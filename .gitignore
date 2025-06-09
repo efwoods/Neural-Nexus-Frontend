@@ -194,3 +194,4 @@ cython_debug/
 .cursorindexingignore# VsCode User Settings
 
 .vscode
+.vercel
