@@ -257,7 +257,7 @@ const AvatarChatApp = () => {
 
   const startTranscription = async () => {
     if (!dataExchangeTypes.voice) return;
-    const wsUrl = ngrokWsUrl + '/transcription/ws';
+    const wsUrl = ngrokWsUrl + '/transcription-api/transcribe/ws';
     const ws = new WebSocket(wsUrl);
     ws.binaryType = "arraybuffer";
     wsRef.current = ws;

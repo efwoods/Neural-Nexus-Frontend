@@ -1,21 +1,18 @@
 import React, { useRef, useState } from "react";
+import { useNgrokApiUrl } from "../context/NgrokAPIContext";
 
 const AudioStreamer = ({ isTranscribing }) => {
   const wsRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const [connected, setConnected] = useState(false);
+  const {ngrokHttpsUrl, ngrokWsUrl} = useNgrokApiUrl()
 
   const startStreaming = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: "audio/webm" });
     
-    const fetch_url = import.meta.env.VITE_GITHUB_FETCH_URL_ROOT + 
-                      import.meta.env.VITE_GITHUB_GIST_ID + 
-                      import.meta.env.VITE_GITHUB_GIST_FILENAME +
-                      "?t=" + Date.now();
-    const data = await (await fetch(fetch_url, {cache: "no-store"})).text()
-    console.log("data: " + data)
-    wsRef.current = new WebSocket(data + "/transcription/ws");
+    console.log("ngrokHttpsUrl: " + ngrokHttpsUrl + "/transcription-api" + "/transcribe/ws")
+    wsRef.current = new WebSocket(ngrokWsUrl + "/transcription-api" + "/transcribe/ws");
 
     wsRef.current.onopen = () => {
       setConnected(true);

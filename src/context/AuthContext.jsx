@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   const signup = async (username, email, password) => {
     const signupData = { username, email, password };
 
-    const signupResponse = await fetch(`${ngrokHttpsUrl}/signup`, {
+    const signupResponse = await fetch(`${ngrokHttpsUrl}/neural-nexus-db/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(signupData),
@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     const { access_token } = await signupResponse.json();
-    const profileResponse = await fetch(`${ngrokHttpsUrl}/profile`, {
+    const profileResponse = await fetch(`${ngrokHttpsUrl}/neural-nexus-db/profile`, {
       headers: {
         Authorization: `Bearer ${access_token}`,
         Accept: "application/json",
@@ -59,12 +59,10 @@ export const AuthProvider = ({ children }) => {
     const loginParams = new URLSearchParams();
     loginParams.append("username", email);
     loginParams.append("password", password);
-    loginParams.append("grant_type", "");
-    loginParams.append("scope", "");
-    loginParams.append("client_id", "");
-    loginParams.append("client_secret", "");
 
-    const loginResponse = await fetch(`${ngrokHttpsUrl}/login`, {
+    console.log(loginParams.toString());
+
+    const loginResponse = await fetch(`${ngrokHttpsUrl}/neural-nexus-db/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -80,7 +78,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     const { access_token } = await loginResponse.json();
-    const profileResponse = await fetch(`${ngrokHttpsUrl}/profile`, {
+    const profileResponse = await fetch(`${ngrokHttpsUrl}/neural-nexus-db/profile`, {
       headers: {
         Authorization: `Bearer ${access_token}`,
         Accept: "application/json",
@@ -103,7 +101,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     const token = localStorage.getItem("access_token");
-    await fetch(`${ngrokHttpsUrl}/logout`, {
+    await fetch(`${ngrokHttpsUrl}/neural-nexus-db/logout`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
