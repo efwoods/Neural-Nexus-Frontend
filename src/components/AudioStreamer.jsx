@@ -15,7 +15,7 @@ const AudioStreamer = ({ isTranscribing }) => {
                       "?t=" + Date.now();
     const data = await (await fetch(fetch_url, {cache: "no-store"})).text()
     console.log("data: " + data)
-    wsRef.current = new WebSocket(data + "/transcription/ws");
+    wsRef.current = new WebSocket(data + "/transcription-api" + "/transcribe/ws");
 
     wsRef.current.onopen = () => {
       setConnected(true);
