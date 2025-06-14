@@ -20,9 +20,11 @@ const Header = ({ sidebarVisible, setSidebarVisible }) => {
           <PanelLeftOpenIcon className="flex w-6 h-6" />
         )}
       </button>
-      <h1 className="text-2xl font-semibold">Neural</h1>
-      <img src={NeuralNexusLogo} alt="Logo" className="w-20 h-20 bg-transparent" />
-      <h1 className="text-2xl font-semibold">Nexus</h1>
+      <div className="flex justify-center items-center gap-2">
+        <h1 className="text-2xl font-semibold">Neural</h1>
+        <img src={NeuralNexusLogo} alt="Logo" className="w-20 h-20 bg-transparent" />
+        <h1 className="text-2xl font-semibold">Nexus</h1>
+      </div>
       </div>
       <div>
         <AuthComponent/>
