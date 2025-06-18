@@ -115,7 +115,7 @@ const AvatarChatApp = () => {
 
     setAvatars((prev) =>
       prev.map((avatar) => {
-        if (avatar.id === activeAvatar.avatar_id) {
+        if (avatar.id === activeAvatar.id) {
           const newFiles = files.map((file) => ({
             id: Date.now() + Math.random(),
             name: file.name,
@@ -147,10 +147,7 @@ const AvatarChatApp = () => {
 
     setMessages((prev) => ({
       ...prev,
-      [activeAvatar.avatar_id]: [
-        ...(prev[activeAvatar.avatar_id] || []),
-        uploadMessage,
-      ],
+      [activeAvatar.id]: [...(prev[activeAvatar.id] || []), uploadMessage],
     }));
     event.target.value = '';
   };
@@ -178,8 +175,8 @@ const AvatarChatApp = () => {
     };
     setMessages((prev) => ({
       ...prev,
-      [activeAvatar.avatar_id]: [
-        ...(prev[activeAvatar.avatar_id] || []),
+      [activeAvatar.id]: [
+        ...(prev[activeAvatar.id] || []),
         userMessage,
         avatarResponse,
       ],
@@ -237,8 +234,8 @@ const AvatarChatApp = () => {
     };
     setMessages((prev) => ({
       ...prev,
-      [activeAvatar.avatar_id]: [
-        ...(prev[activeAvatar.avatar_id] || []),
+      [activeAvatar.id]: [
+        ...(prev[activeAvatar.id] || []),
         voiceMessage,
         avatarResponse,
       ],

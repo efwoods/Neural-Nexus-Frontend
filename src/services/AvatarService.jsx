@@ -8,7 +8,7 @@ export const AvatarService = {
       const ngrokHttpsUrl = getNgrokHttpsUrl();
       console.log('Avatar Service call of ngrokHttpsUrl:', ngrokHttpsUrl);
       const res = await fetch(
-        `${ngrokHttpsUrl}/neural-nexus-db/avatar/get_all`,
+        `${ngrokHttpsUrl}/neural-nexus-db/avatars/get_all`,
         {
           method: 'GET',
           headers: {
@@ -55,21 +55,24 @@ export const AvatarService = {
   },
 
   async deleteAvatar(accessToken, avatarId) {
+    console.log('Avatar_id: ' + avatarId);
     try {
       const ngrokHttpsUrl = getNgrokHttpsUrl();
       const response = await fetch(
-        `${ngrokHttpsUrl}/neural-nexus-db/avatar/${avatarId}/delete`,
+        `${ngrokHttpsUrl}/neural-nexus-db/avatars/${avatarId}/delete`,
         {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
             Accept: 'application/json',
             'ngrok-skip-browser-warning': '69420',
           },
         }
       );
-
-      if (!response.ok) throw new Error(await response.text());
+      let res = response.status;
+      console.log('AvatarService: Delete avatar response:', res);
+      if (res !== 'success') throw new Error(await response.text());
       return true;
     } catch (error) {
       console.error('Error deleting avatar:', error);

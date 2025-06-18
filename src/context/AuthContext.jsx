@@ -25,10 +25,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn && accessToken) {
-      getAvatars();
+    if (isLoggedIn && accessToken && ngrokHttpsUrl) {
+      getAvatars(accessToken);
     }
-  }, [isLoggedIn, accessToken]);
+  }, [isLoggedIn, accessToken, ngrokHttpsUrl]);
 
   const signup = async (username, email, password) => {
     const signupData = { username, email, password };
@@ -143,6 +143,7 @@ export const AuthProvider = ({ children }) => {
     setAvatars([]);
     localStorage.removeItem('user');
     localStorage.removeItem('access_token');
+    localStorage.removeItem('avatars');
   };
 
   const getAvatars = async (token = accessToken) => {
@@ -194,8 +195,12 @@ export const AuthProvider = ({ children }) => {
     if (!accessToken) return;
 
     try {
-      await AvatarService.deleteAvatar(accessToken, avatarId);
-      setAvatars((prev) => prev.filter((a) => a.avatar_id !== avatarId));
+      setAvatars((prev) => prev.filter((a) => a.id !== avatarId));
+      const res = await AvatarService.deleteAvatar(accessToken, avatarId);
+      console.log('Delete avatar response:', res.status);
+      if (res.status !== 'success') throw new Error('Failed to delete avatar');
+      // ✅ Refetch avatars to update UI
+      await getAvatars(accessToken);
     } catch (error) {
       console.error('Delete avatar failed:', error);
     }

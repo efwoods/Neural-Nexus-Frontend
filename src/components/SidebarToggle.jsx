@@ -1,5 +1,5 @@
-import React from "react";
-import { User, Trash2, Sidebar } from "lucide-react";
+import React from 'react';
+import { User, Trash2, Sidebar } from 'lucide-react';
 
 export default function SidebarToggle({
   avatars,
@@ -16,11 +16,11 @@ export default function SidebarToggle({
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {avatars.map((avatar) => (
           <div
-            key={avatar.avatar_id}
+            key={avatar.id}
             className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
-              activeAvatar?.avatar_id === avatar.avatar_id
-                ? "bg-gradient-to-r from-cyan-500/30 to-purple-600/30 border border-cyan-400/50"
-                : "bg-white/5 hover:bg-white/10 border border-transparent"
+              activeAvatar?.id === avatar.id
+                ? 'bg-gradient-to-r from-cyan-500/30 to-purple-600/30 border border-cyan-400/50'
+                : 'bg-white/5 hover:bg-white/10 border border-transparent'
             }`}
             onClick={() => setActiveAvatar(avatar)}
           >
@@ -28,7 +28,7 @@ export default function SidebarToggle({
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">{avatar.name}</h3>
                 <p className="text-sm text-gray-300 mt-1">
-                  {avatar.description || "No description"}
+                  {avatar.description || 'No description'}
                 </p>
                 <div className="flex gap-4 mt-2 text-xs text-gray-400">
                   <span>{avatar.documents.length} docs</span>
@@ -38,7 +38,7 @@ export default function SidebarToggle({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  deleteAvatar(avatar.avatar_id);
+                  deleteAvatar(avatar.id);
                 }}
                 className="text-red-400 hover:text-red-300 p-1 rounded transition-colors"
               >
