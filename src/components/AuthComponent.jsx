@@ -1,13 +1,14 @@
-import React, { useState } from "react";
-import { LogIn, LogOut, UserPlus } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+// components/AuthComponent.jsx
+import React, { useState } from 'react';
+import { LogIn, LogOut, UserPlus } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const AuthComponent = () => {
   const [showModal, setShowModal] = useState(false);
   const [isSignup, setIsSignup] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const { user, isLoggedIn, accessToken, login, signup, logout } = useAuth();
 
   const handleAuth = async (e) => {
@@ -18,13 +19,13 @@ const AuthComponent = () => {
       } else {
         await login(email, password);
       }
-      setUsername("");
-      setEmail("");
-      setPassword("");
+      setUsername('');
+      setEmail('');
+      setPassword('');
       setShowModal(false);
     } catch (error) {
       alert(`Auth Error: ${error.message}`);
-      console.error("Authentication error:", error);
+      console.error('Authentication error:', error);
     }
   };
 
@@ -69,7 +70,9 @@ const AuthComponent = () => {
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gradient-to-br from-purple-800 to-indigo-900 p-6 rounded-xl shadow-lg w-96">
-            <h2 className="text-2xl font-bold text-white mb-4">{isSignup ? "Signup" : "Login"}</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">
+              {isSignup ? 'Signup' : 'Login'}
+            </h2>
             <form onSubmit={handleAuth}>
               {isSignup && (
                 <div className="mb-4">
@@ -115,7 +118,7 @@ const AuthComponent = () => {
                   type="submit"
                   className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white"
                 >
-                  {isSignup ? "Signup" : "Login"}
+                  {isSignup ? 'Signup' : 'Login'}
                 </button>
               </div>
             </form>

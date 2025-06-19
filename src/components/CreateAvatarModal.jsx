@@ -1,14 +1,40 @@
-import React from "react";
-import { UserPenIcon } from "lucide-react";
-
+import React from 'react';
+import { UserPenIcon } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 const CreateAvatarModal = ({
   newAvatarName,
   setNewAvatarName,
   newAvatarDescription,
   setNewAvatarDescription,
-  createAvatar,
   setShowCreateModal,
 }) => {
+  const { createAvatar } = useAuth();
+  const [loading, setLoading] = React.useState(null);
+  const [error, setError] = React.useState(null);
+
+  const handleCreate = async () => {
+    if (!newAvatarName.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const created = await createAvatar({
+        name: newAvatarName,
+        description: newAvatarDescription,
+      });
+      if (created) {
+        setShowCreateModal(false);
+        setNewAvatarName('');
+        setNewAvatarDescription('');
+      } else {
+        setError('Failed to create avatar');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to create avatar');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 bg-opacity-75 flex items-center justify-center z-50"
@@ -55,7 +81,7 @@ const CreateAvatarModal = ({
             Cancel
           </button>
           <button
-            onClick={createAvatar}
+            onClick={handleCreate}
             className="transition-transform duration-300 hover:scale-105 px-4 py-2 rounded hover:bg-cyan-600 transition-colors focus:outline focus:outline-2 focus:outline-cyan-400 min-w-0 rounded px-3 py-2 border border-gray-700 text-white bg-black/35 from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform shadow-lg"
             disabled={!newAvatarName.trim()}
           >

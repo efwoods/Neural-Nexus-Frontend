@@ -1,5 +1,6 @@
 // src/context/NgrokAPIContext.jsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { setNgrokUrls } from './NgrokAPIStore';
 
 const APIContext = createContext(null);
 
@@ -9,8 +10,12 @@ export const NgrokUrlProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchNgrokUrl = async () => {
-      if (!import.meta.env.VITE_GITHUB_FETCH_URL_ROOT || !import.meta.env.VITE_GITHUB_GIST_ID || !import.meta.env.VITE_GITHUB_GIST_FILENAME) {
-        console.error("Missing VITE environment variables");
+      if (
+        !import.meta.env.VITE_GITHUB_FETCH_URL_ROOT ||
+        !import.meta.env.VITE_GITHUB_GIST_ID ||
+        !import.meta.env.VITE_GITHUB_GIST_FILENAME
+      ) {
+        console.error('Missing VITE environment variables');
         return;
       }
 
@@ -19,24 +24,25 @@ export const NgrokUrlProvider = ({ children }) => {
           import.meta.env.VITE_GITHUB_FETCH_URL_ROOT +
           import.meta.env.VITE_GITHUB_GIST_ID +
           import.meta.env.VITE_GITHUB_GIST_FILENAME +
-          "?t=" + Date.now();
+          '?t=' +
+          Date.now();
 
-        console.log("fetch_url:", fetch_url);
+        console.log('fetch_url:', fetch_url);
 
-        const response = await fetch(fetch_url, { cache: "no-store" });
+        const response = await fetch(fetch_url, { cache: 'no-store' });
         const data = await response.text();
-        const cleanHttpUrl = data.trim().replace(/^wss:\/\//, "https://");
-        console.log("ngrok_url:", data);
-        console.log("cleanHttpUrl:", cleanHttpUrl);
+        const cleanHttpUrl = data.trim().replace(/^wss:\/\//, 'https://');
+        console.log('ngrok_url:', data);
+        console.log('cleanHttpUrl:', cleanHttpUrl);
         if (!cleanHttpUrl.startsWith('https')) {
-          console.error("Invalid URL fetched:", cleanHttpUrl);
+          console.error('Invalid URL fetched:', cleanHttpUrl);
           return;
         }
         setNgrokWsUrl(data);
         setNgrokHttpsUrl(cleanHttpUrl);
-
+        setNgrokUrls(cleanHttpUrl, data);
       } catch (error) {
-        console.error("Error fetching ngrok URL:", error);
+        console.error('Error fetching ngrok URL:', error);
       }
     };
 
@@ -44,7 +50,7 @@ export const NgrokUrlProvider = ({ children }) => {
   }, []);
 
   return (
-    <APIContext.Provider value={{ ngrokHttpsUrl, ngrokWsUrl}}>
+    <APIContext.Provider value={{ ngrokHttpsUrl, ngrokWsUrl }}>
       {children}
     </APIContext.Provider>
   );
