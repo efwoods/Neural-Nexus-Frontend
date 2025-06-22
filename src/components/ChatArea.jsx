@@ -1,10 +1,10 @@
-import React from "react";
-import { User } from "lucide-react";
-import LiveTranscriptionTicker from "./LiveTranscriptionTicker";
-import AudioStreamer from "./AudioStreamer";
-import MessageList from "./MessageList";
-import InputBar from "./InputBar";
-import DataExchangeDropdown from "./DataExchangeDropdown";
+import React from 'react';
+import { User } from 'lucide-react';
+import LiveTranscriptionTicker from './LiveTranscriptionTicker';
+import AudioStreamer from './AudioStreamer';
+import MessageList from './MessageList';
+import InputBar from './InputBar';
+import DataExchangeDropdown from './DataExchangeDropdown';
 
 const ChatArea = ({
   activeAvatar,
@@ -34,14 +34,18 @@ const ChatArea = ({
             <User size={64} className="mx-auto mb-4 text-gray-400" />
             <h2 className="text-2xl font-semibold mb-2">Select an Avatar</h2>
             <p className="text-gray-400">
-              Choose an avatar from the sidebar or create a new one to start chatting
+              Choose an avatar from the sidebar or create a new one to start
+              chatting
             </p>
           </div>
         </div>
       )}
       {activeAvatar && (
         <>
-          <MessageList messages={messages[activeAvatar.id] || []} messagesEndRef={messagesEndRef} />
+          <MessageList
+            messages={messages[activeAvatar.id] || []}
+            messagesEndRef={messagesEndRef}
+          />
           <div className="flex gap-2 items-center relative">
             <input
               ref={fileInputRef}

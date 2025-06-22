@@ -1,5 +1,4 @@
 // services/AvatarService.jsx
-import { NgrokUrlProvider } from '../context/NgrokAPIContext';
 import { getNgrokHttpsUrl } from '../context/NgrokAPIStore';
 
 export const AvatarService = {
@@ -7,6 +6,9 @@ export const AvatarService = {
     try {
       const ngrokHttpsUrl = getNgrokHttpsUrl();
       console.log('Avatar Service call of ngrokHttpsUrl:', ngrokHttpsUrl);
+      console.log(
+        'Calling `${ngrokHttpsUrl}/neural-nexus-db/avatars/get_all`, from Avatar Service'
+      );
       const res = await fetch(
         `${ngrokHttpsUrl}/neural-nexus-db/avatars/get_all`,
         {
@@ -31,6 +33,9 @@ export const AvatarService = {
     try {
       console.log('createAvatar payload:', payload);
       const ngrokHttpsUrl = getNgrokHttpsUrl();
+      console.log(
+        'calling `${ngrokHttpsUrl}/neural-nexus-db/avatars/create` from Avatar Service'
+      );
       const response = await fetch(
         `${ngrokHttpsUrl}/neural-nexus-db/avatars/create`,
         {
@@ -58,24 +63,28 @@ export const AvatarService = {
     console.log('Avatar_id: ' + avatarId);
     try {
       const ngrokHttpsUrl = getNgrokHttpsUrl();
+      console.log(
+        'calling `${ngrokHttpsUrl}/neural-nexus-db/avatars/delete` from Avatar Service'
+      );
       const response = await fetch(
-        `${ngrokHttpsUrl}/neural-nexus-db/avatars/${avatarId}/delete`,
+        `${ngrokHttpsUrl}/neural-nexus-db/avatars/delete`,
         {
-          method: 'DELETE',
+          method: 'POST',
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
             Accept: 'application/json',
             'ngrok-skip-browser-warning': '69420',
           },
+          body: new URLSearchParams({ avatar_id: avatarId }),
         }
       );
-      let res = response.status;
+      let res = await response.json();
       console.log('AvatarService: Delete avatar response:', res);
-      if (res !== 'success') throw new Error(await response.text());
+      if (res.status !== 'success') throw new Error(await JSON.stringify(res));
       return true;
     } catch (error) {
-      console.error('Error deleting avatar:', error);
+      console.error('Avatar Service: Error deleting avatar:', error);
       throw error;
     }
   },

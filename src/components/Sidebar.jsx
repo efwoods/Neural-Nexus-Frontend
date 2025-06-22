@@ -14,7 +14,7 @@ const Sidebar = ({ activeAvatar, setActiveAvatar, setShowCreateModal }) => {
     }
   }, [isLoggedIn]);
 
-  console.log('Avatars:' + JSON.stringify(avatars));
+  // console.log('Avatars:' + JSON.stringify(avatars));
 
   const displayAvatars = isLoggedIn ? avatars : [];
 
@@ -49,14 +49,14 @@ const Sidebar = ({ activeAvatar, setActiveAvatar, setShowCreateModal }) => {
               <div className="flex flex-col flex-grow">
                 <span className="font-semibold">{avatar.name}</span>
                 <span className="text-xs text-gray-400  break-words">
-                  {/* {avatar.description} */}
-                  {avatar.avatar_id}
+                  {avatar.description}
+                  {/* {avatar.avatar_id} */}
                 </span>
               </div>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  deleteAvatar(avatar.id);
+                  deleteAvatar(avatar.avatar_id);
                 }}
                 className="text-red-400 hover:text-red-600 focus:outline focus:outline-2 focus:outline-red-400"
                 aria-label={`Delete avatar ${avatar.name}`}

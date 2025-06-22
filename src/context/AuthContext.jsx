@@ -32,7 +32,9 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (username, email, password) => {
     const signupData = { username, email, password };
-
+    console.log(
+      'calling `${ngrokHttpsUrl}/neural-nexus-db/signup`, from AUTHCONTEXT'
+    );
     const signupResponse = await fetch(
       `${ngrokHttpsUrl}/neural-nexus-db/signup`,
       {
@@ -51,6 +53,9 @@ export const AuthProvider = ({ children }) => {
     }
 
     const { access_token } = await signupResponse.json();
+    console.log(
+      'Calling `${ngrokHttpsUrl}/neural-nexus-db/profile`, from AUTHCONTEXT'
+    );
     const profileResponse = await fetch(
       `${ngrokHttpsUrl}/neural-nexus-db/profile`,
       {
@@ -82,7 +87,9 @@ export const AuthProvider = ({ children }) => {
     loginParams.append('password', password);
 
     console.log(loginParams.toString());
-
+    console.log(
+      'calling `${ngrokHttpsUrl}/neural-nexus-db/login`, from AUTHCONTEXT'
+    );
     const loginResponse = await fetch(
       `${ngrokHttpsUrl}/neural-nexus-db/login`,
       {
@@ -102,6 +109,9 @@ export const AuthProvider = ({ children }) => {
     }
 
     const { access_token } = await loginResponse.json();
+    console.log(
+      'Calling `${ngrokHttpsUrl}/neural-nexus-db/profile`, from AUTHCONTEXT'
+    );
     const profileResponse = await fetch(
       `${ngrokHttpsUrl}/neural-nexus-db/profile`,
       {
@@ -129,6 +139,9 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     const token = localStorage.getItem('access_token');
+    console.log(
+      'calling `${ngrokHttpsUrl}/neural-nexus-db/logout`, from AUTHCONTEXT'
+    );
     await fetch(`${ngrokHttpsUrl}/neural-nexus-db/logout`, {
       method: 'POST',
       headers: {
@@ -151,6 +164,9 @@ export const AuthProvider = ({ children }) => {
     console.log(
       'Get Avatars of AuthContext call of ngrokHttpsUrl: ' +
         JSON.stringify(ngrokHttpsUrl)
+    );
+    console.log(
+      'calling `${ngrokHttpsUrl}/neural-nexus-db/avatars/get_all`, from AUTHCONTEXT'
     );
     const res = await fetch(
       `${ngrokHttpsUrl}/neural-nexus-db/avatars/get_all`,
@@ -178,7 +194,9 @@ export const AuthProvider = ({ children }) => {
       name: name.trim(),
       description: description.trim(),
     };
-
+    console.log(
+      'Calling createAvatar from AuthContext: await AvatarService.createAvatar( '
+    );
     try {
       const created = await AvatarService.createAvatar(
         accessToken,
@@ -196,13 +214,16 @@ export const AuthProvider = ({ children }) => {
 
     try {
       setAvatars((prev) => prev.filter((a) => a.id !== avatarId));
-      const res = await AvatarService.deleteAvatar(accessToken, avatarId);
-      console.log('Delete avatar response:', res.status);
-      if (res.status !== 'success') throw new Error('Failed to delete avatar');
+      const delete_response = await AvatarService.deleteAvatar(
+        accessToken,
+        avatarId
+      );
+      console.log('Delete avatar response:', JSON.stringify(delete_response));
+      if (delete_response !== true) throw new Error('Failed to delete avatar');
       // ✅ Refetch avatars to update UI
       await getAvatars(accessToken);
     } catch (error) {
-      console.error('Delete avatar failed:', error);
+      console.error('AuthContext: Delete avatar failed:', error);
     }
   };
 

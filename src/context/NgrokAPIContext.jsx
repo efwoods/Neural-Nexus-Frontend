@@ -29,8 +29,11 @@ export const NgrokUrlProvider = ({ children }) => {
 
         console.log('fetch_url:', fetch_url);
 
+        console.log('Calling NGROK FETCH URL FROM NGROKAPICONTEXT');
         const response = await fetch(fetch_url, { cache: 'no-store' });
         const data = await response.text();
+        console.log('data:', data);
+        console.log('response:', response);
         const cleanHttpUrl = data.trim().replace(/^wss:\/\//, 'https://');
         console.log('ngrok_url:', data);
         console.log('cleanHttpUrl:', cleanHttpUrl);
