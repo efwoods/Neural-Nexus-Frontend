@@ -1,16 +1,12 @@
 import React from 'react';
 import { UserPenIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-const CreateAvatarModal = ({
-  newAvatarName,
-  setNewAvatarName,
-  newAvatarDescription,
-  setNewAvatarDescription,
-  setShowCreateModal,
-}) => {
+const CreateAvatarModal = ({ setShowCreateModal }) => {
   const { createAvatar } = useAuth();
   const [loading, setLoading] = React.useState(null);
   const [error, setError] = React.useState(null);
+  const [newAvatarName, setNewAvatarName] = useState('');
+  const [newAvatarDescription, setNewAvatarDescription] = useState('');
 
   const handleCreate = async () => {
     if (!newAvatarName.trim()) return;

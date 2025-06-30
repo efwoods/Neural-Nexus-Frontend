@@ -13,6 +13,7 @@ export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [accessToken, setAccessToken] = useState(null);
   const [avatars, setAvatars] = useState([]);
+  const [activeAvatar, setActiveAvatar] = useState(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -231,12 +232,16 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
+        activeUser,
+        setActiveUser,
         isLoggedIn,
         accessToken,
         login,
         signup,
         logout,
         avatars,
+        activeAvatar,
+        setActiveAvatar,
         getAvatars,
         createAvatar,
         deleteAvatar,

@@ -4,9 +4,16 @@ import React, { useEffect } from 'react';
 import { UserPenIcon, User, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const Sidebar = ({ activeAvatar, setActiveAvatar, setShowCreateModal }) => {
-  const { isLoggedIn, avatars, deleteAvatar, getAvatars, accessToken } =
-    useAuth();
+const Sidebar = ({ setShowCreateModal }) => {
+  const {
+    isLoggedIn,
+    accessToken,
+    avatars,
+    activeAvatar,
+    setActiveAvatar,
+    deleteAvatar,
+    getAvatars,
+  } = useAuth();
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -15,8 +22,6 @@ const Sidebar = ({ activeAvatar, setActiveAvatar, setShowCreateModal }) => {
   }, [isLoggedIn]);
 
   // console.log('Avatars:' + JSON.stringify(avatars));
-
-  const displayAvatars = isLoggedIn ? avatars : [];
 
   return (
     <div className="w-64 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-4 overflow-y-auto flex flex-col gap-4">

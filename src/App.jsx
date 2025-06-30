@@ -27,20 +27,18 @@ import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import CreateAvatarModal from './components/CreateAvatarModal';
 import { useNgrokApiUrl } from './context/NgrokAPIContext';
-import { AvatarService } from './services/AvatarService';
 import { useAuth } from './context/AuthContext';
-import { ThoughtToImageService } from './services/ThoughtToImageService';
+import { useMedia } from './context/MediaContext';
 
 const AvatarChatApp = () => {
-  const [avatars, setAvatars] = useState([]);
-  const [activeAvatar, setActiveAvatar] = useState(null);
-  const [messages, setMessages] = useState({});
-  const [inputMessage, setInputMessage] = useState('');
+  const { activeAvatar } = useAuth();
+  const { messages, messagesEndRef, inputMessage, setInputMessage } =
+    useMedia();
+
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [isThoughtToImageEnabled, setIsThoughtToImageEnabled] = useState(false);
+
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newAvatarName, setNewAvatarName] = useState('');
-  const [newAvatarDescription, setNewAvatarDescription] = useState('');
+
   const [showDataExchangeDropdown, setShowDataExchangeDropdown] =
     useState(false);
   const [dataExchangeTypes, setDataExchangeTypes] = useState({
@@ -57,7 +55,7 @@ const AvatarChatApp = () => {
   const fileInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
-  const messagesEndRef = useRef(null);
+
   const dropdownRef = useRef(null);
   const wsRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -66,7 +64,6 @@ const AvatarChatApp = () => {
   const processorRef = useRef(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const { ngrokHttpsUrl, ngrokWsUrl } = useNgrokApiUrl();
-  const { deleteAvatar } = useAuth();
 
   // Auto scroll to bottom when messages change
   useEffect(() => {
@@ -328,19 +325,6 @@ const AvatarChatApp = () => {
     return result;
   }
 
-  const startThoughtToImage = () => {
-    console.log('startThoughtToImage');
-    console.log('isThoughtToImageEnabled:' + isThoughtToImageEnabled);
-    setIsThoughtToImageEnabled(true);
-    //send post request
-  };
-
-  const stopThoughtToImage = () => {
-    console.log('stopThoughtToImage');
-    console.log('isThoughtToImageEnabled:' + isThoughtToImageEnabled);
-    setIsThoughtToImageEnabled(false);
-  };
-
   const toggleDataExchangeType = (type) => {
     setDataExchangeTypes((prev) => ({
       ...prev,
@@ -369,12 +353,7 @@ const AvatarChatApp = () => {
         />
         <div className="flex flex-row flex-grow overflow-hidden rounded-2xl shadow-lg gap-x-4">
           {sidebarVisible && (
-            <Sidebar
-              avatars={avatars}
-              activeAvatar={activeAvatar}
-              setActiveAvatar={setActiveAvatar}
-              setShowCreateModal={setShowCreateModal}
-            />
+            <Sidebar setShowCreateModal={setShowCreateModal} />
           )}
           <ChatArea
             activeAvatar={activeAvatar}
@@ -399,13 +378,7 @@ const AvatarChatApp = () => {
           />
         </div>
         {showCreateModal && (
-          <CreateAvatarModal
-            newAvatarName={newAvatarName}
-            setNewAvatarName={setNewAvatarName}
-            newAvatarDescription={newAvatarDescription}
-            setNewAvatarDescription={setNewAvatarDescription}
-            setShowCreateModal={setShowCreateModal}
-          />
+          <CreateAvatarModal setShowCreateModal={setShowCreateModal} />
         )}
       </div>
     </div>
