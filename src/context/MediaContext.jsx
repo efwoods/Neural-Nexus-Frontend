@@ -8,11 +8,12 @@ import { AudioInputService } from '../services/AudioInputService';
 import { FileUploadService } from '../services/FileUploadService';
 import { MessageService } from '../services/MessageService';
 import { TranscriptionService } from '../services/TranscriptionService';
-import { accessToken } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 const MediaContext = createContext();
 
 export const MediaProvider = ({ children }) => {
   const { ngrokHttpsUrl } = useNgrokApiUrl();
+  const { accessToken, activeAvatar } = useAuth();
   console.log('MediaProvider Service call of ngrokHttpsUrl:', ngrokHttpsUrl);
   // variables
   const [isThoughtToImageEnabled, setIsThoughtToImageEnabled] = useState(false);
@@ -279,6 +280,38 @@ export const MediaProvider = ({ children }) => {
     // }
   };
 
+  const sendMessage = () => {
+    if (!inputMessage.trim() || !activeAvatar || !dataExchangeTypes.text)
+      return;
+    const userMessage = {
+      id: Date.now(),
+      content: inputMessage.trim(),
+      sender: 'user',
+      timestamp: new Date().toISOString(),
+    };
+    const avatarResponse = {
+      id: Date.now() + 1,
+      content: `Hello! I'm ${
+        activeAvatar.name
+      }. I received your message: "${inputMessage.trim()}". I have access to ${
+        activeAvatar.documents.length
+      } documents and ${
+        activeAvatar.images.length
+      } images to help answer your questions.`,
+      sender: 'avatar',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => ({
+      ...prev,
+      [activeAvatar.id]: [
+        ...(prev[activeAvatar.id] || []),
+        userMessage,
+        avatarResponse,
+      ],
+    }));
+    setInputMessage('');
+  };
+
   return (
     <MediaContext.Provider
       value={{
@@ -286,6 +319,7 @@ export const MediaProvider = ({ children }) => {
         messagesEndRef,
         inputMessage,
         setInputMessage,
+        sendMessage,
         isThoughtToImageEnabled,
         startThoughtToImage,
         stopThoughtToImage,

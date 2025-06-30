@@ -5,6 +5,8 @@ import AudioStreamer from './AudioStreamer';
 import MessageList from './MessageList';
 import InputBar from './InputBar';
 import DataExchangeDropdown from './DataExchangeDropdown';
+import { useAuth } from '../context/AuthContext';
+import { useMedia } from '../context/MediaContext';
 
 const ChatArea = ({
   activeAvatar,
@@ -12,7 +14,6 @@ const ChatArea = ({
   inputMessage,
   setInputMessage,
   isTranscribing,
-  isThoughtToImageEnabled,
   dataExchangeTypes,
   fileInputRef,
   messagesEndRef,
@@ -23,10 +24,31 @@ const ChatArea = ({
   sendMessage,
   startTranscription,
   stopTranscription,
-  startThoughtToImage,
-  stopThoughtToImage,
+
   toggleDataExchangeType,
 }) => {
+  const {
+    isLoggedIn,
+    accessToken,
+    avatars,
+    activeAvatar,
+    setActiveAvatar,
+    deleteAvatar,
+    getAvatars,
+  } = useAuth();
+
+  const {
+    activeAvatar,
+    messages,
+    messagesEndRef,
+    inputMessage,
+    setInputMessage,
+    sendMessage,
+    isThoughtToImageEnabled,
+    startThoughtToImage,
+    stopThoughtToImage,
+  } = useMedia();
+
   return (
     <div className="flex flex-col flex-grow bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-4 overflow-hidden">
       <LiveTranscriptionTicker isTranscribing={isTranscribing} />

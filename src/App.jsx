@@ -151,38 +151,6 @@ const AvatarChatApp = () => {
     event.target.value = '';
   };
 
-  const sendMessage = () => {
-    if (!inputMessage.trim() || !activeAvatar || !dataExchangeTypes.text)
-      return;
-    const userMessage = {
-      id: Date.now(),
-      content: inputMessage.trim(),
-      sender: 'user',
-      timestamp: new Date().toISOString(),
-    };
-    const avatarResponse = {
-      id: Date.now() + 1,
-      content: `Hello! I'm ${
-        activeAvatar.name
-      }. I received your message: "${inputMessage.trim()}". I have access to ${
-        activeAvatar.documents.length
-      } documents and ${
-        activeAvatar.images.length
-      } images to help answer your questions.`,
-      sender: 'avatar',
-      timestamp: new Date().toISOString(),
-    };
-    setMessages((prev) => ({
-      ...prev,
-      [activeAvatar.id]: [
-        ...(prev[activeAvatar.id] || []),
-        userMessage,
-        avatarResponse,
-      ],
-    }));
-    setInputMessage('');
-  };
-
   const startRecording = async () => {
     if (!dataExchangeTypes.voice) return;
     try {
