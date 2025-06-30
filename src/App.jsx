@@ -29,6 +29,7 @@ import CreateAvatarModal from './components/CreateAvatarModal';
 import { useNgrokApiUrl } from './context/NgrokAPIContext';
 import { AvatarService } from './services/AvatarService';
 import { useAuth } from './context/AuthContext';
+import { ThoughtToImageService } from './services/ThoughtToImageService';
 
 const AvatarChatApp = () => {
   const [avatars, setAvatars] = useState([]);
@@ -36,6 +37,7 @@ const AvatarChatApp = () => {
   const [messages, setMessages] = useState({});
   const [inputMessage, setInputMessage] = useState('');
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isThoughtToImageEnabled, setIsThoughtToImageEnabled] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newAvatarName, setNewAvatarName] = useState('');
   const [newAvatarDescription, setNewAvatarDescription] = useState('');
@@ -326,6 +328,19 @@ const AvatarChatApp = () => {
     return result;
   }
 
+  const startThoughtToImage = () => {
+    console.log('startThoughtToImage');
+    console.log('isThoughtToImageEnabled:' + isThoughtToImageEnabled);
+    setIsThoughtToImageEnabled(true);
+    //send post request
+  };
+
+  const stopThoughtToImage = () => {
+    console.log('stopThoughtToImage');
+    console.log('isThoughtToImageEnabled:' + isThoughtToImageEnabled);
+    setIsThoughtToImageEnabled(false);
+  };
+
   const toggleDataExchangeType = (type) => {
     setDataExchangeTypes((prev) => ({
       ...prev,
@@ -334,6 +349,14 @@ const AvatarChatApp = () => {
     if (type === 'voice' && !dataExchangeTypes.voice && isTranscribing) {
       stopTranscription();
       stopRecording();
+    }
+    if (
+      type === 'neuralImage' &&
+      !dataExchangeTypes.neuralImage &&
+      isThoughtToImageEnabled
+    ) {
+      stopThoughtToImage();
+      startThoughtToImage();
     }
   };
 
@@ -358,6 +381,7 @@ const AvatarChatApp = () => {
             messages={messages}
             inputMessage={inputMessage}
             setInputMessage={setInputMessage}
+            isThoughtToImageEnabled={isThoughtToImageEnabled}
             isTranscribing={isTranscribing}
             dataExchangeTypes={dataExchangeTypes}
             fileInputRef={fileInputRef}
@@ -369,6 +393,8 @@ const AvatarChatApp = () => {
             sendMessage={sendMessage}
             startTranscription={startTranscription}
             stopTranscription={stopTranscription}
+            startThoughtToImage={startThoughtToImage}
+            stopThoughtToImage={stopThoughtToImage}
             toggleDataExchangeType={toggleDataExchangeType}
           />
         </div>

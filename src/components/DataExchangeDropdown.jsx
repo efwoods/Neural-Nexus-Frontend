@@ -17,12 +17,15 @@ import { GiRobotGolem } from 'react-icons/gi';
 
 const DataExchangeDropdown = ({
   isTranscribing,
+  isThoughtToImageEnabled,
   dataExchangeTypes,
   dropdownRef,
   showDataExchangeDropdown,
   setShowDataExchangeDropdown,
   startTranscription,
   stopTranscription,
+  startThoughtToImage,
+  stopThoughtToImage,
   toggleDataExchangeType,
   fileInputRef,
 }) => {
@@ -115,25 +118,30 @@ const DataExchangeDropdown = ({
 */}
           <div className="relative group">
             <button
-              onClick={() => toggleDataExchangeType('custom')}
+              onClick={
+                isThoughtToImageEnabled
+                  ? stopThoughtToImage
+                  : startThoughtToImage
+              }
               className={
-                dataExchangeTypes.custom
-                  ? 'transition-transform duration-300 hover:scale-105 px-6 py-3 rounded-xl flex font-semibold gap-2 transition-all duration-300 transform shadow-lg items-center justify-center hover:bg-cyan-600 focus:outline focus:outline-2 focus:outline-cyan-400 min-w-0 border border-gray-700 text-white bg-black/35 from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700'
-                  : 'transition-transform duration-300 hover:scale-105 p-2 rounded transition-colors focus:outline focus:outline-2 bg-yellow-600 hover:bg-yellow-700'
+                isThoughtToImageEnabled
+                  ? 'transition-transform duration-300 hover:scale-105 p-2 rounded transition-colors focus:outline focus:outline-2 bg-yellow-600 hover:bg-yellow-700'
+                  : 'transition-transform duration-300 hover:scale-105 px-6 py-3 rounded-xl flex font-semibold gap-2 transition-all duration-300 transform shadow-lg items-center justify-center hover:bg-cyan-600 focus:outline focus:outline-2 focus:outline-cyan-400 min-w-0 border border-gray-700 text-white bg-black/35 from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700'
               }
               aria-label={
-                dataExchangeTypes.custom
-                  ? 'Enable Thought-To-Image Input'
-                  : 'Disable Thought-To-Image Input'
+                isThoughtToImageEnabled
+                  ? 'Disable Thought-To-Image Input'
+                  : 'Enable Thought-To-Image Input'
               }
+              disabled={!dataExchangeTypes.neuralImage}
             >
               <Eye className="w-6 h-6 inline-block mr-2" />
               {/* {dataExchangeTypes.custom ? 'Custom On' : 'Custom Off'} */}
             </button>
             <span className="absolute hidden group-hover:block -top-10 left-1/2 transform -translate-x-1/2 bg-black/75 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-20">
-              {dataExchangeTypes.custom
-                ? 'Enable Thought-To-Image Input'
-                : 'Disable Thought-To-Image Input'}
+              {isThoughtToImageEnabled
+                ? 'Disable Thought-To-Image Input'
+                : 'Enable Thought-To-Image Input'}
             </span>
           </div>
           {/* 

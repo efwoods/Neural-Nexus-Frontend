@@ -12,6 +12,7 @@ const ChatArea = ({
   inputMessage,
   setInputMessage,
   isTranscribing,
+  isThoughtToImageEnabled,
   dataExchangeTypes,
   fileInputRef,
   messagesEndRef,
@@ -22,6 +23,8 @@ const ChatArea = ({
   sendMessage,
   startTranscription,
   stopTranscription,
+  startThoughtToImage,
+  stopThoughtToImage,
   toggleDataExchangeType,
 }) => {
   return (
@@ -57,12 +60,15 @@ const ChatArea = ({
             />
             <DataExchangeDropdown
               isTranscribing={isTranscribing}
+              isThoughtToImageEnabled={isThoughtToImageEnabled}
               dataExchangeTypes={dataExchangeTypes}
               dropdownRef={dropdownRef}
               showDataExchangeDropdown={showDataExchangeDropdown}
               setShowDataExchangeDropdown={setShowDataExchangeDropdown}
               startTranscription={startTranscription}
               stopTranscription={stopTranscription}
+              startThoughtToImage={startThoughtToImage}
+              stopThoughtToImage={stopThoughtToImage}
               toggleDataExchangeType={toggleDataExchangeType}
               fileInputRef={fileInputRef}
             />
