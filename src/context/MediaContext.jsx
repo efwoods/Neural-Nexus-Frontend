@@ -1,7 +1,14 @@
 // components/AuthContext.jsx
 // This handles sending messages, thought-to-text, thought-to-image, and conversation suggestions.
+// provides interfaces to the services that handle the actual fetch requests.
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from 'react';
 import { useNgrokApiUrl } from './NgrokAPIContext';
 import { ThoughtToImageService } from '../services/ThoughtToImageService';
 import { AudioInputService } from '../services/AudioInputService';
@@ -17,226 +24,31 @@ export const MediaProvider = ({ children }) => {
   console.log('MediaProvider Service call of ngrokHttpsUrl:', ngrokHttpsUrl);
   // variables
   const [isThoughtToImageEnabled, setIsThoughtToImageEnabled] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [messages, setMessages] = useState({});
   const [inputMessage, setInputMessage] = useState('');
+
   const messagesEndRef = useRef(null);
-  //   const [user, setUser] = useState(null);
-  //   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  //   const [accessToken, setAccessToken] = useState(null);
-  //   const [avatars, setAvatars] = useState([]);
-  // function
-  //   useEffect(() => {
-  //     const storedUser = localStorage.getItem('user');
-  //     const storedToken = localStorage.getItem('access_token');
-  //     if (storedUser && storedToken) {
-  //       setUser(JSON.parse(storedUser));
-  //       setAccessToken(storedToken);
-  //       setIsLoggedIn(true);
-  //     }
-  //   }, []);
-  // function
-  //   useEffect(() => {
-  //     if (isLoggedIn && accessToken && ngrokHttpsUrl) {
-  //       getAvatars(accessToken);
-  //     }
-  //   }, [isLoggedIn, accessToken, ngrokHttpsUrl]);
-  // function
-  //   const signup = async (username, email, password) => {
-  //     const signupData = { username, email, password };
-  //     console.log(
-  //       'calling `${ngrokHttpsUrl}/neural-nexus-db/signup`, from AUTHCONTEXT'
-  //     );
-  //     const signupResponse = await fetch(
-  //       `${ngrokHttpsUrl}/neural-nexus-db/signup`,
-  //       {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //           'ngrok-skip-browser-warning': '69420',
-  //         },
-  //         body: JSON.stringify(signupData),
-  //       }
-  //     );
+  const fileInputRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const wsRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const mediaStreamRef = useRef(null);
+  const sourceRef = useRef(null);
+  const processorRef = useRef(null);
 
-  //     if (!signupResponse.ok) {
-  //       const err = await signupResponse.json();
-  //       throw new Error(err.detail || 'Signup failed');
-  //     }
-
-  //     const { access_token } = await signupResponse.json();
-  //     console.log(
-  //       'Calling `${ngrokHttpsUrl}/neural-nexus-db/profile`, from AUTHCONTEXT'
-  //     );
-  //     const profileResponse = await fetch(
-  //       `${ngrokHttpsUrl}/neural-nexus-db/profile`,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${access_token}`,
-  //           Accept: 'application/json',
-  //           'ngrok-skip-browser-warning': '69420',
-  //         },
-  //       }
-  //     );
-
-  //     if (!profileResponse.ok) {
-  //       const errText = await profileResponse.text();
-  //       throw new Error(errText || 'Failed to fetch profile');
-  //     }
-
-  //     const profileData = await profileResponse.json();
-  //     setUser(profileData);
-  //     setAccessToken(access_token);
-  //     setIsLoggedIn(true);
-  //     localStorage.setItem('user', JSON.stringify(profileData));
-  //     localStorage.setItem('access_token', access_token);
-  //     localStorage.setItem('avatars', JSON.stringify(profileData.avatars)); // Set Avatars
-  //   };
-  // function
-  //   const login = async (email, password) => {
-  //     const loginParams = new URLSearchParams();
-  //     loginParams.append('username', email);
-  //     loginParams.append('password', password);
-
-  //     console.log(loginParams.toString());
-  //     console.log(
-  //       'calling `${ngrokHttpsUrl}/neural-nexus-db/login`, from AUTHCONTEXT'
-  //     );
-  //     const loginResponse = await fetch(
-  //       `${ngrokHttpsUrl}/neural-nexus-db/login`,
-  //       {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/x-www-form-urlencoded',
-  //           Accept: 'application/json',
-  //           'ngrok-skip-browser-warning': '69420',
-  //         },
-  //         body: loginParams.toString(),
-  //       }
-  //     );
-
-  //     if (!loginResponse.ok) {
-  //       const err = await loginResponse.json();
-  //       throw new Error(err.detail || 'Login failed');
-  //     }
-
-  //     const { access_token } = await loginResponse.json();
-  //     console.log(
-  //       'Calling `${ngrokHttpsUrl}/neural-nexus-db/profile`, from AUTHCONTEXT'
-  //     );
-  //     const profileResponse = await fetch(
-  //       `${ngrokHttpsUrl}/neural-nexus-db/profile`,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${access_token}`,
-  //           Accept: 'application/json',
-  //           'ngrok-skip-browser-warning': '69420',
-  //         },
-  //       }
-  //     );
-
-  //     if (!profileResponse.ok) {
-  //       const errText = await profileResponse.text();
-  //       throw new Error(errText || 'Failed to fetch profile');
-  //     }
-
-  //     const profileData = await profileResponse.json();
-  //     setUser(profileData);
-  //     setAccessToken(access_token);
-  //     setIsLoggedIn(true);
-  //     localStorage.setItem('user', JSON.stringify(profileData));
-  //     localStorage.setItem('access_token', access_token);
-  //     localStorage.setItem('avatars', JSON.stringify(profileData.avatars)); // Set Avatars
-  //   };
-  // function
-  //   const logout = async () => {
-  //     const token = localStorage.getItem('access_token');
-  //     console.log(
-  //       'calling `${ngrokHttpsUrl}/neural-nexus-db/logout`, from AUTHCONTEXT'
-  //     );
-  //     await fetch(`${ngrokHttpsUrl}/neural-nexus-db/logout`, {
-  //       method: 'POST',
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         Accept: 'application/json',
-  //         'ngrok-skip-browser-warning': '69420',
-  //       },
-  //     });
-  //     setUser(null);
-  //     setAccessToken(null);
-  //     setIsLoggedIn(false);
-  //     setAvatars([]);
-  //     localStorage.removeItem('user');
-  //     localStorage.removeItem('access_token');
-  //     localStorage.removeItem('avatars');
-  //   };
-  // function interface
-  //   const getAvatars = async (token = accessToken) => {
-  //     if (!token || ngrokHttpsUrl === null) return;
-  //     console.log(
-  //       'Get Avatars of AuthContext call of ngrokHttpsUrl: ' +
-  //         JSON.stringify(ngrokHttpsUrl)
-  //     );
-  //     console.log(
-  //       'calling `${ngrokHttpsUrl}/neural-nexus-db/avatars/get_all`, from AUTHCONTEXT'
-  //     );
-  //     const res = await fetch(
-  //       `${ngrokHttpsUrl}/neural-nexus-db/avatars/get_all`,
-  //       {
-  //         method: 'GET',
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           Accept: 'application/json',
-  //           'ngrok-skip-browser-warning': '69420',
-  //         },
-  //       }
-  //     );
-  //     if (!res.ok) {
-  //       console.error('Failed to fetch avatars');
-  //       return;
-  //     }
-  //     const data = await res.json();
-  //     setAvatars(data);
-  //   };
-  // function interface
-  //   const createAvatar = async ({ name, description = '' }) => {
-  //     if (!accessToken) return;
-
-  //     const newAvatarPayload = {
-  //       name: name.trim(),
-  //       description: description.trim(),
-  //     };
-  //     console.log(
-  //       'Calling createAvatar from AuthContext: await AvatarService.createAvatar( '
-  //     );
-  //     try {
-  //       const created = await AvatarService.createAvatar(
-  //         accessToken,
-  //         newAvatarPayload
-  //       );
-  //       setAvatars((prev) => [...prev, created]);
-  //       return created;
-  //     } catch (error) {
-  //       console.error('Create avatar failed:', error);
-  //     }
-  //   };
-  // function interface
-  //   const deleteAvatar = async (avatarId) => {
-  //     if (!accessToken) return;
-
-  //     try {
-  //       setAvatars((prev) => prev.filter((a) => a.id !== avatarId));
-  //       const delete_response = await AvatarService.deleteAvatar(
-  //         accessToken,
-  //         avatarId
-  //       );
-  //       console.log('Delete avatar response:', JSON.stringify(delete_response));
-  //       if (delete_response !== true) throw new Error('Failed to delete avatar');
-  //       // ✅ Refetch avatars to update UI
-  //       await getAvatars(accessToken);
-  //     } catch (error) {
-  //       console.error('AuthContext: Delete avatar failed:', error);
-  //     }
-  //   };
+  const [dataExchangeTypes, setDataExchangeTypes] = useState({
+    text: true,
+    voice: true,
+    fileUpload: true,
+    custom: true,
+    neuralText: true,
+    neuralImage: true,
+    neuralMotion: true,
+    blueToothControl: true,
+    telepathy: true,
+  });
 
   // function interface
   const startThoughtToImage = async (avatarId) => {
@@ -312,6 +124,211 @@ export const MediaProvider = ({ children }) => {
     setInputMessage('');
   };
 
+  const handleFileUpload = (event) => {
+    if (!activeAvatar || !dataExchangeTypes.fileUpload) return;
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+
+    setAvatars((prev) =>
+      prev.map((avatar) => {
+        if (avatar.id === activeAvatar.id) {
+          const newFiles = files.map((file) => ({
+            id: Date.now() + Math.random(),
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            uploadedAt: new Date().toISOString(),
+          }));
+          const isImage = (type) => type.startsWith('image/');
+          const newDocuments = newFiles.filter((f) => !isImage(f.type));
+          const newImages = newFiles.filter((f) => isImage(f.type));
+          return {
+            ...avatar,
+            documents: [...avatar.documents, ...newDocuments],
+            images: [...avatar.images, ...newImages],
+          };
+        }
+        return avatar;
+      })
+    );
+
+    const uploadMessage = {
+      id: Date.now(),
+      content: `Uploaded ${files.length} file(s): ${files
+        .map((f) => f.name)
+        .join(', ')}`,
+      sender: 'system',
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages((prev) => ({
+      ...prev,
+      [activeAvatar.id]: [...(prev[activeAvatar.id] || []), uploadMessage],
+    }));
+    event.target.value = '';
+  };
+
+  const startRecording = async () => {
+    if (!dataExchangeTypes.voice) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        chunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/wav' });
+        handleVoiceMessage(audioBlob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsTranscribing(true);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isTranscribing) {
+      mediaRecorderRef.current.stop();
+      setIsTranscribing(false);
+    }
+  };
+
+  const handleVoiceMessage = (audioBlob) => {
+    if (!activeAvatar || !dataExchangeTypes.voice) return;
+    const voiceMessage = {
+      id: Date.now(),
+      content: '[Voice Message]',
+      sender: 'user',
+      timestamp: new Date().toISOString(),
+      isVoice: true,
+      audioBlob,
+    };
+    const avatarResponse = {
+      id: Date.now() + 1,
+      content: `I received your voice message! As ${activeAvatar.name}, I would process your audio and respond accordingly. I have ${activeAvatar.documents.length} documents and ${activeAvatar.images.length} images in my knowledge base.`,
+      sender: 'avatar',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => ({
+      ...prev,
+      [activeAvatar.id]: [
+        ...(prev[activeAvatar.id] || []),
+        voiceMessage,
+        avatarResponse,
+      ],
+    }));
+  };
+
+  const startTranscription = async () => {
+    if (!dataExchangeTypes.voice) return;
+    const wsUrl = ngrokWsUrl + '/transcription-api/transcribe/ws';
+    const ws = new WebSocket(wsUrl);
+    ws.binaryType = 'arraybuffer';
+    wsRef.current = ws;
+
+    ws.onopen = async () => {
+      console.log('WebSocket connection opened');
+      setIsTranscribing(true);
+      audioContextRef.current = new AudioContext();
+      mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+      sourceRef.current = audioContextRef.current.createMediaStreamSource(
+        mediaStreamRef.current
+      );
+      processorRef.current = audioContextRef.current.createScriptProcessor(
+        4096,
+        1,
+        1
+      );
+
+      processorRef.current.onaudioprocess = (e) => {
+        const input = e.inputBuffer.getChannelData(0);
+        const downsampled = downsampleBuffer(
+          input,
+          audioContextRef.current.sampleRate,
+          16000
+        );
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(downsampled);
+        }
+      };
+
+      sourceRef.current.connect(processorRef.current);
+      processorRef.current.connect(audioContextRef.current.destination);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        const text = data.transcript;
+        if (typeof text === 'string' && text.trim() !== '') {
+          document.dispatchEvent(
+            new CustomEvent('transcription', { detail: text })
+          );
+        } else {
+          console.warn('Empty or invalid transcript received:', data);
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error, event.data);
+      }
+    };
+
+    ws.onerror = (err) => console.error('WebSocket error:', err);
+    ws.onclose = () => {
+      console.log('WebSocket closed');
+      setIsTranscribing(false);
+    };
+  };
+
+  const stopTranscription = () => {
+    setIsTranscribing(false);
+    if (processorRef.current) processorRef.current.disconnect();
+    if (sourceRef.current) sourceRef.current.disconnect();
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+    }
+    if (audioContextRef.current) audioContextRef.current.close();
+    if (wsRef.current) wsRef.current.close();
+  };
+
+  function downsampleBuffer(buffer, inputSampleRate, outputSampleRate) {
+    const sampleRateRatio = inputSampleRate / outputSampleRate;
+    const newLength = Math.round(buffer.length / sampleRateRatio);
+    const result = new Int16Array(newLength);
+    for (let i = 0; i < newLength; i++) {
+      const sample = buffer[Math.floor(i * sampleRateRatio)];
+      result[i] = Math.max(-32768, Math.min(32767, sample * 0x7fff));
+    }
+    return result;
+  }
+
+  const toggleDataExchangeType = (type) => {
+    setDataExchangeTypes((prev) => ({
+      ...prev,
+      [type]: !prev[type],
+    }));
+    if (type === 'voice' && !dataExchangeTypes.voice && isTranscribing) {
+      stopTranscription();
+      stopRecording();
+    }
+    if (
+      type === 'neuralImage' &&
+      !dataExchangeTypes.neuralImage &&
+      isThoughtToImageEnabled
+    ) {
+      stopThoughtToImage();
+      startThoughtToImage();
+    }
+  };
+
   return (
     <MediaContext.Provider
       value={{
@@ -323,16 +340,13 @@ export const MediaProvider = ({ children }) => {
         isThoughtToImageEnabled,
         startThoughtToImage,
         stopThoughtToImage,
-        // user,
-        // isLoggedIn,
-        // accessToken,
-        // login,
-        // signup,
-        // logout,
-        // avatars,
-        // getAvatars,
-        // createAvatar,
-        // deleteAvatar,
+        isTranscribing,
+        startTranscription,
+        stopTranscription,
+        dataExchangeTypes,
+        toggleDataExchangeType,
+        fileInputRef,
+        handleFileUpload,
       }}
     >
       {children}

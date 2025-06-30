@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 const MessageList = ({ messages, messagesEndRef }) => {
   return (
@@ -11,11 +11,11 @@ const MessageList = ({ messages, messagesEndRef }) => {
         <div
           key={msg.id}
           className={`max-w-[70%] p-2 rounded-lg ${
-            msg.sender === "user"
-              ? "bg-cyan-600 self-end text-white"
-              : msg.sender === "avatar"
-              ? "bg-gray-700 self-start text-white"
-              : "bg-gray-600 self-center italic text-gray-300"
+            msg.sender === 'user'
+              ? 'bg-cyan-600 self-end text-white'
+              : msg.sender === 'avatar'
+              ? 'bg-gray-700 self-start text-white'
+              : 'bg-gray-600 self-center italic text-gray-300'
           }`}
         >
           {msg.isVoice ? (

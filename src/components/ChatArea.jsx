@@ -9,23 +9,8 @@ import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
 
 const ChatArea = ({
-  activeAvatar,
-  messages,
-  inputMessage,
-  setInputMessage,
-  isTranscribing,
-  dataExchangeTypes,
-  fileInputRef,
-  messagesEndRef,
-  dropdownRef,
   showDataExchangeDropdown,
   setShowDataExchangeDropdown,
-  handleFileUpload,
-  sendMessage,
-  startTranscription,
-  stopTranscription,
-
-  toggleDataExchangeType,
 }) => {
   const {
     isLoggedIn,
@@ -38,16 +23,24 @@ const ChatArea = ({
   } = useAuth();
 
   const {
-    activeAvatar,
     messages,
     messagesEndRef,
     inputMessage,
     setInputMessage,
     sendMessage,
+    isTranscribing,
+    startTranscription,
+    stopTranscription,
     isThoughtToImageEnabled,
     startThoughtToImage,
     stopThoughtToImage,
+    dataExchangeTypes,
+    toggleDataExchangeType,
+    fileInputRef,
+    handleFileUpload,
   } = useMedia();
+
+  const dropdownRef = useRef(null);
 
   return (
     <div className="flex flex-col flex-grow bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-4 overflow-hidden">
@@ -81,18 +74,8 @@ const ChatArea = ({
               aria-label="Upload files"
             />
             <DataExchangeDropdown
-              isTranscribing={isTranscribing}
-              isThoughtToImageEnabled={isThoughtToImageEnabled}
-              dataExchangeTypes={dataExchangeTypes}
-              dropdownRef={dropdownRef}
               showDataExchangeDropdown={showDataExchangeDropdown}
               setShowDataExchangeDropdown={setShowDataExchangeDropdown}
-              startTranscription={startTranscription}
-              stopTranscription={stopTranscription}
-              startThoughtToImage={startThoughtToImage}
-              stopThoughtToImage={stopThoughtToImage}
-              toggleDataExchangeType={toggleDataExchangeType}
-              fileInputRef={fileInputRef}
             />
             <InputBar
               inputMessage={inputMessage}

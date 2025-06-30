@@ -14,21 +14,41 @@ import {
 } from 'lucide-react';
 import { TbBubble } from 'react-icons/tb';
 import { GiRobotGolem } from 'react-icons/gi';
+import { useAuth } from '../context/AuthContext';
+import { useMedia } from '../context/MediaContext';
 
 const DataExchangeDropdown = ({
-  isTranscribing,
-  isThoughtToImageEnabled,
-  dataExchangeTypes,
-  dropdownRef,
   showDataExchangeDropdown,
   setShowDataExchangeDropdown,
-  startTranscription,
-  stopTranscription,
-  startThoughtToImage,
-  stopThoughtToImage,
-  toggleDataExchangeType,
-  fileInputRef,
 }) => {
+  const {
+    isLoggedIn,
+    accessToken,
+    avatars,
+    activeAvatar,
+    setActiveAvatar,
+    deleteAvatar,
+    getAvatars,
+  } = useAuth();
+
+  const {
+    messages,
+    messagesEndRef,
+    inputMessage,
+    setInputMessage,
+    sendMessage,
+    isTranscribing,
+    startTranscription,
+    stopTranscription,
+    isThoughtToImageEnabled,
+    startThoughtToImage,
+    stopThoughtToImage,
+    dataExchangeTypes,
+    toggleDataExchangeType,
+    fileInputRef,
+    handleFileUpload,
+  } = useMedia();
+
   return (
     <div ref={dropdownRef}>
       <div className="relative group">

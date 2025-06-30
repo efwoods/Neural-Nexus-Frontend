@@ -1,7 +1,12 @@
-import React from "react";
-import { Send } from "lucide-react";
+import React from 'react';
+import { Send } from 'lucide-react';
 
-const InputBar = ({ inputMessage, setInputMessage, sendMessage, dataExchangeTypes }) => {
+const InputBar = ({
+  inputMessage,
+  setInputMessage,
+  sendMessage,
+  dataExchangeTypes,
+}) => {
   return (
     <>
       {dataExchangeTypes.text && (
@@ -11,7 +16,7 @@ const InputBar = ({ inputMessage, setInputMessage, sendMessage, dataExchangeType
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+            if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               sendMessage();
             }
