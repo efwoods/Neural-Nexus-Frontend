@@ -1,4 +1,6 @@
-import React, { useRef } from 'react';
+// components/ChatArea.jsx
+
+import React, { useRef, useEffect } from 'react';
 import { User } from 'lucide-react';
 import LiveTranscriptionTicker from './LiveTranscriptionTicker';
 import AudioStreamer from './AudioStreamer';
@@ -25,6 +27,8 @@ const ChatArea = ({
 
   const {
     messages,
+    setMessages,
+    fetchMessages,
     messagesEndRef,
     inputMessage,
     setInputMessage,
@@ -36,6 +40,14 @@ const ChatArea = ({
     fileInputRef,
     handleFileUpload,
   } = useMedia();
+
+  useEffect(() => {
+    // Now, anytime a user selects an avatar in Sidebar.jsx, the activeAvatar changes, and the ChatArea will auto-fetch messages from:
+    //   Redis if cached
+    //   MongoDB if not cached
+
+    fetchMessages();
+  }, [activeAvatar, accessToken]);
 
   return (
     <div className="flex flex-col flex-grow bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-4 overflow-hidden">

@@ -1,4 +1,4 @@
-// components/AuthContext.jsx
+// components/MediaContext.jsx
 // This handles sending messages, thought-to-text, thought-to-image, and conversation suggestions.
 // provides interfaces to the services that handle the actual fetch requests.
 
@@ -112,28 +112,64 @@ export const MediaProvider = ({ children }) => {
     }
   };
 
+  // Updated
   async function sendMessage() {
-    if (!inputMessage.trim() || !activeAvatar || !dataExchangeTypes.text)
-      return;
+    if (!activeAvatar || !dataExchangeTypes.text) return;
+
     try {
       const result = await MessageService.saveMessage(
         activeAvatar.avatar_id,
         inputMessage.trim(),
+        fileInputRef.current?.files
+          ? Array.from(fileInputRef.current.files)
+          : [],
         accessToken
       );
-      console.log('Message saved', result);
+
+      const newMessage = {
+        id: result.message_id,
+        content: inputMessage,
+        sender: 'user',
+        timestamp: new Date().toISOString(),
+      };
+
       setMessages((prev) => ({
         ...prev,
         [activeAvatar.avatar_id]: [
           ...(prev[activeAvatar.avatar_id] || []),
-          inputMessage.trim(),
+          newMessage,
         ],
       }));
+
       setInputMessage('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
-      console.error(err.message);
+      console.error('sendMessage failed:', err.message);
     }
   }
+
+  // On Avatar Selection or app load call fetch Messages
+  const fetchMessages = async () => {
+    if (!activeAvatar || !accessToken) return;
+    try {
+      const fetched = await MessageService.getAvatarMessages(
+        activeAvatar.avatar_id,
+        accessToken
+      );
+      setMessages((prev) => ({
+        ...prev,
+        [activeAvatar.avatar_id]: fetched.map((msg) => ({
+          id: msg._id,
+          content: msg.message,
+          media: msg.media || [],
+          sender: msg.sender || 'user', // fallback if backend lacks sender
+          timestamp: msg.timestamp,
+        })),
+      }));
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
+    }
+  };
 
   const handleFileUpload = (event) => {
     if (!activeAvatar || !dataExchangeTypes.fileUpload) return;
@@ -340,14 +376,20 @@ export const MediaProvider = ({ children }) => {
     }
   };
 
+  const getMediaUrl = (mediaId, accessToken) => {
+    return `${getNgrokHttpsUrl()}/avatars/media/${mediaId}?token=${accessToken}`;
+  };
+
   return (
     <MediaContext.Provider
       value={{
         messages,
+        setMessages,
         messagesEndRef,
         inputMessage,
         setInputMessage,
         sendMessage,
+        fetchMessages,
         isThoughtToImageEnabled,
         startThoughtToImage,
         stopThoughtToImage,
@@ -358,6 +400,7 @@ export const MediaProvider = ({ children }) => {
         toggleDataExchangeType,
         fileInputRef,
         handleFileUpload,
+        getMediaUrl,
       }}
     >
       {children}

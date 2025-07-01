@@ -1,55 +1,23 @@
-// services/MessageService.jsx
+// Updated MessageService.jsx
 
 import { getNgrokHttpsUrl } from '../context/NgrokAPIStore';
-// services/MessageService.js
 
-import { MongoClient } from 'mongodb';
-import Redis from 'ioredis';
+export async function saveMessage(avatar_id, message, mediaFiles, accessToken) {
+  const formData = new FormData();
+  formData.append('avatar_id', avatar_id);
+  if (message) formData.append('message', message);
+  if (mediaFiles && mediaFiles.length > 0) {
+    mediaFiles.forEach((file) => {
+      formData.append('media', file);
+    });
+  }
 
-// ———————————————
-// 1) Configuration
-// ———————————————
-const MONGO_URI = import.meta.env.VITE_MONGO_URI || 'mongodb://localhost:27017';
-const MONGO_DB = import.meta.env.VITE_MONGO_DB || 'chat_app';
-const REDIS_URI = import.meta.env.VITE_REDIS_URI || 'redis://127.0.0.1:6379';
-const REDIS_LIST_PREFIX = 'chat_history:';
-const CACHE_LIMIT = 50; // Keep last 50 messages per avatar
-
-// ———————————————
-// 2) Clients
-// ———————————————
-let mongoClient;
-let messagesCollection;
-const redis = new Redis(REDIS_URI);
-
-// ———————————————
-// 3) Initialize MongoDB
-// ———————————————
-async function initDatabase() {
-  mongoClient = new MongoClient(MONGO_URI, { useUnifiedTopology: true });
-  await mongoClient.connect();
-  const db = mongoClient.db(MONGO_DB);
-  messagesCollection = db.collection('messages');
-  await messagesCollection.createIndex({ avatarId: 1, date: -1 });
-  console.log('✅ MongoDB & Redis connected');
-}
-
-// ———————————————
-// 4) Save Message
-// ———————————————
-// services/MessageService.jsx
-
-export async function saveMessage(msg, accessToken) {
-  const response = await fetch('http://localhost:8000/avatars/message', {
+  const response = await fetch(`${getNgrokHttpsUrl()}/avatars/post_message`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${accessToken}`, // if your backend requires auth
-      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Bearer ${accessToken}`,
     },
-    body: new URLSearchParams({
-      avatar_id: msg.avatarId,
-      message: msg.content,
-    }),
+    body: formData,
   });
 
   if (!response.ok) {
@@ -60,19 +28,14 @@ export async function saveMessage(msg, accessToken) {
   return await response.json();
 }
 
-// ———————————————
-// 5) Get Recent Messages
-// ———————————————
-export async function getRecentMessages(avatarId, accessToken) {
+export async function getAvatarMessages(avatar_id, accessToken) {
   const response = await fetch(
-    'http://localhost:8000/avatars/select_all_messages',
+    `${getNgrokHttpsUrl()}/avatars/get_avatar_messages?avatar_id=${avatar_id}`,
     {
-      method: 'POST',
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams({ avatar_id: avatarId }),
     }
   );
 
@@ -85,11 +48,30 @@ export async function getRecentMessages(avatarId, accessToken) {
   return data.messages;
 }
 
-// ———————————————
-// 6) Export Cleanly
-// ———————————————
+const fetchMessages = async () => {
+  if (!activeAvatar || !accessToken) return;
+  try {
+    const fetched = await MessageService.getAvatarMessages(
+      activeAvatar.avatar_id,
+      accessToken
+    );
+    setMessages((prev) => ({
+      ...prev,
+      [activeAvatar.avatar_id]: fetched.map((msg) => ({
+        id: msg._id,
+        content: msg.message,
+        media: msg.media || [],
+        sender: msg.sender || 'user',
+        timestamp: msg.timestamp,
+      })),
+    }));
+  } catch (error) {
+    console.error('Failed to fetch messages:', error);
+  }
+};
+
 export const MessageService = {
-  initDatabase,
   saveMessage,
-  getRecentMessages,
+  getAvatarMessages,
+  fetchMessages,
 };
