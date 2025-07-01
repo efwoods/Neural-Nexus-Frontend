@@ -59,8 +59,8 @@ export const AvatarService = {
     }
   },
 
-  async deleteAvatar(accessToken, avatarId) {
-    console.log('Avatar_id: ' + avatarId);
+  async deleteAvatar(accessToken, avatar_id) {
+    console.log('Avatar_id: ' + avatar_id);
     try {
       const ngrokHttpsUrl = getNgrokHttpsUrl();
       console.log(
@@ -76,7 +76,7 @@ export const AvatarService = {
             Accept: 'application/json',
             'ngrok-skip-browser-warning': '69420',
           },
-          body: new URLSearchParams({ avatar_id: avatarId }),
+          body: new URLSearchParams({ avatar_id: avatar_id }),
         }
       );
       let res = await response.json();

@@ -40,7 +40,7 @@ const Sidebar = ({ setShowCreateModal }) => {
               key={avatar.avatar_id}
               onClick={() => setActiveAvatar(avatar)}
               className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors duration-300 ${
-                activeAvatar?.id === avatar.id
+                activeAvatar?.avatar_id === avatar.avatar_id
                   ? 'bg-white-600 text-white'
                   : 'hover:bg-cyan-700 text-gray-300'
               } focus:outline focus:outline-2 focus:outline-cyan-400`}

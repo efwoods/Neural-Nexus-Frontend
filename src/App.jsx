@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -16,7 +16,7 @@ const AvatarChatApp = () => {
   const [showDataExchangeDropdown, setShowDataExchangeDropdown] =
     useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(true);
-
+  const dropdownRef = useRef(null);
   // Auto scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -73,7 +73,7 @@ const AvatarChatApp = () => {
           <ChatArea
             showDataExchangeDropdown={showDataExchangeDropdown}
             setShowDataExchangeDropdown={setShowDataExchangeDropdown}
-            handleFileUpload={handleFileUpload}
+            dropdownRef={dropdownRef}
           />
         </div>
         {showCreateModal && (

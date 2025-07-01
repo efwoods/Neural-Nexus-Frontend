@@ -7,14 +7,19 @@ export const ThoughtToImageService = {
    * Enable thought-to-image simulation by calling the pipeline endpoint.
    *
    * @param {string} accessToken - The JWT token for authorization.
-   * @param {string} userId - The user ID (part of session_id).
-   * @param {string} avatarId - The avatar ID (part of session_id).
+   * @param {string} user_id - The user ID (part of session_id).
+   * @param {string} avatar_id - The avatar ID (part of session_id).
    * @returns {Promise<object>} - The response from the simulation API.
    */
-  async enableThoughtToImage(accessToken, userId, avatarId) {
+  async enableThoughtToImage(
+    accessToken,
+    user_id,
+    avatar_id,
+    isThoughtToImageEnabled
+  ) {
     try {
-      if (!userId || !avatarId) {
-        throw new Error('userId and avatarId are required');
+      if (!user_id || !avatar_id) {
+        throw new Error('user_id and avatar_id are required');
       }
 
       const ngrokHttpsUrl = getNgrokHttpsUrl();
@@ -23,11 +28,15 @@ export const ThoughtToImageService = {
       }
 
       const simulationPayload = {
-        session_id: `${userId}.${avatarId}`,
-        enable_thought_to_image: true,
+        user_id: `${user_id}`,
+        avatar_id: `${avatar_id}`,
+        enable_thought_to_image: isThoughtToImageEnabled,
       };
 
-      console.log('EnableThoughtToImage payload:', simulationPayload);
+      console.log(
+        'EnableThoughtToImage payload:',
+        JSON.stringify(simulationPayload)
+      );
 
       const simulationResponse = await fetch(
         `${ngrokHttpsUrl}/webcam-to-websocket-simulation-api/test/full-pipeline`,

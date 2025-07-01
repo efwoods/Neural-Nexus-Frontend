@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { User } from 'lucide-react';
 import LiveTranscriptionTicker from './LiveTranscriptionTicker';
 import AudioStreamer from './AudioStreamer';
@@ -11,6 +11,7 @@ import { useMedia } from '../context/MediaContext';
 const ChatArea = ({
   showDataExchangeDropdown,
   setShowDataExchangeDropdown,
+  dropdownRef,
 }) => {
   const {
     isLoggedIn,
@@ -29,18 +30,12 @@ const ChatArea = ({
     setInputMessage,
     sendMessage,
     isTranscribing,
-    startTranscription,
-    stopTranscription,
     isThoughtToImageEnabled,
-    startThoughtToImage,
-    stopThoughtToImage,
     dataExchangeTypes,
     toggleDataExchangeType,
     fileInputRef,
     handleFileUpload,
   } = useMedia();
-
-  const dropdownRef = useRef(null);
 
   return (
     <div className="flex flex-col flex-grow bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-4 overflow-hidden">
@@ -76,6 +71,7 @@ const ChatArea = ({
             <DataExchangeDropdown
               showDataExchangeDropdown={showDataExchangeDropdown}
               setShowDataExchangeDropdown={setShowDataExchangeDropdown}
+              dropdownRef={dropdownRef}
             />
             <InputBar
               inputMessage={inputMessage}

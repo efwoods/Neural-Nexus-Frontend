@@ -20,6 +20,7 @@ import { useMedia } from '../context/MediaContext';
 const DataExchangeDropdown = ({
   showDataExchangeDropdown,
   setShowDataExchangeDropdown,
+  dropdownRef,
 }) => {
   const {
     isLoggedIn,
