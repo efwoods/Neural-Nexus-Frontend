@@ -68,7 +68,7 @@ const ChatArea = ({
       {activeAvatar && (
         <>
           <MessageList
-            messages={messages[activeAvatar.id] || []}
+            messages={messages[activeAvatar.avatar_id] || []}
             messagesEndRef={messagesEndRef}
           />
           <div className="flex gap-2 items-center relative">

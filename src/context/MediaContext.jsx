@@ -162,7 +162,9 @@ export const MediaProvider = ({ children }) => {
           id: msg._id,
           content: msg.message,
           media: msg.media || [],
-          sender: msg.sender || 'user', // fallback if backend lacks sender
+          sender:
+            msg.sender ||
+            (msg.type === 'text' && msg.from_avatar ? 'avatar' : 'user'), // fallback if backend lacks sender
           timestamp: msg.timestamp,
         })),
       }));
@@ -385,11 +387,11 @@ export const MediaProvider = ({ children }) => {
       value={{
         messages,
         setMessages,
+        fetchMessages,
         messagesEndRef,
         inputMessage,
         setInputMessage,
         sendMessage,
-        fetchMessages,
         isThoughtToImageEnabled,
         startThoughtToImage,
         stopThoughtToImage,

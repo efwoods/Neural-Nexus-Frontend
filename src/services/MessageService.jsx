@@ -12,13 +12,18 @@ export async function saveMessage(avatar_id, message, mediaFiles, accessToken) {
     });
   }
 
-  const response = await fetch(`${getNgrokHttpsUrl()}/avatars/post_message`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: formData,
-  });
+  const response = await fetch(
+    `${getNgrokHttpsUrl()}/neural-nexus-db/avatars/post_message`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
+        'ngrok-skip-browser-warning': '69420',
+      },
+      body: formData,
+    }
+  );
 
   if (!response.ok) {
     const error = await response.json();
@@ -30,11 +35,13 @@ export async function saveMessage(avatar_id, message, mediaFiles, accessToken) {
 
 export async function getAvatarMessages(avatar_id, accessToken) {
   const response = await fetch(
-    `${getNgrokHttpsUrl()}/avatars/get_avatar_messages?avatar_id=${avatar_id}`,
+    `${getNgrokHttpsUrl()}/neural-nexus-db/avatars/get_avatar_messages?avatar_id=${avatar_id}`,
     {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
+        'ngrok-skip-browser-warning': '69420',
       },
     }
   );
@@ -48,30 +55,7 @@ export async function getAvatarMessages(avatar_id, accessToken) {
   return data.messages;
 }
 
-const fetchMessages = async () => {
-  if (!activeAvatar || !accessToken) return;
-  try {
-    const fetched = await MessageService.getAvatarMessages(
-      activeAvatar.avatar_id,
-      accessToken
-    );
-    setMessages((prev) => ({
-      ...prev,
-      [activeAvatar.avatar_id]: fetched.map((msg) => ({
-        id: msg._id,
-        content: msg.message,
-        media: msg.media || [],
-        sender: msg.sender || 'user',
-        timestamp: msg.timestamp,
-      })),
-    }));
-  } catch (error) {
-    console.error('Failed to fetch messages:', error);
-  }
-};
-
 export const MessageService = {
   saveMessage,
   getAvatarMessages,
-  fetchMessages,
 };

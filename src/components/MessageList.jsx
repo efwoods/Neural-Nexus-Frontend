@@ -1,3 +1,5 @@
+// components/MessageList.jsx
+
 import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getNgrokHttpsUrl } from '../context/NgrokAPIStore';
@@ -27,8 +29,8 @@ const MessageList = ({ messages, messagesEndRef }) => {
           }`}
         >
           {/* TEXT CONTENT */}
-          {msg.message && (
-            <div className="whitespace-pre-wrap">{msg.message}</div>
+          {msg.content && (
+            <div className="whitespace-pre-wrap">{msg.content}</div>
           )}
 
           {/* MEDIA CONTENT */}
