@@ -27,7 +27,6 @@ export const MediaProvider = ({ children }) => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [messages, setMessages] = useState({});
   const [inputMessage, setInputMessage] = useState('');
-
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -142,6 +141,7 @@ export const MediaProvider = ({ children }) => {
       }));
 
       setInputMessage('');
+      fetchMessages();
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       console.error('sendMessage failed:', err.message);

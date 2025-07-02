@@ -9,8 +9,13 @@ import { useMedia } from './context/MediaContext';
 
 const AvatarChatApp = () => {
   const { activeAvatar } = useAuth();
-  const { messages, messagesEndRef, inputMessage, dataExchangeTypes } =
-    useMedia();
+  const {
+    messages,
+    sendMessage,
+    messagesEndRef,
+    inputMessage,
+    dataExchangeTypes,
+  } = useMedia();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDataExchangeDropdown, setShowDataExchangeDropdown] =
@@ -31,15 +36,15 @@ const AvatarChatApp = () => {
         e.preventDefault();
         setSidebarVisible((v) => !v);
       }
-      if (
-        e.key === 'Enter' &&
-        !e.shiftKey &&
-        activeAvatar &&
-        dataExchangeTypes.text
-      ) {
-        e.preventDefault();
-        sendMessage();
-      }
+      // if (
+      //   e.key === 'Enter' &&
+      //   !e.shiftKey &&
+      //   activeAvatar &&
+      //   dataExchangeTypes.text
+      // ) {
+      //   e.preventDefault();
+      //   sendMessage();
+      // }
       if (e.key === 'Escape') {
         setShowDataExchangeDropdown(false);
       }
