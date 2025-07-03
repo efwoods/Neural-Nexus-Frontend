@@ -27,6 +27,8 @@ export const MediaProvider = ({ children }) => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [messages, setMessages] = useState({});
   const [inputMessage, setInputMessage] = useState('');
+  const [sender, setSender] = useState('');
+  const [mediaFiles, setMediaFiles] = useState([]);
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -112,22 +114,38 @@ export const MediaProvider = ({ children }) => {
     }
   };
 
-  // Updated
   async function sendMessage() {
-    if (!activeAvatar || !dataExchangeTypes.text) return;
+    if (!activeAvatar || (!inputMessage.trim() && mediaFiles.length === 0))
+      return;
 
     try {
-      const result = await MessageService.saveMessage(
-        activeAvatar.avatar_id,
-        inputMessage.trim(),
-        fileInputRef.current?.files
-          ? Array.from(fileInputRef.current.files)
-          : [],
-        accessToken
-      );
+      const formData = new FormData();
+      formData.append('avatar_id', activeAvatar.avatar_id);
+      if (inputMessage.trim()) formData.append('message', inputMessage.trim());
+
+      formData.append('sender', sender);
+
+      mediaFiles.forEach((file) => {
+        formData.append('media', file); // backend expects media as list
+      });
+
+      const response = await fetch('/avatars/post_message', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'ngrok-skip-browser-warning': '69420',
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Message post failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
 
       const newMessage = {
-        id: result.message_id,
+        id: result.message_id || Date.now().toString(),
         content: inputMessage,
         sender: 'user',
         timestamp: new Date().toISOString(),
@@ -140,9 +158,11 @@ export const MediaProvider = ({ children }) => {
           newMessage,
         ],
       }));
-
+      setSender('');
       setInputMessage('');
+      setMediaFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
+      fetchMessages();
     } catch (err) {
       console.error('sendMessage failed:', err.message);
     }
@@ -206,15 +226,19 @@ export const MediaProvider = ({ children }) => {
       content: `Uploaded ${files.length} file(s): ${files
         .map((f) => f.name)
         .join(', ')}`,
-      sender: 'system',
+      sender: sender,
       timestamp: new Date().toISOString(),
     };
 
     setMessages((prev) => ({
       ...prev,
-      [activeAvatar.id]: [...(prev[activeAvatar.id] || []), uploadMessage],
+      [activeAvatar.avatar_id]: [
+        ...(prev[activeAvatar.avatar_id] || []),
+        uploadMessage,
+      ],
     }));
     event.target.value = '';
+    setSender('');
   };
 
   const startRecording = async () => {
@@ -267,8 +291,8 @@ export const MediaProvider = ({ children }) => {
     };
     setMessages((prev) => ({
       ...prev,
-      [activeAvatar.id]: [
-        ...(prev[activeAvatar.id] || []),
+      [activeAvatar.avatar_id]: [
+        ...(prev[activeAvatar.avatar_id] || []),
         voiceMessage,
         avatarResponse,
       ],
@@ -378,8 +402,18 @@ export const MediaProvider = ({ children }) => {
     }
   };
 
-  const getMediaUrl = (mediaId, accessToken) => {
-    return `${getNgrokHttpsUrl()}/avatars/media/${mediaId}?token=${accessToken}`;
+  const getMediaUrl = (media_id, accessToken) => {
+    const base = getNgrokHttpsUrl(); // ex: https://<ngrok-id>.ngrok.io
+    return `${base}/media/${media_id}?token=${accessToken}`;
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setMediaFiles((prev) => [...prev, ...files]);
+  };
+
+  const removeFile = (index) => {
+    setMediaFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -403,6 +437,12 @@ export const MediaProvider = ({ children }) => {
         fileInputRef,
         handleFileUpload,
         getMediaUrl,
+        mediaFiles,
+        setMediaFiles,
+        handleFileChange,
+        removeFile,
+        sender,
+        setSender,
       }}
     >
       {children}

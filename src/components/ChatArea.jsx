@@ -86,10 +86,8 @@ const ChatArea = ({
               dropdownRef={dropdownRef}
             />
             <InputBar
-              inputMessage={inputMessage}
-              setInputMessage={setInputMessage}
-              sendMessage={sendMessage}
-              dataExchangeTypes={dataExchangeTypes}
+              avatarId={activeAvatar.avatar_id}
+              accessToken={accessToken}
             />
           </div>
         </>
