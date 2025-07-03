@@ -129,14 +129,17 @@ export const MediaProvider = ({ children }) => {
         formData.append('media', file); // backend expects media as list
       });
 
-      const response = await fetch('/avatars/post_message', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'ngrok-skip-browser-warning': '69420',
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        `${getNgrokHttpsUrl()}/neural-nexus-db/avatars/post_message`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'ngrok-skip-browser-warning': '69420',
+          },
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Message post failed: ${response.statusText}`);
