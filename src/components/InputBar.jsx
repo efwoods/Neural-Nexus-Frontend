@@ -4,6 +4,7 @@ import { Upload } from 'lucide-react';
 import { useMedia } from '../context/MediaContext';
 
 const InputBar = ({ avatar_id, accessToken }) => {
+<<<<<<< HEAD
   const fileInputRef = useRef(null);
   const {
     sendMessage,
@@ -17,6 +18,20 @@ const InputBar = ({ avatar_id, accessToken }) => {
     sender,
     setSender,
   } = useMedia();
+=======
+  const [mediaFiles, setMediaFiles] = useState([]);
+  const fileInputRef = useRef(null);
+  const { sendMessage, inputMessage, setInputMessage, fetchMessages } =
+    useMedia();
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setMediaFiles((prev) => [...prev, ...files]);
+  };
+
+  const removeFile = (index) => {
+    setMediaFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+>>>>>>> 86da0704e505886050c482cbe60efa917b040b9e
 
   return (
     <div className="w-full px-4 py-3 bg-black/40 rounded-xl flex flex-col gap-2">
@@ -65,7 +80,10 @@ const InputBar = ({ avatar_id, accessToken }) => {
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
+<<<<<<< HEAD
               setSender('user');
+=======
+>>>>>>> 86da0704e505886050c482cbe60efa917b040b9e
               sendMessage(mediaFiles, () => {
                 setMediaFiles([]);
                 if (fileInputRef.current) fileInputRef.current.value = '';
@@ -75,7 +93,10 @@ const InputBar = ({ avatar_id, accessToken }) => {
         />
         <button
           onClick={() => {
+<<<<<<< HEAD
             setSender('user');
+=======
+>>>>>>> 86da0704e505886050c482cbe60efa917b040b9e
             sendMessage(mediaFiles, () => {
               setMediaFiles([]);
               if (fileInputRef.current) fileInputRef.current.value = '';
