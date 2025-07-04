@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNgrokApiUrl } from './NgrokAPIContext';
 import { AvatarService } from '../services/AvatarService';
-
+import { useMedia } from './MediaContext';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {

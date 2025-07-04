@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { LogIn, LogOut, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useMedia } from '../context/MediaContext';
 
 const AuthComponent = () => {
   const [showModal, setShowModal] = useState(false);
@@ -9,7 +10,16 @@ const AuthComponent = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const { user, isLoggedIn, accessToken, login, signup, logout } = useAuth();
+  const {
+    user,
+    isLoggedIn,
+    accessToken,
+    login,
+    signup,
+    logout,
+    setActiveAvatar,
+  } = useAuth();
+  const { messages, setMessages } = useMedia();
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -29,13 +39,19 @@ const AuthComponent = () => {
     }
   };
 
+  const handleLogout = async (e) => {
+    setMessages('');
+    setActiveAvatar('');
+    logout();
+  };
+
   return (
     <div className="flex items-center space-x-4">
       {isLoggedIn ? (
         <>
           <span className="text-white font-medium">{user?.username}</span>
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-full text-white transition"
           >
             <LogOut size={16} />
