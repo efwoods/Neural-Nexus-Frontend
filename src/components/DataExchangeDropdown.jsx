@@ -49,7 +49,7 @@ const DataExchangeDropdown = ({
 
   return (
     <div ref={dropdownRef}>
-      <div className="relative group">
+      <div className="relative inline-block text-left">
         <button
           onClick={() => setShowDataExchangeDropdown((v) => !v)}
           className="transition-transform duration-300 hover:scale-105 px-4 py-2 rounded hover:bg-cyan-600 transition-colors focus:outline focus:outline-2 focus:outline-cyan-400 min-w-0 rounded px-3 py-2 border border-gray-700 text-white bg-black/35 from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-6 py-3 rounded-xl flex font-semibold gap-2 transition-all duration-300 transform shadow-lg items-center justify-center max-h-64 overflow-y-auto"
@@ -66,7 +66,7 @@ const DataExchangeDropdown = ({
         </span>
       </div>
       {showDataExchangeDropdown && (
-        <div className="absolute bottom-12 left-0 bg-black/50 backdrop-blur-lg rounded-lg border border-white/20 p-2 flex flex-row gap-2 z-10">
+        <div className="absolute bottom-20 left-0 bg-black/50 backdrop-blur-lg rounded-lg border border-white/20 p-2 flex flex-row gap-2 z-10">
           <div className="relative group">
             <button
               onClick={isTranscribing ? stopTranscription : startTranscription}
@@ -156,7 +156,7 @@ const DataExchangeDropdown = ({
               <Eye className="w-6 h-6 inline-block mr-2" />
               {/* {dataExchangeTypes.custom ? 'Custom On' : 'Custom Off'} */}
             </button>
-            <span className="absolute hidden group-hover:block -top-10 left-1/2 transform -translate-x-1/2 bg-black/75 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-20">
+            <span className="absolute hidden group-hover:block -top-10 left-1/2 transform -translate-x-1/2 bg-black/75 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-20`0">
               {isThoughtToImageEnabled
                 ? 'Disable Thought-To-Image Input'
                 : 'Enable Thought-To-Image Input'}
@@ -233,7 +233,7 @@ const DataExchangeDropdown = ({
             </span>
           </div>
  */}
-          <div className="relative group">
+          {/* <div className="relative group">
             <button
               onClick={() => {
                 toggleDataExchangeType('fileUpload');
@@ -249,12 +249,12 @@ const DataExchangeDropdown = ({
               }
             >
               <Upload className="w-6 h-6 inline-block mr-2" />
-              {/* {dataExchangeTypes.fileUpload ? "File Upload On" : "File Upload Off"} */}
+   
             </button>
             <span className="absolute hidden group-hover:block -top-10 left-1/2 transform -translate-x-1/2 bg-black/75 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-20">
               {dataExchangeTypes.fileUpload ? 'File Upload' : 'File Upload'}
             </span>
-          </div>
+          </div> */}
         </div>
       )}
     </div>
