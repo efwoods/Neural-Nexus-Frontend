@@ -3,7 +3,7 @@ import React from 'react';
 import NeuralNexusLogo from '../../assets/NeuralNexus.png';
 export default function Header() {
   return (
-    <header className="bg-gradient-to-r from-purple-600 to-teal-500 to-white text-white p-4">
+    <header className="bg-gradient-to-r from-teal-700 to-white text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-100">Neural Nexus</h1>
         <img
