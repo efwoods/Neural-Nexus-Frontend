@@ -35,7 +35,6 @@ const DataExchangeDropdown = ({
   const {
     messages,
     messagesEndRef,
-    sendMessage,
     isTranscribing,
     startTranscription,
     stopTranscription,

@@ -9,7 +9,6 @@ const InputBar = ({ avatar_id, accessToken }) => {
     sendMessage,
     inputMessage,
     setInputMessage,
-    fetchMessages,
     mediaFiles,
     setMediaFiles,
     handleFileChange,

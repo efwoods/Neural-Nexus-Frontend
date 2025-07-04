@@ -2,7 +2,13 @@
 
 import { getNgrokHttpsUrl } from '../context/NgrokAPIStore';
 
-export async function saveMessage(avatar_id, message, mediaFiles, accessToken) {
+export async function saveMessage(
+  avatar_id,
+  message,
+  mediaFiles,
+  accessToken,
+  sender
+) {
   const formData = new FormData();
   formData.append('avatar_id', avatar_id);
   if (message) formData.append('message', message);
@@ -11,6 +17,7 @@ export async function saveMessage(avatar_id, message, mediaFiles, accessToken) {
       formData.append('media', file);
     });
   }
+  formData.append('sender', sender);
 
   const response = await fetch(
     `${getNgrokHttpsUrl()}/neural-nexus-db/avatars/post_message`,
@@ -18,7 +25,7 @@ export async function saveMessage(avatar_id, message, mediaFiles, accessToken) {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        Accept: 'application/json',
+        // Accept: 'application/json',
         'ngrok-skip-browser-warning': '69420',
       },
       body: formData,

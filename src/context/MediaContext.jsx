@@ -16,12 +16,14 @@ import { FileUploadService } from '../services/FileUploadService';
 import { MessageService } from '../services/MessageService';
 import { TranscriptionService } from '../services/TranscriptionService';
 import { useAuth } from '../context/AuthContext';
+
 const MediaContext = createContext();
 
 export const MediaProvider = ({ children }) => {
   const { ngrokHttpsUrl, ngrokWsUrl } = useNgrokApiUrl();
   const { accessToken, activeAvatar, user } = useAuth();
   console.log('MediaProvider Service call of ngrokHttpsUrl:', ngrokHttpsUrl);
+
   // variables
   const [isThoughtToImageEnabled, setIsThoughtToImageEnabled] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -119,38 +121,26 @@ export const MediaProvider = ({ children }) => {
       return;
 
     try {
-      const formData = new FormData();
-      formData.append('avatar_id', activeAvatar.avatar_id);
-      if (inputMessage.trim()) formData.append('message', inputMessage.trim());
-
-      formData.append('sender', sender);
-
-      mediaFiles.forEach((file) => {
-        formData.append('media', file); // backend expects media as list
-      });
-
-      const response = await fetch(
-        `${getNgrokHttpsUrl()}/neural-nexus-db/avatars/post_message`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'ngrok-skip-browser-warning': '69420',
-          },
-          body: formData,
-        }
+      const response = await MessageService.saveMessage(
+        activeAvatar.avatar_id,
+        inputMessage,
+        mediaFiles,
+        accessToken,
+        sender
       );
 
-      if (!response.ok) {
+      if (!response.status === 'success') {
         throw new Error(`Message post failed: ${response.statusText}`);
       }
 
-      const result = await response.json();
+      const result = await JSON.stringify(response);
+      console.log(response);
+      console.log('result:' + result);
 
       const newMessage = {
         id: result.message_id || Date.now().toString(),
         content: inputMessage,
-        sender: 'user',
+        sender: sender,
         timestamp: new Date().toISOString(),
       };
 
@@ -406,8 +396,7 @@ export const MediaProvider = ({ children }) => {
   };
 
   const getMediaUrl = (media_id, accessToken) => {
-    const base = getNgrokHttpsUrl(); // ex: https://<ngrok-id>.ngrok.io
-    return `${base}/media/${media_id}?token=${accessToken}`;
+    return `${ngrokHttpsUrl}/media/${media_id}?token=${accessToken}`;
   };
 
   const handleFileChange = (e) => {
