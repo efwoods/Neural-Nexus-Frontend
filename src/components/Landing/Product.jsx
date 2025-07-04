@@ -19,7 +19,7 @@ export default function Product() {
           </div>
           <div className="bg-gradient-to-b bg-purple-700 to-purple-400 bg-opacity-20 p-6 rounded-lg shadow-lg text-white">
             <h3 className="text-xl font-semibold mb-4 ">
-              🗨️ Conversation Suggestions
+              💬 Conversation Suggestions
             </h3>
             <p>Get real-time suggestions to enhance your interactions.</p>
           </div>
