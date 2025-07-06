@@ -25,13 +25,13 @@ const Sidebar = ({ setShowCreateModal }) => {
     <div
       className={`transition-all duration-300 ease-in-out transform ${
         isLoggedIn ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0 fixed lg:relative z-40 w-full lg:w-64 `}
+      } lg:translate-x-0 fixed lg:relative z-40 `}
     >
-      <div className="w-full lg:w-64 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-4 overflow-y-auto flex flex-col gap-4 max-h-[50vh] lg:max-h-full">
+      <div className="w-full lg:w-full bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-4 overflow-y-auto flex flex-col gap-4 max-h-[50vh] lg:max-h-full">
         {isLoggedIn && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="transition-transform duration-300 hover:scale-105 px-4 py-2 rounded hover:bg-cyan-600 transition-colors focus:outline focus:outline-2 focus:outline-cyan-400 min-w-0 rounded px-3 py-2 border border-gray-700 text-white bg-black/35 from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-6 py-3 rounded-xl flex font-semibold gap-2 transition-all duration-300 transform shadow-lg items-center justify-center"
+            className="transition-transform  lg:w-full duration-300 hover:scale-105 px-4 py-2 rounded hover:bg-cyan-600 transition-colors focus:outline focus:outline-2 focus:outline-cyan-400 min-w-0 rounded px-3 py-2 border border-gray-700 text-white bg-black/35 from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-6 py-3 rounded-xl flex font-semibold gap-2 transition-all duration-300 transform shadow-lg items-center justify-center"
           >
             <UserPenIcon className="w-6 h-6" />
           </button>
@@ -58,7 +58,7 @@ const Sidebar = ({ setShowCreateModal }) => {
                   <span className="font-semibold break-words">
                     {avatar.name}
                   </span>
-                  <span className="text-xs text-gray-400 break-words">
+                  <span className="text-xs text-gray-400 break-words lg:w-64">
                     {avatar.description}
                     {/* {avatar.avatar_id} */}
                   </span>
