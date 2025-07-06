@@ -8,8 +8,9 @@ import { useMedia } from '../context/MediaContext';
 const MessageList = ({ messages, messagesEndRef }) => {
   const { accessToken } = useAuth();
   const { getMediaUrl } = useMedia();
-
+  const ngrokHttpsUrl = getNgrokHttpsUrl();
   useEffect(() => {
+    console.log(ngrokHttpsUrl);
     if (messagesEndRef?.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
@@ -40,24 +41,31 @@ const MessageList = ({ messages, messagesEndRef }) => {
               <div key={media.media_id} className="mt-2">
                 {media.content_type.startsWith('image/') ? (
                   <img
-                    src={getMediaUrl(media.media_id, accessToken)}
+                    src={`${getNgrokHttpsUrl()}/neural-nexus-db/media/${
+                      media.media_id
+                    }?token=${accessToken}`}
                     alt={media.filename}
-                    className="rounded max-h-48"
                   />
                 ) : media.content_type.startsWith('audio/') ? (
                   <audio
                     controls
-                    src={getMediaUrl(media.media_id, accessToken)}
+                    src={`${getNgrokHttpsUrl()}/neural-nexus-db/media/${
+                      media.media_id
+                    }?token=${accessToken}`}
                   />
                 ) : media.content_type.startsWith('video/') ? (
                   <video
                     controls
                     className="max-w-full max-h-64"
-                    src={getMediaUrl(media.media_id, accessToken)}
+                    src={`${getNgrokHttpsUrl()}/neural-nexus-db/media/${
+                      media.media_id
+                    }?token=${accessToken}`}
                   />
                 ) : (
                   <a
-                    href={getMediaUrl(media.media_id, accessToken)}
+                    href={`${getNgrokHttpsUrl()}/neural-nexus-db/media/${
+                      media.media_id
+                    }?token=${accessToken}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="underline text-blue-300"

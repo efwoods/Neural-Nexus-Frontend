@@ -396,7 +396,7 @@ export const MediaProvider = ({ children }) => {
   };
 
   const getMediaUrl = (media_id, accessToken) => {
-    return `${ngrokHttpsUrl}/media/${media_id}?token=${accessToken}`;
+    return `${ngrokHttpsUrl}/neural-nexus-db/media/${media_id}?token=${accessToken}`;
   };
 
   const handleFileChange = (e) => {
