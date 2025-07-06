@@ -38,7 +38,7 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
       aria-modal="true"
       aria-labelledby="create-avatar-title"
     >
-      <div className="bg-gray/20 p-6 rounded-lg w-96 max-w-full">
+      <div className="bg-gray/20 p-4 sm:p-6 rounded-lg w-[90vw] sm:w-96 max-w-full">
         <h2
           id="create-avatar-title"
           className="text-xl font-semibold mb-4 text-white"
@@ -48,7 +48,7 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
             <span>Create Avatar</span>
           </div>
         </h2>
-        <label className="block mb-2 text-sm text-gray-300">
+        <label className="block mb-2 text-xl sm:text-2xl text-gray-300">
           Name
           <input
             type="text"
@@ -59,7 +59,7 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
             aria-required="true"
           />
         </label>
-        <label className="block mb-4 text-sm text-gray-300">
+        <label className="block mb-4 text-xl sm:text-2xl text-gray-300 ">
           Description
           <textarea
             value={newAvatarDescription}

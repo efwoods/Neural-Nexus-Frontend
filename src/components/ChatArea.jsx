@@ -50,7 +50,7 @@ const ChatArea = ({
   }, [activeAvatar, accessToken]);
 
   return (
-    <div className="flex flex-col flex-grow bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-4 overflow-hidden">
+    <div className="flex flex-col flex-grow bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-2 sm:p-4 overflow-hidden">
       <LiveTranscriptionTicker isTranscribing={isTranscribing} />
       <AudioStreamer isTranscribing={isTranscribing} />
       {!activeAvatar && (

@@ -18,7 +18,7 @@ const InputBar = ({ avatar_id, accessToken }) => {
   } = useMedia();
 
   return (
-    <div className="w-full px-4 py-3 bg-black/40 rounded-xl flex flex-col gap-2">
+    <div className="w-full px-4 py-3 bg-black/40 rounded-xl flex flex-col gap-2 sm:flex-row sm:items-center items-stretch">
       {/* Image Preview */}
       {mediaFiles.length > 0 && (
         <div className="flex gap-2 flex-wrap">
@@ -41,7 +41,7 @@ const InputBar = ({ avatar_id, accessToken }) => {
       )}
 
       {/* Input + Controls */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center relative">
         <button
           onClick={() => fileInputRef.current?.click()}
           className="hover:scale-110 transition-transform"
