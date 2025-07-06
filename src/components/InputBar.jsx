@@ -1,9 +1,15 @@
-// components/InputBar.jsx
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Upload } from 'lucide-react';
 import { useMedia } from '../context/MediaContext';
+import DataExchangeDropdown from './DataExchangeDropdown';
 
-const InputBar = ({ avatar_id, accessToken }) => {
+const InputBar = ({
+  avatar_id,
+  accessToken,
+  showDataExchangeDropdown,
+  setShowDataExchangeDropdown,
+  dropdownRef,
+}) => {
   const fileInputRef = useRef(null);
   const {
     sendMessage,
@@ -18,8 +24,8 @@ const InputBar = ({ avatar_id, accessToken }) => {
   } = useMedia();
 
   return (
-    <div className="w-full px-4 py-3 bg-black/40 rounded-xl flex flex-col gap-2 sm:flex-row sm:items-center items-stretch">
-      {/* Image Preview */}
+    <div className="w-full px-4 py-3 bg-black/40 rounded-xl flex flex-col gap-3">
+      {/* Row 1: Image Previews */}
       {mediaFiles.length > 0 && (
         <div className="flex gap-2 flex-wrap">
           {mediaFiles.map((file, index) => (
@@ -40,8 +46,13 @@ const InputBar = ({ avatar_id, accessToken }) => {
         </div>
       )}
 
-      {/* Input + Controls */}
-      <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center relative">
+      {/* Row 2: Controls (Dropdown + Upload Button) */}
+      <div className="flex flex-row items-center gap-2 justify-end">
+        <DataExchangeDropdown
+          showDataExchangeDropdown={showDataExchangeDropdown}
+          setShowDataExchangeDropdown={setShowDataExchangeDropdown}
+          dropdownRef={dropdownRef}
+        />
         <button
           onClick={() => fileInputRef.current?.click()}
           className="hover:scale-110 transition-transform"
@@ -56,8 +67,12 @@ const InputBar = ({ avatar_id, accessToken }) => {
           hidden
           onChange={handleFileChange}
         />
+      </div>
+
+      {/* Row 3: Input and Send */}
+      <div className="flex flex-row items-center gap-2 w-full">
         <input
-          className="flex-grow min-w-0 rounded px-3 py-2 border border-gray-700 focus:outline focus:outline-2 focus:outline-cyan-400 text-white bg-black/35 from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform shadow-lg"
+          className="flex-grow min-w-0 rounded-xl px-6 py-3 border border-gray-700 focus:outline focus:outline-2 focus:outline-cyan-400 text-white bg-black/35 font-semibold transition-all duration-300 shadow-lg"
           placeholder="Type your message..."
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}

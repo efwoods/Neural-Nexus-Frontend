@@ -6,7 +6,6 @@ import LiveTranscriptionTicker from './LiveTranscriptionTicker';
 import AudioStreamer from './AudioStreamer';
 import MessageList from './MessageList';
 import InputBar from './InputBar';
-import DataExchangeDropdown from './DataExchangeDropdown';
 import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
 import NeuralNexusLogo from '../assets/NeuralNexus.png';
@@ -87,14 +86,17 @@ const ChatArea = ({
               className="hidden"
               aria-label="Upload files"
             />
-            <DataExchangeDropdown
+            {/* <DataExchangeDropdown
               showDataExchangeDropdown={showDataExchangeDropdown}
               setShowDataExchangeDropdown={setShowDataExchangeDropdown}
               dropdownRef={dropdownRef}
-            />
+            /> */}
             <InputBar
               avatarId={activeAvatar.avatar_id}
               accessToken={accessToken}
+              showDataExchangeDropdown={showDataExchangeDropdown}
+              setShowDataExchangeDropdown={setShowDataExchangeDropdown}
+              dropdownRef={dropdownRef}
             />
           </div>
         </>

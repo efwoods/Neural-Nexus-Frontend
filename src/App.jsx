@@ -73,7 +73,7 @@ const AvatarChatApp = () => {
         />
         <div className="flex flex-col lg:flex-row flex-grow overflow-hidden rounded-2xl shadow-lg gap-4">
           {sidebarVisible && (
-            <div className="lg:block w-full lg:w-128 max-h-[50vh] lg:max-h-full overflow-y-auto">
+            <div className="lg:block w-full lg:w-1/8 max-h-[50vh] lg:max-h-full overflow-y-auto">
               <Sidebar setShowCreateModal={setShowCreateModal} />
             </div>
           )}
