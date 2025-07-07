@@ -66,14 +66,14 @@ const AvatarChatApp = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-green-900 text-white">
-      <div className="w-screen h-screen flex flex-col p-4 sm:p-6 min-h-screen">
+      <div className="w-screen h-screen flex flex-col p-4 sm:p-6 min-h-screen gap-2">
         <Header
           sidebarVisible={sidebarVisible}
           setSidebarVisible={setSidebarVisible}
         />
         <div className="flex flex-col lg:flex-row flex-grow overflow-hidden rounded-2xl shadow-lg gap-4">
           {sidebarVisible && (
-            <div className="lg:block w-full lg:w-128 max-h-[50vh] lg:max-h-full overflow-y-auto">
+            <div className="lg:block w-full lg:w-1/4 max-h-[50vh] lg:max-h-full overflow-y-auto">
               <Sidebar setShowCreateModal={setShowCreateModal} />
             </div>
           )}

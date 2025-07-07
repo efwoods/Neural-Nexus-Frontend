@@ -55,7 +55,7 @@ const AuthComponent = () => {
             className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-full text-white transition"
           >
             <LogOut size={16} />
-            <span>Logout</span>
+            {/* <span>Logout</span> */}
           </button>
         </>
       ) : (

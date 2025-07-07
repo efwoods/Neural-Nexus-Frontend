@@ -60,12 +60,12 @@ const ChatArea = ({
             <img
               src={NeuralNexusLogo}
               alt="Logo"
-              className="w-64 h-64 bg-transparent mx-auto mb-4 text-gray-400"
+              className="w-64 h-64 bg-transparent mx-auto mb-4 text-gray-400 sm:w-32 sm:h-32"
               size={64}
             />
 
             <h2 className="text-2xl font-semibold mb-2">Select an Avatar</h2>
-            <p className="text-gray-400">
+            <p className="text-gray-400 break-words">
               Choose an avatar from the sidebar or create a new one to start
               chatting
             </p>
@@ -79,22 +79,12 @@ const ChatArea = ({
             messagesEndRef={messagesEndRef}
           />
           <div className="flex gap-2 items-center relative">
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={handleFileUpload}
-              className="hidden"
-              aria-label="Upload files"
-            />
-            <DataExchangeDropdown
-              showDataExchangeDropdown={showDataExchangeDropdown}
-              setShowDataExchangeDropdown={setShowDataExchangeDropdown}
-              dropdownRef={dropdownRef}
-            />
             <InputBar
               avatarId={activeAvatar.avatar_id}
               accessToken={accessToken}
+              setShowDataExchangeDropdown={setShowDataExchangeDropdown}
+              showDataExchangeDropdown={showDataExchangeDropdown}
+              dropdownRef={dropdownRef}
             />
           </div>
         </>
