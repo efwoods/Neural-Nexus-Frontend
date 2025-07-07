@@ -16,5 +16,10 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addVariant }) {
+      addVariant('portrait', '@media (orientation: portrait)');
+      addVariant('landscape', '@media (orientation: landscape)');
+    },
+  ], 
 };

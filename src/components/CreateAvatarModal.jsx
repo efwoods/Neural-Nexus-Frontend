@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserPenIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 const CreateAvatarModal = ({ setShowCreateModal }) => {
@@ -30,6 +30,17 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowCreateModal(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setShowCreateModal]);
 
   return (
     <div
