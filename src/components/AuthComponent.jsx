@@ -200,10 +200,10 @@ const AuthComponent = () => {
               setIsSignup(true);
               setShowModal(true);
             }}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-full text-white transition"
+            className="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
           >
             <UserPlus size={16} />
-            <span>Signup</span>
+            <span className="portrait:hidden landscape:ml-2">Signup</span>
           </button>
 
           <button
@@ -211,10 +211,10 @@ const AuthComponent = () => {
               setIsSignup(false);
               setShowModal(true);
             }}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-full text-white transition "
+            className="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
           >
             <LogIn size={16} />
-            <span>Login</span>
+            <span className="portrait:hidden landscape:ml-2">Login</span>
           </button>
         </>
       )}
