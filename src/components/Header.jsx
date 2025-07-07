@@ -11,13 +11,14 @@ const Header = ({ sidebarVisible, setSidebarVisible }) => {
         <div className="flex items-center">
           <button
             onClick={() => setSidebarVisible((v) => !v)}
-            className="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded hover:bg-cyan-600 transition-colors focus:outline focus:outline-2 focus:outline-cyan-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
+            className="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
             aria-label={sidebarVisible ? 'Close Sidebar' : 'Open Sidebar'}
           >
+            <span className="portrait:hidden">Avatars</span>
             {sidebarVisible ? (
-              <PanelTopCloseIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+              <PanelTopCloseIcon className="w-4 h-4 sm:w-4 sm:h-5 ml-2" />
             ) : (
-              <PanelTopOpenIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+              <PanelTopOpenIcon className="w-4 h-4 sm:w-4 sm:h-5 ml-2" />
             )}
           </button>
         </div>

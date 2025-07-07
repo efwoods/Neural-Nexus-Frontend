@@ -80,7 +80,7 @@ const AuthComponent = () => {
 
   // Modal JSX as a Portal child (unchanged)
   const modalContent = (
-    <div className="fixed inset-0 flex items-center justify-center z-[10000]">
+    <div className="fixed inset-0 flex items-center justify-center z-[999]">
       <VantaBackground />
       <div
         className="absolute inset-0"
@@ -185,7 +185,7 @@ const AuthComponent = () => {
             >
               <button
                 onClick={handleLogout}
-                className="block w-full text-left flex flex-row items-center px-4 py-2 text-sm text-red-500 hover:bg-red-600 hover:text-white transition"
+                className="block w-full text-left flex flex-row items-center px-4 py-2 text-sm text-red-500 hover:bg-red-900 hover:text-white transition"
                 role="menuitem"
               >
                 Logout <LogOutIcon className="ml-2" />

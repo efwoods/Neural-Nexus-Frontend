@@ -237,7 +237,7 @@ const MessageList = ({ messages, messagesEndRef }) => {
           key={msg._id || msg.id}
           className={`max-w-[70%] p-2 rounded-lg break-words ${
             msg.sender === 'user'
-              ? 'bg-cyan-600 self-end text-white'
+              ? 'bg-teal-600 self-end text-white'
               : msg.sender === 'avatar'
               ? 'bg-gray-700 self-start text-white'
               : 'bg-gray-600 self-center italic text-gray-300'
