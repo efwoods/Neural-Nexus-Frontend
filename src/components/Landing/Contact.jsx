@@ -26,7 +26,7 @@ export default function Contact() {
             ></textarea>
             <button
               type="button"
-              className="bg-purple-700 text-white px-6 py-2 rounded-full w-full"
+              className="bg-purple-900 text-white px-6 py-2 rounded-full w-full"
             >
               Send
             </button>
@@ -34,19 +34,19 @@ export default function Contact() {
           <div className="flex justify-center mt-4">
             {/* <a
               href="https://x.com/neuralnexus"
-              className="mx-2 text-purple-700 hover:text-purple-500 transition"
+              className="mx-2 text-purple-900 hover:text-purple-500 transition"
             >
               <FaXTwitter />
             </a> */}
             {/* <a
               href="https://linkedin.com/company/neuralnexus"
-              className="mx-2 text-purple-700 hover:text-purple-500 transition"
+              className="mx-2 text-purple-900 hover:text-purple-500 transition"
             >
               <FaLinkedin />
             </a> */}
             <a
               href="https://github.com/sponsors/efwoods"
-              className="mx-2 text-purple-700 hover:text-purple-500 transition"
+              className="mx-2 text-purple-900 hover:text-purple-500 transition"
             >
               <FaGithub />
             </a>

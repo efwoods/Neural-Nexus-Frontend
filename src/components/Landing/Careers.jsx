@@ -5,7 +5,7 @@ export default function Careers() {
   return (
     <section
       id="careers"
-      className="py-16 bg-gradient-to-b bg-purple-700 to-purple-400 text-white"
+      className="py-16 bg-gradient-to-b bg-purple-900 to-purple-400 text-white"
     >
       <div className="container mx-auto">
         <h2 className="text-3xl font-bold text-center mb-8">Join Our Team</h2>

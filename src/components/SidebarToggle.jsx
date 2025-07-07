@@ -19,7 +19,7 @@ export default function SidebarToggle({
             key={avatar.id}
             className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
               activeAvatar?.id === avatar.id
-                ? 'bg-gradient-to-r from-cyan-500/30 to-purple-600/30 border border-cyan-400/50'
+                ? 'bg-gradient-to-r from-teal-500/30 to-purple-600/30 border border-teal-400/50'
                 : 'bg-white/5 hover:bg-white/10 border border-transparent'
             }`}
             onClick={() => setActiveAvatar(avatar)}

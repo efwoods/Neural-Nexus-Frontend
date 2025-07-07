@@ -56,7 +56,7 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
         >
           <div className="flex items-center gap-2">
             <UserPenIcon className="w-6 h-6" />
-            <span>Create Avatar</span>
+            <span className="portrait:hidden">Create Avatar</span>
           </div>
         </h2>
         <label className="block mb-2 text-xl sm:text-2xl text-gray-300">
@@ -65,7 +65,7 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
             type="text"
             value={newAvatarName}
             onChange={(e) => setNewAvatarName(e.target.value)}
-            className="w-full p-2 mt-1 rounded bg-black/35 from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg"
+            className="w-full p-2 mt-1 rounded bg-black/35 from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-900 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg"
             autoFocus
             aria-required="true"
           />
@@ -75,7 +75,7 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
           <textarea
             value={newAvatarDescription}
             onChange={(e) => setNewAvatarDescription(e.target.value)}
-            className="w-full p-2 mt-1 rounded bg-black/35 from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg"
+            className="w-full p-2 mt-1 rounded bg-black/35 from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-900 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg"
             rows={3}
             aria-multiline="true"
           />
@@ -83,13 +83,13 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
         <div className="flex justify-end gap-2">
           <button
             onClick={() => setShowCreateModal(false)}
-            className="transition-transform duration-300 hover:scale-105 px-4 py-2 rounded hover:bg-cyan-600 transition-colors focus:outline focus:outline-2 focus:outline-cyan-400 min-w-0 rounded px-3 py-2 border border-gray-700 text-white bg-black/35 from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform shadow-lg"
+            className="transition-transform duration-300 hover:scale-105 px-4 py-2 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 min-w-0 rounded px-3 py-2 border border-gray-700 text-white bg-black/35 from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-900 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform shadow-lg"
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
-            className="transition-transform duration-300 hover:scale-105 px-4 py-2 rounded hover:bg-cyan-600 transition-colors focus:outline focus:outline-2 focus:outline-cyan-400 min-w-0 rounded px-3 py-2 border border-gray-700 text-white bg-black/35 from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform shadow-lg"
+            className="transition-transform duration-300 hover:scale-105 px-4 py-2 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 min-w-0 rounded px-3 py-2 border border-gray-700 text-white bg-black/35 from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-900 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform shadow-lg"
             disabled={!newAvatarName.trim()}
           >
             Create
