@@ -65,7 +65,7 @@ const ChatArea = ({
             />
 
             <h2 className="text-2xl font-semibold mb-2">Select an Avatar</h2>
-            <p className="text-gray-400 break-words">
+            <p className="text-gray-400 break-words p-1">
               Choose an avatar from the sidebar or create a new one to start
               chatting
             </p>
