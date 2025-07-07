@@ -25,9 +25,9 @@ const Sidebar = ({ setShowCreateModal }) => {
     <div
       className={`transition-all duration-300 ease-in-out transform ${
         isLoggedIn ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0 fixed lg:relative z-40 w-full lg:w-64 `}
+      } lg:translate-x-0 fixed lg:relative z-40 w-full`}
     >
-      <div className="w-full lg:w-64 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-4 overflow-y-auto flex flex-col gap-4 max-h-[50vh] lg:max-h-full">
+      <div className="w-full bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-4 overflow-y-auto flex flex-col gap-4 max-h-[50vh] lg:max-h-full">
         {isLoggedIn && (
           <button
             onClick={() => setShowCreateModal(true)}

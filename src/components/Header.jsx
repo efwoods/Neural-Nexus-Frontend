@@ -6,7 +6,7 @@ import AuthComponent from './AuthComponent';
 const Header = ({ sidebarVisible, setSidebarVisible }) => {
   return (
     <header className="w-full bg-black/50 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50 rounded-2xl px-2">
-      <div className="flex justify-between items-center px-2 py-3 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center px-2 py-3 mx-auto">
         {/* Left side: Avatar/Sidebar toggle button */}
         <div className="flex items-center">
           <button
