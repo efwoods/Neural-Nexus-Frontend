@@ -1,6 +1,5 @@
 // /src/App.jsx
 import React, { useState, useEffect, useRef } from 'react';
-
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
@@ -21,8 +20,9 @@ const AvatarChatApp = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDataExchangeDropdown, setShowDataExchangeDropdown] =
     useState(false);
-  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
   const dropdownRef = useRef(null);
+
   // Auto scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -30,22 +30,13 @@ const AvatarChatApp = () => {
     }
   }, [messages, activeAvatar]);
 
-  // Handle keyboard shortcuts and dropdown close on click outside
+  // Handle keyboard shortcuts and dropdown close
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.ctrlKey && e.key.toLowerCase() === 'b') {
         e.preventDefault();
         setSidebarVisible((v) => !v);
       }
-      // if (
-      //   e.key === 'Enter' &&
-      //   !e.shiftKey &&
-      //   activeAvatar &&
-      //   dataExchangeTypes.text
-      // ) {
-      //   e.preventDefault();
-      //   sendMessage();
-      // }
       if (e.key === 'Escape') {
         setShowDataExchangeDropdown(false);
         setSidebarVisible(false);
@@ -68,21 +59,19 @@ const AvatarChatApp = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-green-900 text-white">
-      <div className="w-screen h-screen flex flex-col p-4 sm:p-6 min-h-screen lg:gap-2">
+      <div className="w-screen h-screen flex flex-col gap-1">
         <Header
           sidebarVisible={sidebarVisible}
           setSidebarVisible={setSidebarVisible}
         />
-        <div className="flex flex-col lg:flex-row flex-grow overflow-hidden rounded-2xl shadow-lg lg:gap-4 portrait:gap-1 landscape:gap-1">
-          <div className="lg:block w-full lg:w-1/4">
-            <Sidebar
-              setShowCreateModal={setShowCreateModal}
-              isOpen={sidebarVisible}
-              onClose={() => setSidebarVisible(false)}
-            />
-          </div>
-
+        <div className="relative flex flex-grow overflow-hidden">
+          <Sidebar
+            setShowCreateModal={setShowCreateModal}
+            isOpen={sidebarVisible}
+            onClose={() => setSidebarVisible(false)}
+          />
           <ChatArea
+            className="flex flex-grow w-full h-full z-50"
             showDataExchangeDropdown={showDataExchangeDropdown}
             setShowDataExchangeDropdown={setShowDataExchangeDropdown}
             dropdownRef={dropdownRef}

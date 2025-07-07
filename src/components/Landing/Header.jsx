@@ -36,16 +36,6 @@ export default function Header() {
     >
       {/* Animated gradient border */}
       <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 via-teal-400/20 to-teal-500/10 opacity-0 hover:opacity-100 transition-opacity duration-700"></div>
-
-      {/* Floating geometric shapes */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-32 h-32 bg-teal-500/5 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute top-0 right-1/4 w-24 h-24 bg-teal-400/10 rounded-full blur-2xl animate-pulse"
-          style={{ animationDelay: '2s' }}
-        ></div>
-      </div>
-
       <div className="relative max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
           {/* Logo Section */}
@@ -166,19 +156,6 @@ export default function Header() {
             </nav>
           </div>
         </div>
-      </div>
-
-      {/* Floating particles effect */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-2 -right-2 w-4 h-4 bg-teal-500/30 rounded-full animate-pulse"></div>
-        <div
-          className="absolute -bottom-2 -left-2 w-3 h-3 bg-teal-400/30 rounded-full animate-pulse"
-          style={{ animationDelay: '1s' }}
-        ></div>
-        <div
-          className="absolute top-1/2 right-1/4 w-2 h-2 bg-teal-300/20 rounded-full animate-pulse"
-          style={{ animationDelay: '3s' }}
-        ></div>
       </div>
     </header>
   );
