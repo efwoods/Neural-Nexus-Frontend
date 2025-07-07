@@ -51,7 +51,8 @@ const AnimatedList = ({
   itemClassName = '',
   displayScrollbar = true,
   initialSelectedIndex = -1,
-  renderItem, // NEW: custom render function (item, index, isSelected) => JSX
+  renderItem, // : custom render function (item, index, isSelected) => JSX
+  selectedKey = null,
 }) => {
   const listRef = useRef(null);
   const [selectedIndex, setSelectedIndex] = useState(initialSelectedIndex);
@@ -149,7 +150,7 @@ const AnimatedList = ({
             }}
           >
             {renderItem ? (
-              renderItem(item, index, selectedIndex === index)
+              renderItem(item, index, selectedKey === item.avatar_id)
             ) : (
               <div
                 className={`p-4 bg-[#111] rounded-lg ${

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { UserPenIcon, User, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AuthComponent from './AuthComponent';
+import AnimatedList from './AnimatedList';
 
 const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
   const {
@@ -24,7 +25,7 @@ const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
   // Handle avatar selection and close sidebar
   const handleAvatarSelect = (avatar) => {
     setActiveAvatar(avatar);
-    onClose?.();
+    // onClose?.();
   };
 
   // Handle create avatar button click and close sidebar
@@ -34,43 +35,45 @@ const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
   };
 
   // Render each avatar item
-  const renderAvatarItem = (avatar) => (
-    <div
-      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-        activeAvatar?.avatar_id === avatar.avatar_id
-          ? 'bg-white/20 text-white shadow-lg scale-[1.02]'
-          : 'hover:bg-white/10 text-gray-300 hover:text-white'
-      }`}
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') handleAvatarSelect(avatar);
-        if (e.key === 'Delete') deleteAvatar(avatar.avatar_id);
-      }}
-      onClick={() => handleAvatarSelect(avatar)}
-    >
-      <User className="w-6 h-6" />
+  const renderAvatarItem = (avatar, index, isSelected) => {
+    const isActive = activeAvatar?.avatar_id === avatar.avatar_id;
 
-      <div className="flex-grow min-w-0">
-        <span className="font-semibold text-sm sm:text-base truncate">
-          {avatar.name}
-        </span>
-        <span className="text-xs text-gray-400 truncate mt-1">
-          {avatar.description}
-        </span>
-      </div>
-
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          deleteAvatar(avatar.avatar_id);
+    return (
+      <div
+        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+          isActive
+            ? 'bg-white/20 text-white shadow-lg scale-[1.02]'
+            : 'hover:bg-white/10 text-gray-300 hover:text-white'
+        }`}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleAvatarSelect(avatar);
+          if (e.key === 'Delete') deleteAvatar(avatar.avatar_id);
         }}
-        className="flex-shrink-0 p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
-        aria-label={`Delete avatar ${avatar.name}`}
+        onClick={() => handleAvatarSelect(avatar)}
       >
-        <Trash2 className="w-4 h-4" />
-      </button>
-    </div>
-  );
+        <User className="w-6 h-6" />
+        <div className="flex-grow min-w-0">
+          <div className="font-semibold text-sm sm:text-base whitespace-normal">
+            {avatar.name}
+          </div>
+          <div className="text-xs text-gray-400 mt-1 whitespace-normal">
+            {avatar.description}
+          </div>
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            deleteAvatar(avatar.avatar_id);
+          }}
+          className="flex-shrink-0 p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+          aria-label={`Delete avatar ${avatar.name}`}
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -136,43 +139,21 @@ const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
               <AuthComponent />
             </div>
           )}
-
-          {/* Avatar List */}
-
           {/* Avatar List */}
           <div className="flex-grow overflow-y-auto min-h-0 space-y-2">
             {Array.isArray(avatars) && avatars.length > 0 ? (
-              avatars.map((avatar) => (
-                <div
-                  key={avatar.avatar_id}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                    activeAvatar?.avatar_id === avatar.avatar_id
-                      ? 'bg-white/20 text-white shadow-lg scale-[1.02]'
-                      : 'hover:bg-white/10 text-gray-300 hover:text-white'
-                  }`}
-                  onClick={() => handleAvatarSelect(avatar)}
-                >
-                  <User className="w-6 h-6" />
-                  <div className="flex-grow min-w-0">
-                    <div className="font-semibold text-sm sm:text-base truncate">
-                      {avatar.name}
-                    </div>
-                    <div className="text-xs text-gray-400 truncate mt-1">
-                      {avatar.description}
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteAvatar(avatar.avatar_id);
-                    }}
-                    className="flex-shrink-0 p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
-                    aria-label={`Delete avatar ${avatar.name}`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))
+              <AnimatedList
+                items={avatars}
+                selectedKey={activeAvatar?.avatar_id} // <-- NEW
+                onItemSelect={(avatar) => handleAvatarSelect(avatar)}
+                renderItem={(avatar, index, isSelected) =>
+                  renderAvatarItem(avatar, index, isSelected)
+                }
+                showGradients={true}
+                enableArrowNavigation={true}
+                displayScrollbar={true}
+                className="relative flex-grow overflow-y-auto min-h-0"
+              />
             ) : (
               <div className="text-gray-400 text-sm p-4 italic text-center">
                 {isLoggedIn
