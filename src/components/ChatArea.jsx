@@ -78,12 +78,10 @@ const ChatArea = ({
             messages={messages[activeAvatar.avatar_id] || []}
             messagesEndRef={messagesEndRef}
           />
-          <div className="flex gap-2 items-center relative">
+          <div className="flex gap-2 items-center relative w-full">
             <InputBar
               avatarId={activeAvatar.avatar_id}
               accessToken={accessToken}
-              setShowDataExchangeDropdown={setShowDataExchangeDropdown}
-              showDataExchangeDropdown={showDataExchangeDropdown}
               dropdownRef={dropdownRef}
             />
           </div>
