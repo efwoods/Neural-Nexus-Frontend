@@ -4,6 +4,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNgrokApiUrl } from './NgrokAPIContext';
 import { AvatarService } from '../services/AvatarService';
 import { useMedia } from './MediaContext';
+import { useCallback } from 'react';
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -14,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [accessToken, setAccessToken] = useState(null);
   const [avatars, setAvatars] = useState([]);
   const [activeAvatar, setActiveAvatar] = useState(null);
+  const [avatarsHaveBeenFetched, setAvatarsHaveBeenFetched] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -28,8 +31,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (isLoggedIn && accessToken && ngrokHttpsUrl) {
       getAvatars(accessToken);
+      setAvatarsHaveBeenFetched(true);
     }
-  }, [isLoggedIn, accessToken, ngrokHttpsUrl]);
+  }, [isLoggedIn, accessToken, ngrokHttpsUrl, avatarsHaveBeenFetched]);
 
   const signup = async (username, email, password) => {
     const signupData = { username, email, password };
