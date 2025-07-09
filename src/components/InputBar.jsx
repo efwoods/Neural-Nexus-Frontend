@@ -40,7 +40,7 @@ const InputBar = ({
   };
 
   return (
-    <div className="w-full px-4 py-3 bg-black/40 rounded-xl flex flex-col gap-3">
+    <div className="w-full rounded-xl flex flex-col gap-3">
       {/* Image Preview */}
       {mediaFiles.length > 0 && (
         <div className="flex gap-2 flex-wrap">

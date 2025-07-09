@@ -72,14 +72,8 @@ const Dock = ({
   ];
 
   return (
-    <div className="flex items-center justify-center w-full mb-3">
-      <div
-        className="flex items-center gap-2 px-4 py-2 
-                      bg-black/30 backdrop-blur-lg rounded-2xl 
-                      border border-white/20 shadow-2xl
-                      portrait:overflow-x-auto landscape:overflow-x-visible
-                      max-w-full"
-      >
+    <div className="flex items-center justify-center w-full">
+      <div className="flex items-center gap-2 rounded-2xl shadow-2xl portrait:overflow-x-auto">
         {buttons.map((button, index) => (
           <DockButton
             key={index}
