@@ -1,3 +1,5 @@
+//components/Sidebar.jsx
+
 import React, { useEffect } from 'react';
 import { UserPenIcon, User, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -16,16 +18,15 @@ const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
   } = useAuth();
 
   // Fetch avatars when logged in
-  useEffect(() => {
-    if (isLoggedIn) {
-      getAvatars(accessToken);
-    }
-  }, [isLoggedIn, accessToken, getAvatars]);
+  // useEffect(() => {
+  //   if (isLoggedIn) {
+  //     getAvatars(accessToken);
+  //   }
+  // }, [isLoggedIn, accessToken, getAvatars]);
 
   // Handle avatar selection and close sidebar
   const handleAvatarSelect = (avatar) => {
     setActiveAvatar(avatar);
-    // onClose?.();
   };
 
   // Handle create avatar button click and close sidebar

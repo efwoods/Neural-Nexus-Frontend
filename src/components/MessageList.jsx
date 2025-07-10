@@ -9,6 +9,7 @@ const MessageList = ({ messages, messagesEndRef }) => {
   const { accessToken } = useAuth();
   const { getMediaUrl } = useMedia();
   const ngrokHttpsUrl = getNgrokHttpsUrl();
+
   useEffect(() => {
     console.log(ngrokHttpsUrl);
     if (messagesEndRef?.current) {

@@ -1,3 +1,5 @@
+//src/components/InputBar.jsx
+
 import { useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { useMedia } from '../context/MediaContext';
@@ -40,7 +42,25 @@ const InputBar = ({
   };
 
   return (
-    <div className="w-full rounded-xl flex flex-col gap-3">
+    <div className="w-full rounded-xl flex flex-col">
+      {/* Preset Input Bar */}
+      <div className="flex justify-between items-center gap-3 text-white">
+        {[
+          'Expand on that.',
+          "Let's change the topic.",
+          'How does that make you feel?',
+        ].map((preset, idx) => (
+          <button
+            key={idx}
+            onClick={() => setInputMessage(preset)}
+            title={preset} // Shows full text on hover
+            className="truncate text-sm px-4 py-1 bg-gradient-to-r bg-black/15 transition-all duration-200"
+          >
+            {preset}
+          </button>
+        ))}
+      </div>
+
       {/* Image Preview */}
       {mediaFiles.length > 0 && (
         <div className="flex gap-2 flex-wrap">
@@ -77,9 +97,6 @@ const InputBar = ({
           }}
         />
       </div>
-      {/* Row 1: Upload Images Button on Left */}
-
-      {/* Row 3: Send Button */}
 
       {/* Row 3: Upload on Left, Dropdown + Send on Right */}
       <div className="flex flex-row items-center justify-between">
