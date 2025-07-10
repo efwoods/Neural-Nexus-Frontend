@@ -43,24 +43,6 @@ const InputBar = ({
 
   return (
     <div className="w-full rounded-xl flex flex-col">
-      {/* Preset Input Bar */}
-      <div className="flex justify-between items-center gap-3 text-white">
-        {[
-          'Expand on that.',
-          "Let's change the topic.",
-          'How does that make you feel?',
-        ].map((preset, idx) => (
-          <button
-            key={idx}
-            onClick={() => setInputMessage(preset)}
-            title={preset} // Shows full text on hover
-            className="truncate text-sm px-4 py-1 bg-gradient-to-r bg-black/15 transition-all duration-200"
-          >
-            {preset}
-          </button>
-        ))}
-      </div>
-
       {/* Image Preview */}
       {mediaFiles.length > 0 && (
         <div className="flex gap-2 flex-wrap">
@@ -82,8 +64,32 @@ const InputBar = ({
         </div>
       )}
 
+      {/* Preset Input Bar */}
+      <div className="flex justify-center items-center gap-3 text-white">
+        {[
+          'Expand on that.',
+          "Let's change the topic.",
+          'How does that make you feel?',
+        ].map((preset, idx) => (
+          <button
+            key={idx}
+            onClick={() => setInputMessage(preset)}
+            title={preset}
+            className="relative px-4 py-1 bg-gradient-to-r from-white/10 to-white/5 text-white font-semibold rounded-lg overflow-hidden group transition-all duration-300 text-sm"
+          >
+            <span className="relative z-10 truncate">{preset}</span>
+
+            {/* Solid teal glow on hover */}
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-500 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+            {/* Moving white shimmer effect */}
+            <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-500 skew-x-12"></div>
+          </button>
+        ))}
+      </div>
+
       {/* Row 2: Text Input Bar */}
-      <div className="flex flex-row items-center gap-2 w-full">
+      <div className="flex flex-row items-center gap-2 w-full mb-1 mt-1">
         <input
           className="flex-grow min-w-0 rounded px-3 py-2 border border-gray-700 focus:outline focus:outline-2 focus:outline-teal-400 text-white bg-black/35 placeholder-gray-400"
           placeholder="Type your message..."
