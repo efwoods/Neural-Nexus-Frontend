@@ -39,7 +39,7 @@ export const ThoughtToImageService = {
       );
 
       const simulationResponse = await fetch(
-        `${ngrokHttpsUrl}/webcam-to-websocket-simulation-api/test/full-pipeline`,
+        `${ngrokHttpsUrl}/thought-to-image-simulation-api/initialize/test/full-pipeline`,
         {
           method: 'POST',
           headers: {

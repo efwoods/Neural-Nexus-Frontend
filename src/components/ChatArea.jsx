@@ -42,12 +42,10 @@ const ChatArea = ({
   } = useMedia();
 
   useEffect(() => {
-    // Now, anytime a user selects an avatar in Sidebar.jsx, the activeAvatar changes, and the ChatArea will auto-fetch messages from:
-    //   Redis if cached
-    //   MongoDB if not cached
-
-    fetchMessages();
-  }, [activeAvatar, accessToken]);
+    if (activeAvatar && accessToken) {
+      fetchMessages();
+    }
+  }, [activeAvatar?.avatar_id]);
 
   return (
     <div className="flex flex-col flex-grow bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-2 sm:p-4 overflow-hidden">
