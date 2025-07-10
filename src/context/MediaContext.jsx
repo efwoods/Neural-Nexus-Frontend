@@ -129,7 +129,7 @@ export const MediaProvider = ({ children }) => {
         sender
       );
 
-      if (!response.status === 'success') {
+      if (response.status !== 'success') {
         throw new Error(`Message post failed: ${response.statusText}`);
       }
 

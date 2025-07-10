@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getNgrokHttpsUrl } from '../context/NgrokAPIStore';
 import { useMedia } from '../context/MediaContext';
+import SecureImage from './SecureImage';
 
 const MessageList = ({ messages, messagesEndRef }) => {
   const { accessToken } = useAuth();
@@ -41,11 +42,10 @@ const MessageList = ({ messages, messagesEndRef }) => {
             msg.media.map((media) => (
               <div key={media.media_id} className="mt-2">
                 {media.content_type.startsWith('image/') ? (
-                  <img
-                    src={`${getNgrokHttpsUrl()}/neural-nexus-db/media/${
-                      media.media_id
-                    }?token=${accessToken}`}
-                    alt={media.filename}
+                  <SecureImage
+                    mediaId={media.media_id}
+                    filename={media.filename}
+                    accessToken={accessToken}
                   />
                 ) : media.content_type.startsWith('audio/') ? (
                   <audio
@@ -78,7 +78,7 @@ const MessageList = ({ messages, messagesEndRef }) => {
             ))}
 
           {/* TIMESTAMP */}
-          <div className="text-xs text-gray-400 mt-1 text-right select-none">
+          <div className="text-xs text-white-400 mt-1 text-right select-none">
             {msg.timestamp &&
               new Date(msg.timestamp).toLocaleTimeString(undefined, {
                 hour: '2-digit',
