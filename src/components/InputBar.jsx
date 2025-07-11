@@ -1,9 +1,6 @@
-//src/components/InputBar.jsx
-
-import { useRef, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import { Upload } from 'lucide-react';
 import { useMedia } from '../context/MediaContext';
-import DataExchangeDropdown from './DataExchangeDropdown';
 import Dock from './Dock';
 
 const InputBar = ({
@@ -14,6 +11,8 @@ const InputBar = ({
   dropdownRef,
 }) => {
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null); // new ref for textarea
+
   const {
     sendMessage,
     inputMessage,
@@ -33,21 +32,60 @@ const InputBar = ({
     dataExchangeTypes,
   } = useMedia();
 
+  // Send message on Enter (without Shift)
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // prevent newline
+      handleSendMessage();
+    }
+    // else let default behavior (including Shift+Enter newline) happen
+  };
+
+  // Auto resize textarea height to fit content
+  const handleInput = (e) => {
+    setInputMessage(e.target.value);
+
+    // Reset height to auto then set to scrollHeight for shrink/grow
+    const ta = textareaRef.current;
+    if (ta) {
+      ta.style.height = 'auto'; // reset height to shrink if needed
+      ta.style.height = ta.scrollHeight + 'px'; // grow to fit content
+    }
+  };
+
   const handleSendMessage = () => {
+    if (!inputMessage.trim() && mediaFiles.length === 0) return; // ignore empty sends
+
     setSender('user');
     sendMessage(mediaFiles, () => {
       setMediaFiles([]);
+      setInputMessage(''); // clear input after send
+
       if (fileInputRef.current) fileInputRef.current.value = '';
+
+      // Reset textarea height on clear
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
     });
   };
 
+  // Resize once on mount and when inputMessage changes (for external changes)
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (ta) {
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+    }
+  }, [inputMessage]);
+
   return (
-    <div className="w-full rounded-xl flex flex-col">
-      {/* Image Preview */}
+    <div className="w-full max-w-3xl mx-auto rounded-xl flex flex-col">
+      {/* Image Preview Section */}
       {mediaFiles.length > 0 && (
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 overflow-x-auto mb-2 scrollbar-thin scrollbar-thumb-teal-400">
           {mediaFiles.map((file, index) => (
-            <div key={index} className="relative">
+            <div key={index} className="relative flex-shrink-0">
               <img
                 src={URL.createObjectURL(file)}
                 alt={`preview-${index}`}
@@ -64,8 +102,8 @@ const InputBar = ({
         </div>
       )}
 
-      {/* Preset Input Bar */}
-      <div className="flex justify-center items-center gap-3 text-white">
+      {/* Preset Buttons */}
+      <div className="flex justify-center items-center gap-3 text-white flex-wrap mb-2">
         {[
           'Expand on that.',
           "Let's change the topic.",
@@ -78,40 +116,34 @@ const InputBar = ({
             className="relative px-4 py-1 bg-gradient-to-r from-white/10 to-white/5 text-white font-semibold rounded-lg overflow-hidden group transition-all duration-300 text-sm"
           >
             <span className="relative z-10 truncate">{preset}</span>
-
-            {/* Solid teal glow on hover */}
             <div className="absolute inset-0 bg-gradient-to-r from-teal-500 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-            {/* Moving white shimmer effect */}
             <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-500 skew-x-12"></div>
           </button>
         ))}
       </div>
 
-      {/* Row 2: Text Input Bar */}
-      <div className="flex flex-row items-center gap-2 w-full mb-1 mt-1">
-        <input
-          className="flex-grow min-w-0 rounded px-3 py-2 border border-gray-700 focus:outline focus:outline-2 focus:outline-teal-400 text-white bg-black/35 placeholder-gray-400"
+      {/* Native textarea Input */}
+      <div className="mb-2">
+        <textarea
+          ref={textareaRef}
+          rows={1}
+          style={{ lineHeight: '1.5rem', maxHeight: '9rem' }} // 6 * 1.5rem = 9rem max height
+          className="w-full resize-none overflow-y-auto max-h-40 rounded px-3 py-2 border border-gray-700 focus:outline focus:outline-2 focus:outline-teal-400 text-white bg-black/35 placeholder-gray-400 scrollbar-thin scrollbar-thumb-teal-400 px-4 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-teal-400"
           placeholder="Type your message..."
           value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSendMessage();
-            }
-          }}
+          onChange={handleInput}
+          onKeyDown={handleKeyDown}
+          spellCheck={false}
         />
       </div>
 
-      {/* Row 3: Upload on Left, Dropdown + Send on Right */}
-      <div className="flex flex-row items-center justify-between">
-        {/* Left side: Upload Button */}
+      {/* Upload + Dock + Send */}
+      <div className="flex flex-row items-center justify-between mt-1">
+        {/* Upload */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="transition-transform duration-300 hover:scale-105 px-4 py-2 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 min-w-0 rounded px-3 py-2 border border-gray-700 text-white bg-black/35 from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-700 px-6 py-3 rounded-xl flex font-semibold gap-2 transition-all duration-300 transform shadow-lg items-center justify-center max-h-64 overflow-y-auto"
-            aria-label="Toggle data exchange options"
+            className="transition-transform duration-300 hover:scale-105 px-6 py-3 rounded-xl flex items-center justify-center gap-2 text-white bg-black/35 border border-gray-700"
           >
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Upload</span>
@@ -126,22 +158,20 @@ const InputBar = ({
           />
         </div>
 
-        {/* Right side: Dropdown + Send Button */}
-        {/* Dock */}
-        <Dock
-          isTranscribing={isTranscribing}
-          startTranscription={startTranscription}
-          stopTranscription={stopTranscription}
-          isThoughtToImageEnabled={isThoughtToImageEnabled}
-          startThoughtToImage={startThoughtToImage}
-          stopThoughtToImage={stopThoughtToImage}
-          dataExchangeTypes={dataExchangeTypes}
-        />
-        <div className="flex items-center gap-2 ">
+        {/* Dock + Send */}
+        <div className="flex items-center gap-2">
+          <Dock
+            isTranscribing={isTranscribing}
+            startTranscription={startTranscription}
+            stopTranscription={stopTranscription}
+            isThoughtToImageEnabled={isThoughtToImageEnabled}
+            startThoughtToImage={startThoughtToImage}
+            stopThoughtToImage={stopThoughtToImage}
+            dataExchangeTypes={dataExchangeTypes}
+          />
           <button
             onClick={handleSendMessage}
-            className="transition-transform duration-300 hover:scale-105 px-4 py-2 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 min-w-0 rounded px-3 py-2 border border-gray-700 text-white bg-black/35 from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-700 px-6 py-3 rounded-xl flex font-semibold gap-2 transition-all duration-300 transform shadow-lg items-center justify-center max-h-64 overflow-y-auto"
-            aria-label="Toggle data exchange options"
+            className="transition-transform duration-300 hover:scale-105 px-6 py-3 rounded-xl text-white bg-black/35 border border-gray-700"
           >
             Send
           </button>

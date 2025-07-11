@@ -23,24 +23,30 @@ const AvatarChatApp = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
   const dropdownRef = useRef(null);
 
-  // Auto scroll to bottom when messages change
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, activeAvatar]);
-
-  // Handle keyboard shortcuts and dropdown close
   useEffect(() => {
     const handleKeyDown = (e) => {
+      const target = e.target;
+      const isFormElement =
+        target.tagName === 'TEXTAREA' ||
+        (target.tagName === 'INPUT' && !target.readOnly);
+
+      // Prevent ALL keybindings inside text inputs
+      if (isFormElement) return;
+
       if (e.ctrlKey && e.key.toLowerCase() === 'b') {
         e.preventDefault();
         setSidebarVisible((v) => !v);
       }
+
       if (e.key === 'Escape') {
         setShowDataExchangeDropdown(false);
         setSidebarVisible(false);
       }
+
+      // REMOVE this block entirely
+      // if (e.shiftKey && e.key === 'Enter') {
+      //   console.log('Shift + Enter detected');
+      // }
     };
 
     const handleClickOutside = (e) => {
