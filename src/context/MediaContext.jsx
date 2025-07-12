@@ -10,7 +10,6 @@ import React, {
   useRef,
 } from 'react';
 import { useNgrokApiUrl } from './NgrokAPIContext';
-import { ThoughtToImageService } from '../services/ThoughtToImageService';
 import { AudioInputService } from '../services/AudioInputService';
 import { FileUploadService } from '../services/FileUploadService';
 import { MessageService } from '../services/MessageService';
@@ -61,30 +60,8 @@ export const MediaProvider = ({ children }) => {
     console.log('isThoughtToImageEnabled:' + isThoughtToImageEnabled);
     setIsThoughtToImageEnabled(true);
     //send post request
-    try {
-      console.log('user.user_id:', user.user_id);
-      console.log('activeAvatar.avatar_id:', activeAvatar.avatar_id);
-      const thoughtToImageSimulationResponse =
-        await ThoughtToImageService.enableThoughtToImage(
-          accessToken,
-          user.user_id,
-          activeAvatar.avatar_id,
-          true
-        );
-      console.log(thoughtToImageSimulationResponse);
-      //   setAvatars((prev) => prev.filter((a) => a.id !== avatarId));
-      //   const delete_response = await AvatarService.deleteAvatar(
-      //     accessToken,
-      //     avatarId
-      //   );
-      //   console.log('Delete avatar response:', JSON.stringify(delete_response));
-      //   if (delete_response !== true) throw new Error('Failed to delete avatar');
-      //   // ✅ Refetch avatars to update UI
-      //   await getAvatars(accessToken);
-    } catch (error) {
-      console.error('AuthContext: Delete avatar failed:', error);
-    }
   };
+
   // function interface
   const stopThoughtToImage = () => {
     console.log('stopThoughtToImage');
@@ -92,28 +69,6 @@ export const MediaProvider = ({ children }) => {
     setIsThoughtToImageEnabled(false);
     console.log('user.user_id:', user.user_id);
     console.log('activeAvatar.avatar_id:', activeAvatar.avatar_id);
-    const thoughtToImageSimulationResponse =
-      ThoughtToImageService.enableThoughtToImage(
-        accessToken,
-        user.user_id,
-        activeAvatar.avatar_id,
-        false
-      );
-    console.log(thoughtToImageSimulationResponse);
-    //send post request
-    try {
-      //   setAvatars((prev) => prev.filter((a) => a.id !== avatarId));
-      //   const delete_response = await AvatarService.deleteAvatar(
-      //     accessToken,
-      //     avatarId
-      //   );
-      //   console.log('Delete avatar response:', JSON.stringify(delete_response));
-      //   if (delete_response !== true) throw new Error('Failed to delete avatar');
-      //   // ✅ Refetch avatars to update UI
-      //   await getAvatars(accessToken);
-    } catch (error) {
-      console.error('AuthContext: Delete avatar failed:', error);
-    }
   };
 
   async function sendMessage() {

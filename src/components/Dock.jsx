@@ -1,5 +1,8 @@
 import { Ear, EarOff, Eye } from 'lucide-react';
-
+import thoughtToImageService from '../services/ThoughtToImageService';
+import { useEffect } from 'react';
+import { useMedia } from '../context/MediaContext';
+import { useAuth } from '../context/AuthContext';
 const DockButton = ({
   icon: Icon,
   label,
@@ -50,6 +53,40 @@ const Dock = ({
   stopThoughtToImage,
   dataExchangeTypes,
 }) => {
+  const { fetchMessages } = useMedia();
+  const { user, activeAvatar, accessToken } = useAuth();
+  console.log('activeAvatar.avatar_id: ', activeAvatar.avatar_id);
+  console.log('user.user_id: ', user.user_id);
+
+  useEffect(() => {
+    if (isThoughtToImageEnabled) {
+      const pollingFreq = 10000; // every ten seconds, poll
+      thoughtToImageService.startPolling({
+        accessToken,
+        avatar_id: activeAvatar.avatar_id,
+        user_id: user.user_id,
+        pollingFreq,
+      });
+
+      thoughtToImageService.connectWebSocket({
+        accessToken,
+        avatar_id: activeAvatar.avatar_id,
+        user_id: user.user_id,
+        onReconstructed: () => {
+          fetchMessages();
+        },
+      });
+    }
+    return () => {
+      thoughtToImageService.cleanup();
+    };
+  }, [
+    isThoughtToImageEnabled,
+    activeAvatar.avatar_id,
+    user.user_id,
+    accessToken,
+  ]);
+
   const buttons = [
     {
       icon: isTranscribing ? EarOff : Ear,

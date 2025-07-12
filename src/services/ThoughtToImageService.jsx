@@ -1,69 +1,96 @@
 // services/ThoughtToImageService.jsx
 
-import { getNgrokHttpsUrl } from '../context/NgrokAPIStore';
+import { getNgrokHttpsUrl, getNgrokWsUrl } from '../context/NgrokAPIStore';
 
-export const ThoughtToImageService = {
-  /**
-   * Enable thought-to-image simulation by calling the pipeline endpoint.
-   *
-   * @param {string} accessToken - The JWT token for authorization.
-   * @param {string} user_id - The user ID (part of session_id).
-   * @param {string} avatar_id - The avatar ID (part of session_id).
-   * @returns {Promise<object>} - The response from the simulation API.
-   */
-  async enableThoughtToImage(
-    accessToken,
-    user_id,
-    avatar_id,
-    isThoughtToImageEnabled
-  ) {
-    try {
-      if (!user_id || !avatar_id) {
-        throw new Error('user_id and avatar_id are required');
+class ThoughtToImageService {
+  constructor() {
+    this.socket = null;
+    this.pollingInterval = null;
+    this.controller = new AbortController();
+  }
+
+  connectWebSocket({ accessToken, avatar_id, user_id, onReconstructed }) {
+    const wsUrl = getNgrokWsUrl();
+    const fullReconstructWsUrl = `${wsUrl}/thought-to-image-simulation-api/reconstruct/ws/reconstruct-image-from-waveform-latent`;
+
+    this.socket = new WebSocket(fullReconstructWsUrl);
+
+    this.socket.onopen = () => {
+      console.info('[ThoughtToImage] WebSocket connected');
+    };
+
+    this.socket.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.status === 'success') {
+          console.info('[ThoughtToImage] Image reconstructed and uploaded');
+          onReconstructed();
+        }
+      } catch (err) {
+        console.error('[ThoughtToImage] Error parsing message', err);
       }
+    };
 
-      const ngrokHttpsUrl = getNgrokHttpsUrl();
-      if (!ngrokHttpsUrl) {
-        throw new Error('Ngrok HTTPS URL is not available');
-      }
+    this.socket.onerror = (err) => {
+      console.error('[ThoughtToImage] WebSocket error:', err);
+    };
 
-      const simulationPayload = {
-        user_id: `${user_id}`,
-        avatar_id: `${avatar_id}`,
-        enable_thought_to_image: isThoughtToImageEnabled,
-      };
+    this.socket.onclose = () => {
+      console.warn('[ThoughtToImage] WebSocket closed');
+    };
+  }
 
-      console.log(
-        'EnableThoughtToImage payload:',
-        JSON.stringify(simulationPayload)
-      );
+  startPolling({ accessToken, avatar_id, user_id, pollingFreq }) {
+    const ngrokUrl = getNgrokHttpsUrl();
+    const endpoint = `${ngrokUrl}/thought-to-image-simulation-api/initialize/enable-thought-to-image`;
 
-      const simulationResponse = await fetch(
-        `${ngrokHttpsUrl}/thought-to-image-simulation-api/initialize/test/full-pipeline`,
-        {
+    this.pollingInterval = setInterval(async () => {
+      try {
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
-            Accept: 'application/json',
             'ngrok-skip-browser-warning': '69420',
           },
-          body: JSON.stringify(simulationPayload),
+          body: JSON.stringify({
+            user_id,
+            avatar_id,
+          }),
+          signal: this.controller.signal,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('[ThoughtToImage] Error polling:', errorText);
         }
-      );
-
-      if (!simulationResponse.ok) {
-        const errorText = await simulationResponse.text();
-        throw new Error(`Simulation API error: ${errorText}`);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('[ThoughtToImage] Polling failed:', err);
+        }
       }
+    }, pollingFreq); // every 10 seconds
+  }
 
-      const simulationData = await simulationResponse.json();
-      console.log('Simulation triggered:', simulationData);
+  stopPolling() {
+    if (this.pollingInterval) clearInterval(this.pollingInterval);
+    this.pollingInterval = null;
+    this.controller.abort();
+    this.controller = new AbortController();
+  }
 
-      return simulationData;
-    } catch (error) {
-      console.error('ThoughtToImageService error:', error);
-      throw error;
+  disconnectWebSocket() {
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
     }
-  },
-};
+  }
+
+  cleanup() {
+    this.stopPolling();
+    this.disconnectWebSocket();
+  }
+}
+
+const thoughtToImageService = new ThoughtToImageService();
+export default thoughtToImageService;

@@ -35,7 +35,6 @@ const ChatArea = ({
     isTranscribing,
     isThoughtToImageEnabled,
     dataExchangeTypes,
-    toggleDataExchangeType,
     fileInputRef,
     handleFileUpload,
   } = useMedia();
