@@ -40,6 +40,8 @@ export const MediaProvider = ({ children }) => {
   const mediaStreamRef = useRef(null);
   const sourceRef = useRef(null);
   const processorRef = useRef(null);
+  const NUM_OF_BYTES_FILE_SIZE = 1; // # of Bytes
+  const MAX_FILE_SIZE_MB = NUM_OF_BYTES_FILE_SIZE * 1024 * 1024;
 
   const [dataExchangeTypes, setDataExchangeTypes] = useState({
     text: true,
@@ -84,8 +86,10 @@ export const MediaProvider = ({ children }) => {
         sender
       );
 
-      if (response.status !== 'success') {
-        throw new Error(`Message post failed: ${response.statusText}`);
+      if (!response || response.status !== 'success') {
+        throw new Error(
+          `Message post failed: ${response.statusText || 'Unknown error'}`
+        );
       }
 
       const result = await JSON.stringify(response);
@@ -112,7 +116,16 @@ export const MediaProvider = ({ children }) => {
       if (fileInputRef.current) fileInputRef.current.value = '';
       fetchMessages();
     } catch (err) {
-      console.error('sendMessage failed:', err.message);
+      // Special handling for 413 status code
+      if (err.status === 413) {
+        alert(
+          `One or more of the files exceeds the maximum upload size of 1 MB.`
+        );
+      } else {
+        alert(
+          `One or more of the files exceeds the maximum upload size of 1 MB.`
+        );
+      }
     }
   }
 
