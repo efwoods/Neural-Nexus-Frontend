@@ -9,6 +9,7 @@ import InputBar from './InputBar';
 import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
 import NeuralNexusLogo from '../assets/NeuralNexus.png';
+
 const ChatArea = ({
   showDataExchangeDropdown,
   setShowDataExchangeDropdown,
@@ -53,12 +54,13 @@ const ChatArea = ({
         <div className="absolute inset-0 flex items-center justify-center bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20">
           <div className="text-center">
             {/* <User size={64} className="mx-auto mb-4 text-gray-400" /> */}
-            <img
+            {/* <img
               src={NeuralNexusLogo}
               alt="Logo"
               className="w-64 h-64 bg-transparent mx-auto mb-4 text-gray-400 sm:w-32 sm:h-32"
               size={64}
-            />
+            /> */}
+            <User className="w-64 h-64 bg-transparent mx-auto mb-4 text-gray-400 sm:w-32 sm:h-32" />
 
             <h2 className="text-2xl font-semibold mb-2">Select an Avatar</h2>
             <p className="text-gray-400 break-words p-1">
