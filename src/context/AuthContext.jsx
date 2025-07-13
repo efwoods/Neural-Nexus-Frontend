@@ -230,6 +230,48 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Add this function to your AuthContext
+
+  const updateAvatarOrder = async (newOrderedAvatars) => {
+    try {
+      // Update local state immediately
+      setAvatars(newOrderedAvatars);
+
+      // Create the order data - you might want to send just the IDs in order
+      const orderData = newOrderedAvatars.map((avatar, index) => ({
+        avatar_id: avatar.avatar_id,
+        order: index,
+      }));
+
+      // Send to your backend API
+      const response = await fetch('/api/avatars/reorder', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ avatars: orderData }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update avatar order');
+      }
+
+      // Optionally refetch avatars to ensure sync
+      // await getAvatars(accessToken);
+    } catch (error) {
+      console.error('Error updating avatar order:', error);
+      // Optionally revert local state on error
+      // await getAvatars(accessToken);
+    }
+  };
+
+  // Make sure to include this in your context value:
+  const value = {
+    // ... other context values
+    updateAvatarOrder,
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -245,6 +287,7 @@ export const AuthProvider = ({ children }) => {
         getAvatars,
         createAvatar,
         deleteAvatar,
+        updateAvatarOrder,
       }}
     >
       {children}
