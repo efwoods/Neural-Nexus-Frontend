@@ -1,7 +1,8 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { useMedia } from '../context/MediaContext';
 import Dock from './Dock';
+import { HiXMark } from 'react-icons/hi2';
 
 const InputBar = ({
   avatar_id,
@@ -11,7 +12,14 @@ const InputBar = ({
   dropdownRef,
 }) => {
   const fileInputRef = useRef(null);
-  const textareaRef = useRef(null); // new ref for textarea
+  const textareaRef = useRef(null);
+  // Message history state
+  const [messageHistory, setMessageHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [tempMessage, setTempMessage] = useState(''); // Store current draft when navigating history
+  // Image caption editing state
+  const [editingCaption, setEditingCaption] = useState(null);
+  const [captions, setCaptions] = useState({});
 
   const {
     sendMessage,
@@ -32,45 +40,151 @@ const InputBar = ({
     dataExchangeTypes,
   } = useMedia();
 
-  // Send message on Enter (without Shift)
+  // Enhanced key handler with history navigation
   const handleKeyDown = (e) => {
+    // Stop event propagation to prevent App.jsx global handler from interfering
+    e.stopPropagation();
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault(); // prevent newline
+      e.preventDefault();
       handleSendMessage();
+    } else if (e.key === 'Enter' && e.shiftKey) {
+      // Allow default behavior for Shift+Enter (newline)
+      // Don't preventDefault() here - let the textarea handle it naturally
+      return;
+    } else if (e.key === 'ArrowUp' && e.ctrlKey) {
+      e.preventDefault();
+      navigateHistory('up');
+    } else if (e.key === 'ArrowDown' && e.ctrlKey) {
+      e.preventDefault();
+      navigateHistory('down');
     }
-    // else let default behavior (including Shift+Enter newline) happen
+    // Regular up/down arrows without modifiers will work normally in textarea
+  };
+
+  // History navigation logic
+  const navigateHistory = (direction) => {
+    if (messageHistory.length === 0) return;
+    if (direction === 'up') {
+      if (historyIndex === -1) {
+        // First time navigating up - store current message
+        setTempMessage(inputMessage);
+        setHistoryIndex(messageHistory.length - 1);
+        setInputMessage(messageHistory[messageHistory.length - 1]);
+      } else if (historyIndex > 0) {
+        setHistoryIndex(historyIndex - 1);
+        setInputMessage(messageHistory[historyIndex - 1]);
+      }
+    } else if (direction === 'down') {
+      if (historyIndex === messageHistory.length - 1) {
+        // At newest entry - restore temp message
+        setHistoryIndex(-1);
+        setInputMessage(tempMessage);
+        setTempMessage('');
+      } else if (historyIndex > -1) {
+        setHistoryIndex(historyIndex + 1);
+        setInputMessage(messageHistory[historyIndex + 1]);
+      }
+    }
   };
 
   // Auto resize textarea height to fit content
   const handleInput = (e) => {
     setInputMessage(e.target.value);
-
-    // Reset height to auto then set to scrollHeight for shrink/grow
+    // Reset history navigation when user types
+    if (historyIndex !== -1) {
+      setHistoryIndex(-1);
+      setTempMessage('');
+    }
+    // Resize textarea
     const ta = textareaRef.current;
     if (ta) {
-      ta.style.height = 'auto'; // reset height to shrink if needed
-      ta.style.height = ta.scrollHeight + 'px'; // grow to fit content
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
     }
   };
 
   const handleSendMessage = () => {
-    if (!inputMessage.trim() && mediaFiles.length === 0) return; // ignore empty sends
-
+    if (!inputMessage.trim() && mediaFiles.length === 0) return;
+    // Add to history if not empty and not duplicate
+    if (
+      inputMessage.trim() &&
+      (messageHistory.length === 0 ||
+        messageHistory[messageHistory.length - 1] !== inputMessage.trim())
+    ) {
+      setMessageHistory((prev) => [...prev, inputMessage.trim()]);
+    }
+    // Reset history navigation
+    setHistoryIndex(-1);
+    setTempMessage('');
     setSender('user');
     sendMessage(mediaFiles, () => {
       setMediaFiles([]);
-      setInputMessage(''); // clear input after send
-
+      setInputMessage('');
+      setCaptions({}); // Clear captions when message is sent
       if (fileInputRef.current) fileInputRef.current.value = '';
-
-      // Reset textarea height on clear
+      // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
       }
     });
   };
 
-  // Resize once on mount and when inputMessage changes (for external changes)
+  // Enhanced file handler with drag and drop support
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files || e.dataTransfer?.files || []);
+    handleFileChange({ target: { files } });
+  };
+
+  // Enhanced remove file function
+  const handleRemoveFile = (index) => {
+    removeFile(index);
+    // Remove caption for this file
+    setCaptions((prev) => {
+      const newCaptions = { ...prev };
+      delete newCaptions[index];
+      // Reindex remaining captions
+      const reindexed = {};
+      Object.keys(newCaptions).forEach((key) => {
+        const keyIndex = parseInt(key);
+        if (keyIndex > index) {
+          reindexed[keyIndex - 1] = newCaptions[key];
+        } else {
+          reindexed[key] = newCaptions[key];
+        }
+      });
+      return reindexed;
+    });
+  };
+
+  // Caption editing functions
+  const startEditingCaption = (index) => {
+    setEditingCaption(index);
+  };
+
+  const updateCaption = (index, caption) => {
+    setCaptions((prev) => ({
+      ...prev,
+      [index]: caption,
+    }));
+  };
+
+  const finishEditingCaption = () => {
+    setEditingCaption(null);
+  };
+
+  // Drag and drop handlers
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleFileSelect(e);
+  };
+
+  // Resize on mount and input changes
   useEffect(() => {
     const ta = textareaRef.current;
     if (ta) {
@@ -80,28 +194,11 @@ const InputBar = ({
   }, [inputMessage]);
 
   return (
-    <div className="w-full max-w-3xl mx-auto rounded-xl flex flex-col">
-      {/* Image Preview Section */}
-      {mediaFiles.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto mb-2 scrollbar-thin scrollbar-thumb-teal-400">
-          {mediaFiles.map((file, index) => (
-            <div key={index} className="relative flex-shrink-0">
-              <img
-                src={URL.createObjectURL(file)}
-                alt={`preview-${index}`}
-                className="h-20 w-20 object-cover rounded border border-white"
-              />
-              <button
-                onClick={() => removeFile(index)}
-                className="absolute -top-2 -right-2 bg-red-600 text-xs px-1 rounded-full"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
+    <div
+      className="w-full max-w-3xl mx-auto rounded-xl flex flex-col"
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       {/* Preset Buttons */}
       <div className="flex justify-center items-center gap-3 text-white flex-wrap mb-2">
         {[
@@ -122,19 +219,52 @@ const InputBar = ({
         ))}
       </div>
 
-      {/* Native textarea Input */}
-      <div className="mb-2">
+      {/* Integrated Input Container */}
+      <div className="mb-2 relative border border-gray-700 rounded-lg bg-black/35 focus-within:border-teal-400 transition-colors">
+        {/* Image thumbnails inside the input container */}
+        {mediaFiles.length > 0 && (
+          <div className="p-3 border-b border-gray-700/50">
+            <div className="flex gap-3 overflow-x-auto scrollbar-thin scrollbar-thumb-teal-400">
+              {mediaFiles.map((file, index) => (
+                <div key={index} className="relative flex-shrink-0 group">
+                  <div className="relative">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`preview-${index}`}
+                      className="h-16 w-16 object-cover rounded-lg border border-gray-600 group-hover:border-teal-400 transition-colors"
+                    />
+                    {/* Remove button */}
+
+                    <HiXMark
+                      onClick={() => handleRemoveFile(index)}
+                      className="absolute -top-0 -right-1 bg-red-900 hover:bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center transition-colors z-20"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Textarea */}
         <textarea
           ref={textareaRef}
           rows={1}
-          style={{ lineHeight: '1.5rem', maxHeight: '9rem' }} // 6 * 1.5rem = 9rem max height
-          className="w-full resize-none overflow-y-auto max-h-40 rounded px-3 py-2 border border-gray-700 focus:outline focus:outline-2 focus:outline-teal-400 text-white bg-black/35 placeholder-gray-400 scrollbar-thin scrollbar-thumb-teal-400 px-4 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-teal-400"
-          placeholder="Type your message..."
+          style={{ lineHeight: '1.5rem', maxHeight: '9rem' }}
+          className="w-full resize-none overflow-y-auto max-h-40 px-4 py-3 text-white bg-transparent placeholder-gray-400 scrollbar-thin scrollbar-thumb-teal-400 focus:outline-none border-none"
+          placeholder="Type your message... (Ctrl+↑↓ for history)"
           value={inputMessage}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
           spellCheck={false}
         />
+
+        {/* History indicator */}
+        {historyIndex !== -1 && (
+          <div className="absolute right-2 top-2 text-xs text-teal-400 bg-black/50 px-2 py-1 rounded">
+            {messageHistory.length - historyIndex}/{messageHistory.length}
+          </div>
+        )}
       </div>
 
       {/* Upload + Dock + Send */}
@@ -143,7 +273,7 @@ const InputBar = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="transition-transform duration-300 hover:scale-105 px-6 py-3 rounded-xl flex items-center justify-center gap-2 text-white bg-black/35 border border-gray-700"
+            className="transition-transform duration-300 hover:scale-105 px-6 py-3 rounded-xl flex items-center justify-center gap-2 text-white bg-black/35 border border-gray-700 hover:border-teal-400"
           >
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Upload</span>
@@ -154,7 +284,7 @@ const InputBar = ({
             accept="image/*"
             multiple
             hidden
-            onChange={handleFileChange}
+            onChange={handleFileSelect}
           />
         </div>
 
@@ -171,7 +301,7 @@ const InputBar = ({
           />
           <button
             onClick={handleSendMessage}
-            className="transition-transform duration-300 hover:scale-105 px-6 py-3 rounded-xl text-white bg-black/35 border border-gray-700"
+            className="transition-transform duration-300 hover:scale-105 px-6 py-3 rounded-xl text-white bg-black/35 border border-gray-700 hover:border-teal-400"
           >
             Send
           </button>
