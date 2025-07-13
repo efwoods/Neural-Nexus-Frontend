@@ -3,6 +3,7 @@ import thoughtToImageService from '../services/ThoughtToImageService';
 import { useEffect } from 'react';
 import { useMedia } from '../context/MediaContext';
 import { useAuth } from '../context/AuthContext';
+
 const DockButton = ({
   icon: Icon,
   label,
