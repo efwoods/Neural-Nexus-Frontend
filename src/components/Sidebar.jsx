@@ -1,6 +1,7 @@
 //components/Sidebar.jsx
-import React, { useEffect, useState } from 'react';
-import { UserPenIcon, User, Trash2, GripVertical } from 'lucide-react';
+
+import React, { useEffect } from 'react';
+import { UserPenIcon, User, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AuthComponent from './AuthComponent';
 import AnimatedList from './AnimatedList';
@@ -14,17 +15,14 @@ const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
     setActiveAvatar,
     deleteAvatar,
     getAvatars,
-    updateAvatarOrder, // You'll need to add this to your AuthContext
   } = useAuth();
 
-  const [draggedItem, setDraggedItem] = useState(null);
-  const [draggedOverItem, setDraggedOverItem] = useState(null);
-  const [localAvatars, setLocalAvatars] = useState([]);
-
-  // Update local avatars when avatars prop changes
-  useEffect(() => {
-    setLocalAvatars(avatars || []);
-  }, [avatars]);
+  // Fetch avatars when logged in
+  // useEffect(() => {
+  //   if (isLoggedIn) {
+  //     getAvatars(accessToken);
+  //   }
+  // }, [isLoggedIn, accessToken, getAvatars]);
 
   // Handle avatar selection and close sidebar
   const handleAvatarSelect = (avatar) => {
@@ -37,86 +35,17 @@ const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
     onClose?.();
   };
 
-  // Drag and drop handlers
-  const handleDragStart = (e, avatar, index) => {
-    setDraggedItem({ avatar, index });
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', e.target.outerHTML);
-    e.dataTransfer.setDragImage(e.target, 0, 0);
-  };
-
-  const handleDragOver = (e, index) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDraggedOverItem(index);
-  };
-
-  const handleDragLeave = (e) => {
-    // Only clear if we're leaving the container, not just moving between children
-    if (!e.currentTarget.contains(e.relatedTarget)) {
-      setDraggedOverItem(null);
-    }
-  };
-
-  const handleDrop = (e, dropIndex) => {
-    e.preventDefault();
-
-    if (!draggedItem || draggedItem.index === dropIndex) {
-      setDraggedItem(null);
-      setDraggedOverItem(null);
-      return;
-    }
-
-    const newAvatars = [...localAvatars];
-    const draggedAvatar = newAvatars[draggedItem.index];
-
-    // Remove the dragged item
-    newAvatars.splice(draggedItem.index, 1);
-
-    // Insert at new position
-    newAvatars.splice(dropIndex, 0, draggedAvatar);
-
-    // Update local state immediately for responsive UI
-    setLocalAvatars(newAvatars);
-
-    // Update the order in your backend/context
-    if (updateAvatarOrder) {
-      updateAvatarOrder(newAvatars);
-    }
-
-    setDraggedItem(null);
-    setDraggedOverItem(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedItem(null);
-    setDraggedOverItem(null);
-  };
-
-  // Render each avatar item with drag functionality
+  // Render each avatar item
   const renderAvatarItem = (avatar, index, isSelected) => {
     const isActive = activeAvatar?.avatar_id === avatar.avatar_id;
-    const isDragging = draggedItem?.index === index;
-    const isDraggedOver = draggedOverItem === index;
 
     return (
       <div
-        draggable
-        onDragStart={(e) => handleDragStart(e, avatar, index)}
-        onDragOver={(e) => handleDragOver(e, index)}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => handleDrop(e, index)}
-        onDragEnd={handleDragEnd}
-        className={`
-          flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 
-          ${
-            isActive
-              ? 'bg-white/20 text-white shadow-lg scale-[1.02]'
-              : 'hover:bg-white/10 text-gray-300 hover:text-white'
-          }
-          ${isDragging ? 'opacity-50 transform rotate-2' : ''}
-          ${isDraggedOver ? 'bg-white/30 transform scale-105' : ''}
-        `}
+        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+          isActive
+            ? 'bg-white/20 text-white shadow-lg scale-[1.02]'
+            : 'hover:bg-white/10 text-gray-300 hover:text-white'
+        }`}
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'Enter') handleAvatarSelect(avatar);
@@ -124,16 +53,7 @@ const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
         }}
         onClick={() => handleAvatarSelect(avatar)}
       >
-        {/* Drag Handle */}
-        <div
-          className="flex-shrink-0 text-gray-400 hover:text-white cursor-grab active:cursor-grabbing"
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          <GripVertical className="w-4 h-4" />
-        </div>
-
         <User className="w-6 h-6" />
-
         <div className="flex-grow min-w-0">
           <div className="font-semibold text-sm sm:text-base whitespace-normal">
             {avatar.name}
@@ -142,7 +62,6 @@ const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
             {avatar.description}
           </div>
         </div>
-
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -221,21 +140,21 @@ const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
               <AuthComponent />
             </div>
           )}
-
           {/* Avatar List */}
           <div className="flex-grow overflow-y-auto min-h-0 space-y-2">
-            {Array.isArray(localAvatars) && localAvatars.length > 0 ? (
-              <div className="space-y-2">
-                {localAvatars.map((avatar, index) => (
-                  <div key={avatar.avatar_id}>
-                    {renderAvatarItem(
-                      avatar,
-                      index,
-                      activeAvatar?.avatar_id === avatar.avatar_id
-                    )}
-                  </div>
-                ))}
-              </div>
+            {Array.isArray(avatars) && avatars.length > 0 ? (
+              <AnimatedList
+                items={avatars}
+                selectedKey={activeAvatar?.avatar_id} // <-- NEW
+                onItemSelect={(avatar) => handleAvatarSelect(avatar)}
+                renderItem={(avatar, index, isSelected) =>
+                  renderAvatarItem(avatar, index, isSelected)
+                }
+                showGradients={true}
+                enableArrowNavigation={true}
+                displayScrollbar={true}
+                className="relative flex-grow overflow-y-auto min-h-0"
+              />
             ) : (
               <div className="text-gray-400 text-sm p-4 italic text-center">
                 {isLoggedIn

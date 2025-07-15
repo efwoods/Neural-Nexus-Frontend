@@ -3,6 +3,7 @@ import { Upload } from 'lucide-react';
 import { useMedia } from '../context/MediaContext';
 import Dock from './Dock';
 import { HiXMark } from 'react-icons/hi2';
+import thoughtToImageService from '../services/ThoughtToImageService';
 
 const InputBar = ({
   avatar_id,
@@ -192,6 +193,30 @@ const InputBar = ({
       ta.style.height = ta.scrollHeight + 'px';
     }
   }, [inputMessage]);
+
+  // Receive Thought to Image Previews of Reconstructed Images
+  useEffect(() => {
+    console.log('Reconstructed Image Received in the Frontend');
+    thoughtToImageService.onReconstructedImage = ({
+      file,
+      imageUrl,
+      metadata,
+    }) => {
+      console.info('[InputBar] Adding reconstructed image to mediaFiles');
+
+      setMediaFiles((prevFiles) => [...prevFiles, file]);
+
+      // Optional: set caption or metadata if needed
+      // setCaptions((prevCaptions) => ({
+      //   ...prevCaptions,
+      //   [mediaFiles.length]: `Reconstructed on ${new Date().toLocaleString()}`,
+      // }));
+    };
+
+    return () => {
+      thoughtToImageService.onReconstructedImage = null;
+    };
+  }, [mediaFiles.length]);
 
   return (
     <div

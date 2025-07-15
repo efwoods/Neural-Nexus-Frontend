@@ -1,14 +1,13 @@
 // components/ChatArea.jsx
 
-import React, { useRef, useEffect } from 'react';
-import { User } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
+import { User, MessageCircle, Eye } from 'lucide-react';
 import LiveTranscriptionTicker from './LiveTranscriptionTicker';
 import AudioStreamer from './AudioStreamer';
 import MessageList from './MessageList';
 import InputBar from './InputBar';
 import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
-import NeuralNexusLogo from '../assets/NeuralNexus.png';
 
 const ChatArea = ({
   showDataExchangeDropdown,
@@ -40,6 +39,8 @@ const ChatArea = ({
     handleFileUpload,
   } = useMedia();
 
+  const [activeTab, setActiveTab] = useState('chat');
+
   useEffect(() => {
     if (activeAvatar && accessToken) {
       fetchMessages();
@@ -54,7 +55,6 @@ const ChatArea = ({
         <div className="absolute inset-0 flex items-center justify-center bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20">
           <div className="text-center">
             <User className="w-64 h-64 bg-transparent mx-auto mb-4 text-gray-400 sm:w-32 sm:h-32" />
-
             <h2 className="text-2xl font-semibold mb-2">Select an Avatar</h2>
             <p className="text-gray-400 break-words p-1">
               Choose an avatar from the sidebar or create a new one to start
@@ -81,5 +81,4 @@ const ChatArea = ({
     </div>
   );
 };
-
 export default ChatArea;

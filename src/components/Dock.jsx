@@ -61,21 +61,18 @@ const Dock = ({
 
   useEffect(() => {
     if (isThoughtToImageEnabled) {
-      const pollingFreq = 10000; // every ten seconds, poll
+      const pollingFreq = 10000; // every ten seconds, send a request for a reconstructed image
+
+      // Connect to the reconstruction websocket to receive
+      // a reconstructed image
+      thoughtToImageService.connectReconstructedImageWebSocket(user.user_id);
+
+      // Send the request for the reconstructed image
       thoughtToImageService.startPolling({
         accessToken,
         avatar_id: activeAvatar.avatar_id,
         user_id: user.user_id,
         pollingFreq,
-      });
-
-      thoughtToImageService.connectWebSocket({
-        accessToken,
-        avatar_id: activeAvatar.avatar_id,
-        user_id: user.user_id,
-        onReconstructed: () => {
-          fetchMessages();
-        },
       });
     }
     return () => {

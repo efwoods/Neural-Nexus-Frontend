@@ -21,7 +21,7 @@ const MessageList = ({ messages, messagesEndRef }) => {
   return (
     <div className="flex-grow overflow-y-auto mb-4 space-y-2 px-2 flex flex-col">
       {messages.map((msg) => {
-        if (!msg?.sender) return null; // ✅ VALID: inside .map(), skipping undefined senders
+        if (!msg?.sender) return null; // preventing grey box from appearing
 
         return (
           <div
