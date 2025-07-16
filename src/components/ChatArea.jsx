@@ -8,6 +8,7 @@ import MessageList from './MessageList';
 import InputBar from './InputBar';
 import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
+import { Toaster } from 'react-hot-toast';
 
 const ChatArea = ({
   showDataExchangeDropdown,
@@ -49,6 +50,24 @@ const ChatArea = ({
 
   return (
     <div className="flex flex-col flex-grow bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-2 sm:p-4 overflow-hidden">
+      <Toaster
+        position="top-center"
+        reverseOrder={true}
+        toastOptions={{
+          success: {
+            style: {
+              background: 'transparent',
+              color: 'white', // text-gray-400
+            },
+          },
+          loading: {
+            style: {
+              background: 'transparent',
+              color: 'white', // text-gray-400
+            },
+          },
+        }}
+      />
       <LiveTranscriptionTicker isTranscribing={isTranscribing} />
       <AudioStreamer isTranscribing={isTranscribing} />
       {!activeAvatar && (

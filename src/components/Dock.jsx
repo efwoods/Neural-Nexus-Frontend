@@ -4,6 +4,12 @@ import { useEffect } from 'react';
 import { useMedia } from '../context/MediaContext';
 import { useAuth } from '../context/AuthContext';
 
+import {
+  incrementPendingRequests,
+  decrementPendingRequests,
+  clearPendingRequests,
+} from '../components/toastManager';
+
 const DockButton = ({
   icon: Icon,
   label,
@@ -68,6 +74,7 @@ const Dock = ({
       thoughtToImageService.connectReconstructedImageWebSocket(user.user_id);
 
       // Send the request for the reconstructed image
+      incrementPendingRequests();
       thoughtToImageService.startPolling({
         accessToken,
         avatar_id: activeAvatar.avatar_id,

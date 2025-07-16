@@ -1,5 +1,11 @@
 // services/ThoughtToImageService.jsx
 
+import {
+  incrementPendingRequests,
+  decrementPendingRequests,
+  clearPendingRequests,
+} from '../components/toastManager';
+
 import { getNgrokHttpsUrl, getNgrokWsUrl } from '../context/NgrokAPIStore';
 class ThoughtToImageService {
   constructor() {
@@ -48,6 +54,8 @@ class ThoughtToImageService {
               imageUrl,
               metadata: message.metadata,
             });
+            console.log('decrementPendingRequests();');
+            decrementPendingRequests();
           }
         }
       } catch (err) {
@@ -67,9 +75,13 @@ class ThoughtToImageService {
   startPolling({ accessToken, avatar_id, user_id, pollingFreq }) {
     const ngrokUrl = getNgrokHttpsUrl();
     const endpoint = `${ngrokUrl}/thought-to-image-simulation-api/initialize/enable-thought-to-image`;
-
+    console.log('starting polling');
+    console.log('incrementPendingRequests();');
+    // incrementPendingRequests();
     this.pollingInterval = setInterval(async () => {
       try {
+        console.log('incrementPendingRequests();');
+        incrementPendingRequests();
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
@@ -113,6 +125,7 @@ class ThoughtToImageService {
   cleanup() {
     this.stopPolling();
     this.disconnectWebSocket();
+    clearPendingRequests();
   }
 }
 

@@ -6,6 +6,7 @@ import ChatArea from './components/ChatArea';
 import CreateAvatarModal from './components/CreateAvatarModal';
 import { useAuth } from './context/AuthContext';
 import { useMedia } from './context/MediaContext';
+import { Toaster } from 'react-hot-toast';
 
 const AvatarChatApp = () => {
   const { activeAvatar } = useAuth();
@@ -76,6 +77,7 @@ const AvatarChatApp = () => {
             isOpen={sidebarVisible}
             onClose={() => setSidebarVisible(false)}
           />
+
           <ChatArea
             className="flex flex-grow w-full h-full z-50"
             showDataExchangeDropdown={showDataExchangeDropdown}
