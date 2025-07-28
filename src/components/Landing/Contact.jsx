@@ -27,7 +27,7 @@ export default function Contact() {
     const body = encodeURIComponent(
       `Name: ${name}\nEmail: ${senderEmail}\n\nMessage:\n${message}`
     );
-    const mailto = `mailto:hiring@neuralnexus.site?subject=${subject}&body=${body}`;
+    const mailto = `mailto:contact@neuralnexus.site?subject=${subject}&body=${body}`;
 
     window.location.href = mailto;
   };
