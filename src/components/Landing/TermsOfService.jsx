@@ -12,10 +12,10 @@ export default function TermsOfService() {
           Welcome to Neural Nexus, operated by Afterlife Systems Inc. ("we,"
           "us," or "our") at{' '}
           <a
-            href="https://neural-nexus-omega.vercel.app/"
+            href="https://neuralnexus.site"
             className="text-purple-300 hover:text-purple-100"
           >
-            https://neural-nexus-omega.vercel.app/
+            https://neuralnexus.site
           </a>{' '}
           ("the Service"). By accessing or using the Service, you ("you" or
           "User") agree to be bound by these Terms of Service ("Terms"). If you
@@ -56,10 +56,10 @@ export default function TermsOfService() {
           <li>
             Notify us immediately of any unauthorized use of your account at{' '}
             <a
-              href="mailto:afterlifesystems@icloud.com"
+              href="mailto:contact@neuralnexus.site"
               className="text-purple-300 hover:text-purple-100"
             >
-              afterlifesystems@icloud.com
+              contact@neuralnexus.site
             </a>
             .
           </li>
@@ -121,10 +121,10 @@ export default function TermsOfService() {
           Some features may require a paid subscription. Subscription details,
           including pricing, are available at{' '}
           <a
-            href="https://neural-nexus-omega.vercel.app/pricing"
+            href="https://neuralnexus.site/pricing"
             className="text-purple-300 hover:text-purple-100"
           >
-            https://neural-nexus-omega.vercel.app/pricing
+            https://neuralnexus.site/pricing
           </a>
           . Subscriptions are processed via Stripe, a third-party payment
           processor.
@@ -147,10 +147,10 @@ export default function TermsOfService() {
           Refunds are issued at our discretion, subject to our refund policy,
           available at{' '}
           <a
-            href="https://neural-nexus-omega.vercel.app/refunds"
+            href="https://neuralnexus.site/refunds"
             className="text-purple-300 hover:text-purple-100"
           >
-            https://neural-nexus-omega.vercel.app/refunds
+            https://neuralnexus.site/refunds
           </a>
           .
         </p>
@@ -250,13 +250,13 @@ export default function TermsOfService() {
           <br />
           Email:{' '}
           <a
-            href="mailto:afterlifesystems@icloud.com"
+            href="mailto:contact@neuralnexus.site"
             className="text-purple-300 hover:text-purple-100"
           >
-            afterlifesystems@icloud.com
+            contact@neuralnexus.site
           </a>
           <br />
-          Address: Your address
+          {/* Address: Your address */}
         </p>
         <p className="mt-6 italic">
           These Terms of Service are designed to protect Afterlife Systems Inc.

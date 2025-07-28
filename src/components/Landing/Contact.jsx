@@ -1,9 +1,37 @@
 // src/components/Landing/Contact.jsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import { FaXTwitter, FaLinkedin, FaGithub } from 'react-icons/fa6'; // Modern Twitter & LinkedIn
 
+import toast, { Toaster } from 'react-hot-toast';
+
 export default function Contact() {
+  const [name, setName] = useState('');
+  const [senderEmail, setSenderEmail] = useState('');
+  const [message, setMessage] = useState('');
+
+  const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const handleSend = () => {
+    if (!name || !senderEmail || !message) {
+      toast.error('All fields are required.');
+      return;
+    }
+
+    if (!isEmailValid(senderEmail)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+
+    const subject = encodeURIComponent(`Message from ${name}`);
+    const body = encodeURIComponent(
+      `Name: ${name}\nEmail: ${senderEmail}\n\nMessage:\n${message}`
+    );
+    const mailto = `mailto:hiring@neuralnexus.site?subject=${subject}&body=${body}`;
+
+    window.location.href = mailto;
+  };
+
   return (
     <section id="contact" className="py-16 bg-gray-100 text-gray-800">
       <div className="container mx-auto">
@@ -13,19 +41,26 @@ export default function Contact() {
             <input
               type="text"
               placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="w-full p-2 mb-4 border focus:border-purple-900 focus:ring-4 focus:ring-purple-400 focus:outline-none rounded transition-all"
             />
             <input
               type="email"
               placeholder="Email"
+              value={senderEmail}
+              onChange={(e) => setSenderEmail(e.target.value)}
               className="w-full p-2 mb-4 border focus:border-purple-900 focus:ring-4 focus:ring-purple-400 focus:outline-none rounded transition-all"
             />
             <textarea
               placeholder="Message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
               className="w-full p-2 mb-4 border focus:border-purple-900 focus:ring-4 focus:ring-purple-400 focus:outline-none rounded transition-all"
             ></textarea>
             <button
               type="button"
+              onClick={handleSend}
               className="bg-purple-900 text-white px-6 py-2 rounded-full w-full"
             >
               Send

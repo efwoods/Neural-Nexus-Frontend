@@ -12,10 +12,10 @@ export default function PrivacyPolicy() {
           Afterlife Systems Inc. ("we," "us," or "our") operates the Neural
           Nexus platform, accessible at{' '}
           <a
-            href="https://neural-nexus-omega.vercel.app/"
+            href="https://neuralnexus.site"
             className="text-purple-300 hover:text-purple-100"
           >
-            https://neural-nexus-omega.vercel.app/
+            https://neuralnexus.site
           </a>{' '}
           ("the Service"). We are committed to protecting your privacy and
           ensuring the security of your personal information. This Privacy
@@ -167,10 +167,10 @@ export default function PrivacyPolicy() {
         <p className="mb-4">
           To exercise these rights, contact us at{' '}
           <a
-            href="mailto:afterlifesystems@icloud.com"
+            href="mailto:contact@neuralnexus.site"
             className="text-purple-300 hover:text-purple-100"
           >
-            afterlifesystems@icloud.com
+            contact@neuralnexus.site
           </a>
           . We will respond within 30 days, or as required by law.
         </p>
@@ -242,13 +242,13 @@ export default function PrivacyPolicy() {
           <br />
           Email:{' '}
           <a
-            href="mailto:afterlifesystems@icloud.com"
+            href="mailto:contact@neuralnexus.site"
             className="text-purple-300 hover:text-purple-100"
           >
-            afterlifesystems@icloud.com
+            contact@neuralnexus.site
           </a>
           <br />
-          Address: Your address
+          {/* Address: Your address */}
         </p>
         <p className="mt-6 italic">
           This Privacy Policy is designed to comply with applicable regulations,

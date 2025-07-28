@@ -14,10 +14,10 @@ export default function Careers() {
           Apply now to shape the future of AI.
         </p>
         <a
-          href="mailto:afterlifesystems@icloud.com"
+          href="mailto:hiring@neuralnexus.site"
           className="block text-center text-white hover:underline hover:text-purple-200 transition"
         >
-          afterlifesystems@icloud.com
+          hiring@neuralnexus.site
         </a>
       </div>
     </section>
