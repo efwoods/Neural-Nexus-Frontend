@@ -7,10 +7,14 @@ const APIContext = createContext(null);
 export const NgrokUrlProvider = ({ children }) => {
   const [ngrokWsUrl, setNgrokWsUrl] = useState(null);
   const [ngrokHttpsUrl, setNgrokHttpsUrl] = useState(null);
-
   // Using a known subdomain with proxy
-  setNgrokWsUrl('wss://api.neuralnexus.site');
-  setNgrokHttpsUrl('https://api.neuralnexus.site');
+  useEffect(() => {
+    const wsUrl = 'wss://api.neuralnexus.site';
+    const httpsUrl = 'https://api.neuralnexus.site';
+    setNgrokWsUrl(wsUrl);
+    setNgrokHttpsUrl(httpsUrl);
+    setNgrokUrls(httpsUrl, wsUrl); // optional: if you want to share state elsewhere
+  }, []);
 
   // useEffect(() => {
   //   const fetchNgrokUrl = async () => {
