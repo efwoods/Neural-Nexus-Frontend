@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getNgrokHttpsUrl } from '../context/NgrokAPIStore';
+import { getNgrokHttpsUrl, getDbHttpsUrl } from '../context/NgrokAPIStore';
 
 const SecureImage = ({ mediaId, filename, accessToken }) => {
   const [imageSrc, setImageSrc] = useState(null);
@@ -10,16 +10,13 @@ const SecureImage = ({ mediaId, filename, accessToken }) => {
 
     const fetchImage = async () => {
       try {
-        const res = await fetch(
-          `${getNgrokHttpsUrl()}/neural-nexus-db/media/${mediaId}`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'ngrok-skip-browser-warning': '69420',
-            },
-          }
-        );
+        const res = await fetch(`${getDbHttpsUrl()}/media/${mediaId}`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'ngrok-skip-browser-warning': '69420',
+          },
+        });
 
         if (!res.ok) {
           throw new Error(`Failed to fetch image: ${res.status}`);

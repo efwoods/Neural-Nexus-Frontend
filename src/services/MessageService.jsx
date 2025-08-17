@@ -1,6 +1,6 @@
 // Updated MessageService.jsx
 
-import { getNgrokHttpsUrl } from '../context/NgrokAPIStore';
+import { getNgrokHttpsUrl, getDbHttpsUrl } from '../context/NgrokAPIStore';
 
 export async function saveMessage(
   avatar_id,
@@ -19,18 +19,14 @@ export async function saveMessage(
   }
   formData.append('sender', sender);
 
-  const response = await fetch(
-    `${getNgrokHttpsUrl()}/neural-nexus-db/avatars/post_message`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        // Accept: 'application/json',
-        'ngrok-skip-browser-warning': '69420',
-      },
-      body: formData,
-    }
-  );
+  const response = await fetch(`${getDbHttpsUrl()}/avatars/post_message`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      // Accept: 'application/json',
+    },
+    body: formData,
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -42,13 +38,12 @@ export async function saveMessage(
 
 export async function getAvatarMessages(avatar_id, accessToken) {
   const response = await fetch(
-    `${getNgrokHttpsUrl()}/neural-nexus-db/avatars/get_avatar_messages?avatar_id=${avatar_id}`,
+    `${getDbHttpsUrl()}/avatars/get_avatar_messages?avatar_id=${avatar_id}`,
     {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         Accept: 'application/json',
-        'ngrok-skip-browser-warning': '69420',
       },
     }
   );

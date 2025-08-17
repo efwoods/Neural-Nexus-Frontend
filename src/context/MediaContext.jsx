@@ -19,7 +19,7 @@ import { useAuth } from '../context/AuthContext';
 const MediaContext = createContext();
 
 export const MediaProvider = ({ children }) => {
-  const { ngrokHttpsUrl, ngrokWsUrl } = useNgrokApiUrl();
+  const { ngrokHttpsUrl, ngrokWsUrl, dbHttpsUrl } = useNgrokApiUrl();
   const { accessToken, activeAvatar, user } = useAuth();
   console.log('MediaProvider Service call of ngrokHttpsUrl:', ngrokHttpsUrl);
 
@@ -364,7 +364,7 @@ export const MediaProvider = ({ children }) => {
   };
 
   const getMediaUrl = (media_id, accessToken) => {
-    return `${ngrokHttpsUrl}/neural-nexus-db/media/${media_id}?token=${accessToken}`;
+    return `${dbHttpsUrl}/media/${media_id}?token=${accessToken}`;
   };
 
   const handleFileChange = (e) => {

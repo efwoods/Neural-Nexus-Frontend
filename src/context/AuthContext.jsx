@@ -9,7 +9,7 @@ import { useCallback } from 'react';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const { ngrokHttpsUrl } = useNgrokApiUrl();
+  const { ngrokHttpsUrl, dbHttpsUrl } = useNgrokApiUrl();
   console.log('AuthProvider Service call of ngrokHttpsUrl:', ngrokHttpsUrl);
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -35,20 +35,14 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (username, email, password) => {
     const signupData = { username, email, password };
-    console.log(
-      'calling `${ngrokHttpsUrl}/neural-nexus-db/signup`, from AUTHCONTEXT'
-    );
-    const signupResponse = await fetch(
-      `${ngrokHttpsUrl}/neural-nexus-db/signup`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': '69420',
-        },
-        body: JSON.stringify(signupData),
-      }
-    );
+    console.log('calling `${dbHttpsUrl}/signup`, from AUTHCONTEXT');
+    const signupResponse = await fetch(`${dbHttpsUrl}/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(signupData),
+    });
 
     if (!signupResponse.ok) {
       const err = await signupResponse.json();
@@ -56,19 +50,13 @@ export const AuthProvider = ({ children }) => {
     }
 
     const { access_token } = await signupResponse.json();
-    console.log(
-      'Calling `${ngrokHttpsUrl}/neural-nexus-db/profile`, from AUTHCONTEXT'
-    );
-    const profileResponse = await fetch(
-      `${ngrokHttpsUrl}/neural-nexus-db/profile`,
-      {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-          Accept: 'application/json',
-          'ngrok-skip-browser-warning': '69420',
-        },
-      }
-    );
+    console.log('Calling `${dbHttpsUrl}/profile`, from AUTHCONTEXT');
+    const profileResponse = await fetch(`${dbHttpsUrl}/profile`, {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        Accept: 'application/json',
+      },
+    });
 
     if (!profileResponse.ok) {
       const errText = await profileResponse.text();
@@ -90,21 +78,15 @@ export const AuthProvider = ({ children }) => {
     loginParams.append('password', password);
 
     console.log(loginParams.toString());
-    console.log(
-      'calling `${ngrokHttpsUrl}/neural-nexus-db/login`, from AUTHCONTEXT'
-    );
-    const loginResponse = await fetch(
-      `${ngrokHttpsUrl}/neural-nexus-db/login`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Accept: 'application/json',
-          'ngrok-skip-browser-warning': '69420',
-        },
-        body: loginParams.toString(),
-      }
-    );
+    console.log('calling `${dbHttpsUrl}/login`, from AUTHCONTEXT');
+    const loginResponse = await fetch(`${dbHttpsUrl}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: loginParams.toString(),
+    });
 
     if (!loginResponse.ok) {
       const err = await loginResponse.json();
@@ -112,19 +94,13 @@ export const AuthProvider = ({ children }) => {
     }
 
     const { access_token } = await loginResponse.json();
-    console.log(
-      'Calling `${ngrokHttpsUrl}/neural-nexus-db/profile`, from AUTHCONTEXT'
-    );
-    const profileResponse = await fetch(
-      `${ngrokHttpsUrl}/neural-nexus-db/profile`,
-      {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-          Accept: 'application/json',
-          'ngrok-skip-browser-warning': '69420',
-        },
-      }
-    );
+    console.log('Calling `${dbHttpsUrl}/profile`, from AUTHCONTEXT');
+    const profileResponse = await fetch(`${dbHttpsUrl}/profile`, {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        Accept: 'application/json',
+      },
+    });
 
     if (!profileResponse.ok) {
       const errText = await profileResponse.text();
@@ -142,15 +118,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     const token = localStorage.getItem('access_token');
-    console.log(
-      'calling `${ngrokHttpsUrl}/neural-nexus-db/logout`, from AUTHCONTEXT'
-    );
-    await fetch(`${ngrokHttpsUrl}/neural-nexus-db/logout`, {
+    console.log('calling `${dbHttpsUrl}/logout`, from AUTHCONTEXT');
+    await fetch(`${dbHttpsUrl}/logout`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/json',
-        'ngrok-skip-browser-warning': '69420',
       },
     });
     setUser(null);
@@ -168,20 +141,14 @@ export const AuthProvider = ({ children }) => {
       'Get Avatars of AuthContext call of ngrokHttpsUrl: ' +
         JSON.stringify(ngrokHttpsUrl)
     );
-    console.log(
-      'calling `${ngrokHttpsUrl}/neural-nexus-db/avatars/get_all`, from AUTHCONTEXT'
-    );
-    const res = await fetch(
-      `${ngrokHttpsUrl}/neural-nexus-db/avatars/get_all`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
-          'ngrok-skip-browser-warning': '69420',
-        },
-      }
-    );
+    console.log('calling `${dbHttpsUrl}/avatars/get_all`, from AUTHCONTEXT');
+    const res = await fetch(`${dbHttpsUrl}/avatars/get_all`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+    });
     if (!res.ok) {
       console.error('Failed to fetch avatars');
       return;

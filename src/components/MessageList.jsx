@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getNgrokHttpsUrl } from '../context/NgrokAPIStore';
+import { getDbHttpsUrl, getNgrokHttpsUrl } from '../context/NgrokAPIStore';
 import { useMedia } from '../context/MediaContext';
 import SecureImage from './SecureImage';
 
@@ -10,6 +10,7 @@ const MessageList = ({ messages, messagesEndRef }) => {
   const { accessToken } = useAuth();
   const { getMediaUrl } = useMedia();
   const ngrokHttpsUrl = getNgrokHttpsUrl();
+  const dbHttpsUrl = getDbHttpsUrl();
 
   useEffect(() => {
     console.log(ngrokHttpsUrl);
@@ -53,17 +54,17 @@ const MessageList = ({ messages, messagesEndRef }) => {
                   ) : media.content_type.startsWith('audio/') ? (
                     <audio
                       controls
-                      src={`${ngrokHttpsUrl}/neural-nexus-db/media/${media.media_id}?token=${accessToken}`}
+                      src={`${dbHttpsUrl}/media/${media.media_id}?token=${accessToken}`}
                     />
                   ) : media.content_type.startsWith('video/') ? (
                     <video
                       controls
                       className="max-w-full max-h-64"
-                      src={`${ngrokHttpsUrl}/neural-nexus-db/media/${media.media_id}?token=${accessToken}`}
+                      src={`${dbHttpsUrl}/media/${media.media_id}?token=${accessToken}`}
                     />
                   ) : (
                     <a
-                      href={`${ngrokHttpsUrl}/neural-nexus-db/media/${media.media_id}?token=${accessToken}`}
+                      href={`${dbHttpsUrl}/media/${media.media_id}?token=${accessToken}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline text-blue-300"
