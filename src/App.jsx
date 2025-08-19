@@ -22,6 +22,7 @@ const AvatarChatApp = () => {
   const [showDataExchangeDropdown, setShowDataExchangeDropdown] =
     useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
+  const [activeTab, setActiveTab] = useState('chat'); // default tab
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -78,12 +79,21 @@ const AvatarChatApp = () => {
             onClose={() => setSidebarVisible(false)}
           />
 
-          <ChatArea
-            className="flex flex-grow w-full h-full z-50"
-            showDataExchangeDropdown={showDataExchangeDropdown}
-            setShowDataExchangeDropdown={setShowDataExchangeDropdown}
-            dropdownRef={dropdownRef}
-          />
+          {activeTab === 'chat' && (
+            <ChatArea
+              className="flex flex-grow w-full h-full z-50"
+              showDataExchangeDropdown={showDataExchangeDropdown}
+              setShowDataExchangeDropdown={setShowDataExchangeDropdown}
+              dropdownRef={dropdownRef}
+              onOpenDocs={() => setActiveTab('docs')} // new prop
+            />
+          )}
+
+          {activeTab === 'docs' && (
+            <DocumentPane
+              onClose={() => setActiveTab('chat')} // back to chat
+            />
+          )}
         </div>
         {showCreateModal && (
           <CreateAvatarModal setShowCreateModal={setShowCreateModal} />

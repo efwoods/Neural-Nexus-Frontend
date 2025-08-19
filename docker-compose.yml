@@ -3,13 +3,15 @@ services:
     container_name: neural-nexus-frontend
     build:
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
       - "5173:5173"
     volumes:
-      - ./:/app
-      - /app/node_modules
-    command: npm run dev -- --host
+      - ./:/app:cached # bind your code
+      - /app/node_modules # keep container modules separate
     environment:
-      - CHOKIDAR_USEPOLLING=true  # Use polling to detect changes (helpful in some Docker environments)
+      - CHOKIDAR_USEPOLLING=true # force Vite to poll for changes
+      - CHOKIDAR_INTERVAL=100  # optional: faster polling
+    stdin_open: true
+    tty: true
     restart: unless-stopped
