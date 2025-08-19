@@ -9,6 +9,7 @@ import { useMedia } from './context/MediaContext';
 import { Toaster } from 'react-hot-toast';
 import LiveChat from './components/LiveChat';
 import AccountSettings from './components/AccountSettings';
+import BillingDashboard from './components/BillingDashboard';
 
 const AvatarChatApp = () => {
   const { activeAvatar } = useAuth();
@@ -79,6 +80,7 @@ const AvatarChatApp = () => {
           sidebarVisible={sidebarVisible}
           setSidebarVisible={setSidebarVisible}
           setActiveTab={setActiveTab}
+          onEndLiveChat={handleEndLiveChat} // <-- make sure this is here
         />
         <div className="relative flex flex-grow overflow-hidden">
           <Sidebar
@@ -89,7 +91,9 @@ const AvatarChatApp = () => {
             setActiveTab={setActiveTab} // allow switching tabs
             onEndLiveChat={handleEndLiveChat} // <-- NEW
           />
-          {activeTab === 'account' ? (
+          {activeTab === 'billing' ? (
+            <BillingDashboard />
+          ) : activeTab === 'account' ? (
             <AccountSettings />
           ) : !isLiveChat ? (
             <ChatArea

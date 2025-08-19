@@ -15,7 +15,7 @@ const modalRoot =
     return el;
   })();
 
-const AuthComponent = () => {
+const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
   const [showModal, setShowModal] = useState(false);
   const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState('');
@@ -185,6 +185,7 @@ const AuthComponent = () => {
             >
               <button
                 onClick={() => {
+                  onEndLiveChat?.(); // stop live chat if active
                   setActiveTab('account'); // switch to account settings
                   setDropdownOpen(false);
                 }}
@@ -192,6 +193,18 @@ const AuthComponent = () => {
                 role="menuitem"
               >
                 Account Settings
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab('billing'); // switch to billing dashboard
+                  if (onEndLiveChat) onEndLiveChat(); // stop live chat if active
+                  setDropdownOpen(false);
+                }}
+                className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-teal-600 transition"
+                role="menuitem"
+              >
+                Billing
               </button>
 
               <button

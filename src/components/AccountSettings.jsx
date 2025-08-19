@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
-const AccountSettings = () => {
+const AccountSettings = ({ activeTab }) => {
   const [username, setUsername] = useState('');
   const [personalImage, setPersonalImage] = useState(null);
   const [neuralNexusKey, setNeuralNexusKey] = useState('');
@@ -152,11 +152,6 @@ const AccountSettings = () => {
 
       {/* Billing / Subscription */}
       <div className="flex flex-col gap-2">
-        <h2 className="text-xl font-bold">Billing & Subscription</h2>
-        <button className="bg-teal-600 px-4 py-2 rounded">Go to Billing</button>
-        <button className="bg-red-600 px-4 py-2 rounded">
-          Cancel Subscription
-        </button>
         <button className="bg-blue-600 px-4 py-2 rounded">
           Download My Data
         </button>

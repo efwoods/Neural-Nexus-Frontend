@@ -170,7 +170,7 @@ const InputBar = ({
       }}
     >
       {/* Preset Buttons */}
-      <div className="flex justify-center items-center gap-3 text-white flex-wrap mb-2">
+      {/* <div className="flex justify-center items-center gap-3 text-white flex-wrap mb-2"> These need to be toasts and call an api endpoint with the conversation context, avatar context, and user context
         {[
           'Expand on that.',
           "Let's change the topic.",
@@ -187,7 +187,7 @@ const InputBar = ({
             <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-500 skew-x-12"></div>
           </button>
         ))}
-      </div>
+      </div> */}
 
       {/* Input + Media */}
       <div className="mb-2 relative border border-gray-700 rounded-lg bg-black/35 focus-within:border-teal-400 transition-colors">

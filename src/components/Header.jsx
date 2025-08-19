@@ -5,7 +5,12 @@ import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import NeuralNexusLogo from '../assets/NeuralNexus.png';
 import AuthComponent from './AuthComponent';
 
-const Header = ({ sidebarVisible, setSidebarVisible, setActiveTab }) => {
+const Header = ({
+  sidebarVisible,
+  setSidebarVisible,
+  setActiveTab,
+  onEndLiveChat,
+}) => {
   return (
     <header className="w-full bg-black/50 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50 rounded-2xl px-2">
       <div className="flex justify-between items-center px-2 py-3 mx-auto">
@@ -37,7 +42,10 @@ const Header = ({ sidebarVisible, setSidebarVisible, setActiveTab }) => {
 
         {/* Right side: Auth component */}
         <div className="flex items-center">
-          <AuthComponent setActiveTab={setActiveTab} />
+          <AuthComponent
+            setActiveTab={setActiveTab}
+            onEndLiveChat={onEndLiveChat}
+          />
         </div>
       </div>
     </header>
