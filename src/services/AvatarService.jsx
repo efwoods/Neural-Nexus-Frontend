@@ -1,15 +1,15 @@
 // services/AvatarService.jsx
-import { getNgrokHttpsUrl } from '../context/NgrokAPIStore';
+import { getNgrokHttpsUrl, getDbHttpsUrl } from '../context/NgrokAPIStore';
 
 export const AvatarService = {
   async getAll(accessToken) {
     try {
       const ngrokHttpsUrl = getNgrokHttpsUrl();
-      console.log('Avatar Service call of dbHttpsUrl:', dbHttpsUrl);
+      console.log('Avatar Service call of getDbHttpsUrl():', getDbHttpsUrl());
       console.log(
-        'Calling `${dbHttpsUrl}/avatars/get_all`, from Avatar Service'
+        'Calling `${getDbHttpsUrl()}/avatars/get_all`, from Avatar Service'
       );
-      const res = await fetch(`${dbHttpsUrl}/avatars/get_all`, {
+      const res = await fetch(`${getDbHttpsUrl()}/avatars/get_all`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -28,8 +28,10 @@ export const AvatarService = {
   async createAvatar(accessToken, payload) {
     try {
       console.log('createAvatar payload:', payload);
-      console.log('calling `${dbHttpsUrl}/avatars/create` from Avatar Service');
-      const response = await fetch(`${dbHttpsUrl}/avatars/create`, {
+      console.log(
+        'calling `${getDbHttpsUrl()}/avatars/create` from Avatar Service'
+      );
+      const response = await fetch(`${getDbHttpsUrl()}/avatars/create`, {
         method: 'POST',
 
         headers: {
@@ -53,8 +55,10 @@ export const AvatarService = {
     console.log('Avatar_id: ' + avatar_id);
     try {
       const ngrokHttpsUrl = getNgrokHttpsUrl();
-      console.log('calling `${dbHttpsUrl}/avatars/delete` from Avatar Service');
-      const response = await fetch(`${dbHttpsUrl}/avatars/delete`, {
+      console.log(
+        'calling `${getDbHttpsUrl()}/avatars/delete` from Avatar Service'
+      );
+      const response = await fetch(`${getDbHttpsUrl()}/avatars/delete`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,

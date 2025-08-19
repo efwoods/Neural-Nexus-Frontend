@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { Upload } from 'lucide-react';
+import { AudioLines } from 'lucide-react';
 import { useMedia } from '../context/MediaContext';
 import Dock from './Dock';
 import { HiXMark } from 'react-icons/hi2';
@@ -11,16 +12,18 @@ const InputBar = ({
   setShowDataExchangeDropdown,
   showDataExchangeDropdown,
   dropdownRef,
+  isLiveChatView = false, // NEW: prop to toggle live chat behavior
+  onActivateLiveChat, // NEW: callback to trigger live chat
 }) => {
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
-  // Message history state
+
   const [messageHistory, setMessageHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [tempMessage, setTempMessage] = useState(''); // Store current draft when navigating history
-  // Image caption editing state
+  const [tempMessage, setTempMessage] = useState('');
   const [editingCaption, setEditingCaption] = useState(null);
   const [captions, setCaptions] = useState({});
+  const [isHovered, setIsHovered] = useState(false);
 
   const {
     sendMessage,
@@ -41,17 +44,12 @@ const InputBar = ({
     dataExchangeTypes,
   } = useMedia();
 
-  // Enhanced key handler with history navigation
+  // Key handler
   const handleKeyDown = (e) => {
-    // Stop event propagation to prevent App.jsx global handler from interfering
     e.stopPropagation();
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
-    } else if (e.key === 'Enter' && e.shiftKey) {
-      // Allow default behavior for Shift+Enter (newline)
-      // Don't preventDefault() here - let the textarea handle it naturally
-      return;
     } else if (e.key === 'ArrowUp' && e.ctrlKey) {
       e.preventDefault();
       navigateHistory('up');
@@ -59,15 +57,12 @@ const InputBar = ({
       e.preventDefault();
       navigateHistory('down');
     }
-    // Regular up/down arrows without modifiers will work normally in textarea
   };
 
-  // History navigation logic
   const navigateHistory = (direction) => {
     if (messageHistory.length === 0) return;
     if (direction === 'up') {
       if (historyIndex === -1) {
-        // First time navigating up - store current message
         setTempMessage(inputMessage);
         setHistoryIndex(messageHistory.length - 1);
         setInputMessage(messageHistory[messageHistory.length - 1]);
@@ -77,7 +72,6 @@ const InputBar = ({
       }
     } else if (direction === 'down') {
       if (historyIndex === messageHistory.length - 1) {
-        // At newest entry - restore temp message
         setHistoryIndex(-1);
         setInputMessage(tempMessage);
         setTempMessage('');
@@ -88,15 +82,12 @@ const InputBar = ({
     }
   };
 
-  // Auto resize textarea height to fit content
   const handleInput = (e) => {
     setInputMessage(e.target.value);
-    // Reset history navigation when user types
     if (historyIndex !== -1) {
       setHistoryIndex(-1);
       setTempMessage('');
     }
-    // Resize textarea
     const ta = textareaRef.current;
     if (ta) {
       ta.style.height = 'auto';
@@ -105,8 +96,13 @@ const InputBar = ({
   };
 
   const handleSendMessage = () => {
-    if (!inputMessage.trim() && mediaFiles.length === 0) return;
-    // Add to history if not empty and not duplicate
+    if (!inputMessage.trim() && mediaFiles.length === 0) {
+      if (isLiveChatView && onActivateLiveChat) {
+        onActivateLiveChat(); // Trigger live chat if input empty
+      }
+      return;
+    }
+
     if (
       inputMessage.trim() &&
       (messageHistory.length === 0 ||
@@ -114,78 +110,39 @@ const InputBar = ({
     ) {
       setMessageHistory((prev) => [...prev, inputMessage.trim()]);
     }
-    // Reset history navigation
+
     setHistoryIndex(-1);
     setTempMessage('');
     setSender('user');
     sendMessage(mediaFiles, () => {
       setMediaFiles([]);
       setInputMessage('');
-      setCaptions({}); // Clear captions when message is sent
+      setCaptions({});
       if (fileInputRef.current) fileInputRef.current.value = '';
-      // Reset textarea height
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
+      if (textareaRef.current) textareaRef.current.style.height = 'auto';
     });
   };
 
-  // Enhanced file handler with drag and drop support
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files || e.dataTransfer?.files || []);
     handleFileChange({ target: { files } });
   };
 
-  // Enhanced remove file function
   const handleRemoveFile = (index) => {
     removeFile(index);
-    // Remove caption for this file
     setCaptions((prev) => {
       const newCaptions = { ...prev };
       delete newCaptions[index];
-      // Reindex remaining captions
       const reindexed = {};
       Object.keys(newCaptions).forEach((key) => {
         const keyIndex = parseInt(key);
-        if (keyIndex > index) {
-          reindexed[keyIndex - 1] = newCaptions[key];
-        } else {
-          reindexed[key] = newCaptions[key];
-        }
+        if (keyIndex > index) reindexed[keyIndex - 1] = newCaptions[key];
+        else reindexed[key] = newCaptions[key];
       });
       return reindexed;
     });
   };
 
-  // Caption editing functions
-  const startEditingCaption = (index) => {
-    setEditingCaption(index);
-  };
-
-  const updateCaption = (index, caption) => {
-    setCaptions((prev) => ({
-      ...prev,
-      [index]: caption,
-    }));
-  };
-
-  const finishEditingCaption = () => {
-    setEditingCaption(null);
-  };
-
-  // Drag and drop handlers
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleFileSelect(e);
-  };
-
-  // Resize on mount and input changes
   useEffect(() => {
     const ta = textareaRef.current;
     if (ta) {
@@ -194,25 +151,10 @@ const InputBar = ({
     }
   }, [inputMessage]);
 
-  // Receive Thought to Image Previews of Reconstructed Images
   useEffect(() => {
-    console.log('Reconstructed Image Received in the Frontend');
-    thoughtToImageService.onReconstructedImage = ({
-      file,
-      imageUrl,
-      metadata,
-    }) => {
-      console.info('[InputBar] Adding reconstructed image to mediaFiles');
-
+    thoughtToImageService.onReconstructedImage = ({ file }) => {
       setMediaFiles((prevFiles) => [...prevFiles, file]);
-
-      // Optional: set caption or metadata if needed
-      // setCaptions((prevCaptions) => ({
-      //   ...prevCaptions,
-      //   [mediaFiles.length]: `Reconstructed on ${new Date().toLocaleString()}`,
-      // }));
     };
-
     return () => {
       thoughtToImageService.onReconstructedImage = null;
     };
@@ -221,8 +163,11 @@ const InputBar = ({
   return (
     <div
       className="w-full max-w-3xl mx-auto rounded-xl flex flex-col"
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        handleFileSelect(e);
+      }}
     >
       {/* Preset Buttons */}
       <div className="flex justify-center items-center gap-3 text-white flex-wrap mb-2">
@@ -244,34 +189,28 @@ const InputBar = ({
         ))}
       </div>
 
-      {/* Integrated Input Container */}
+      {/* Input + Media */}
       <div className="mb-2 relative border border-gray-700 rounded-lg bg-black/35 focus-within:border-teal-400 transition-colors">
-        {/* Image thumbnails inside the input container */}
         {mediaFiles.length > 0 && (
           <div className="p-3 border-b border-gray-700/50">
             <div className="flex gap-3 overflow-x-auto scrollbar-thin scrollbar-thumb-teal-400">
               {mediaFiles.map((file, index) => (
                 <div key={index} className="relative flex-shrink-0 group">
-                  <div className="relative">
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={`preview-${index}`}
-                      className="h-16 w-16 object-cover rounded-lg border border-gray-600 group-hover:border-teal-400 transition-colors"
-                    />
-                    {/* Remove button */}
-
-                    <HiXMark
-                      onClick={() => handleRemoveFile(index)}
-                      className="absolute -top-0 -right-1 bg-red-900 hover:bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center transition-colors z-20"
-                    />
-                  </div>
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={`preview-${index}`}
+                    className="h-16 w-16 object-cover rounded-lg border border-gray-600 group-hover:border-teal-400 transition-colors"
+                  />
+                  <HiXMark
+                    onClick={() => handleRemoveFile(index)}
+                    className="absolute -top-0 -right-1 bg-red-900 hover:bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center transition-colors z-20"
+                  />
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Textarea */}
         <textarea
           ref={textareaRef}
           rows={1}
@@ -284,7 +223,6 @@ const InputBar = ({
           spellCheck={false}
         />
 
-        {/* History indicator */}
         {historyIndex !== -1 && (
           <div className="absolute right-2 top-2 text-xs text-teal-400 bg-black/50 px-2 py-1 rounded">
             {messageHistory.length - historyIndex}/{messageHistory.length}
@@ -292,9 +230,8 @@ const InputBar = ({
         )}
       </div>
 
-      {/* Upload + Dock + Send */}
+      {/* Upload + Dock + Dynamic Send */}
       <div className="flex flex-row items-center justify-between mt-1">
-        {/* Upload */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => fileInputRef.current?.click()}
@@ -313,7 +250,6 @@ const InputBar = ({
           />
         </div>
 
-        {/* Dock + Send */}
         <div className="flex items-center gap-2">
           <Dock
             isTranscribing={isTranscribing}
@@ -325,10 +261,24 @@ const InputBar = ({
             dataExchangeTypes={dataExchangeTypes}
           />
           <button
-            onClick={handleSendMessage}
-            className="transition-transform duration-300 hover:scale-105 px-6 py-3 rounded-xl text-white bg-black/35 border border-gray-700 hover:border-teal-400"
+            onClick={() => {
+              if (!inputMessage.trim() && mediaFiles.length === 0) {
+                // Trigger Live Chat if empty
+                if (onActivateLiveChat) onActivateLiveChat();
+              } else {
+                handleSendMessage();
+              }
+            }}
+            className="transition-transform duration-300 hover:scale-105 px-6 py-3 rounded-xl text-white bg-black/35 border border-gray-700 hover:border-teal-400 flex items-center justify-center gap-2"
           >
-            Send
+            {inputMessage.trim().length > 0 ? (
+              'Send'
+            ) : (
+              <>
+                <AudioLines className="w-5 h-5" />
+                Live Chat
+              </>
+            )}
           </button>
         </div>
       </div>

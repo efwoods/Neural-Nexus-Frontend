@@ -1,12 +1,19 @@
 //components/Sidebar.jsx
 
 import React, { useEffect } from 'react';
-import { UserPenIcon, User, Trash2 } from 'lucide-react';
+import { UserPenIcon, User, Trash2, Settings, Settings2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AuthComponent from './AuthComponent';
 import AnimatedList from './AnimatedList';
 
-const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
+const Sidebar = ({
+  setShowCreateModal,
+  isOpen,
+  onClose,
+  setActiveTab,
+  activeTab,
+  onEndLiveChat,
+}) => {
   const {
     isLoggedIn,
     accessToken,
@@ -27,15 +34,32 @@ const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
   // Handle avatar selection and close sidebar
   const handleAvatarSelect = (avatar) => {
     setActiveAvatar(avatar);
+    setActiveTab('chat'); // <-- this must come from props
+    onEndLiveChat?.();
+    onClose?.();
   };
 
   // Handle create avatar button click and close sidebar
   const handleCreateAvatar = () => {
     setShowCreateModal(true);
+    setActiveTab('chat');
+    onEndLiveChat?.();
     onClose?.();
   };
 
-  // Render each avatar item
+  const handleSelectDocs = (avatar, e) => {
+    e.stopPropagation();
+    setActiveAvatar(avatar);
+    setActiveTab('documents'); // <-- this must come from props
+    onEndLiveChat?.();
+    onClose?.();
+  };
+
+  const handleDelete = (avatar, e) => {
+    e.stopPropagation();
+    deleteAvatar(avatar.avatar_id);
+  };
+
   const renderAvatarItem = (avatar, index, isSelected) => {
     const isActive = activeAvatar?.avatar_id === avatar.avatar_id;
 
@@ -49,11 +73,23 @@ const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'Enter') handleAvatarSelect(avatar);
-          if (e.key === 'Delete') deleteAvatar(avatar.avatar_id);
+          if (e.key === 'Delete') handleDelete(avatar, e);
         }}
-        onClick={() => handleAvatarSelect(avatar)}
+        onClick={(e) => {
+          if (e.target.tagName !== 'BUTTON') handleAvatarSelect(avatar);
+        }}
       >
-        <User className="w-6 h-6" />
+        {/* Avatar Icon */}
+        {avatar.iconUrl ? (
+          <img
+            src={avatar.iconUrl}
+            alt="avatar"
+            className="w-8 h-8 rounded-lg object-cover"
+          />
+        ) : (
+          <User className="w-6 h-6" />
+        )}
+
         <div className="flex-grow min-w-0">
           <div className="font-semibold text-sm sm:text-base whitespace-normal">
             {avatar.name}
@@ -62,11 +98,23 @@ const Sidebar = ({ setShowCreateModal, isOpen, onClose }) => {
             {avatar.description}
           </div>
         </div>
+
         <button
           onClick={(e) => {
             e.stopPropagation();
-            deleteAvatar(avatar.avatar_id);
+            setActiveAvatar(avatar);
+            setActiveTab('documents');
+            onEndLiveChat?.();
+            onClose?.();
           }}
+          className="flex-shrink-0 px-2 py-1 text-grey-400 hover:text-grey-300 hover:bg-grey-500/20 rounded transition-colors text-xs"
+          aria-label={`Go to documents for ${avatar.name}`}
+        >
+          <Settings className="w-4 h-4" />
+        </button>
+
+        <button
+          onClick={(e) => handleDelete(avatar, e)}
           className="flex-shrink-0 p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
           aria-label={`Delete avatar ${avatar.name}`}
         >

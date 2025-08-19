@@ -184,6 +184,17 @@ const AuthComponent = () => {
               className="absolute right-0 mt-2 w-32 bg-gray-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
             >
               <button
+                onClick={() => {
+                  setActiveTab('account'); // switch to account settings
+                  setDropdownOpen(false);
+                }}
+                className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-teal-600 transition"
+                role="menuitem"
+              >
+                Account Settings
+              </button>
+
+              <button
                 onClick={handleLogout}
                 className="block w-full text-left flex flex-row items-center px-4 py-2 text-sm text-red-500 hover:bg-red-900 hover:text-white transition"
                 role="menuitem"

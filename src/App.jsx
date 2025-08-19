@@ -7,6 +7,8 @@ import CreateAvatarModal from './components/CreateAvatarModal';
 import { useAuth } from './context/AuthContext';
 import { useMedia } from './context/MediaContext';
 import { Toaster } from 'react-hot-toast';
+import LiveChat from './components/LiveChat';
+import AccountSettings from './components/AccountSettings';
 
 const AvatarChatApp = () => {
   const { activeAvatar } = useAuth();
@@ -24,6 +26,11 @@ const AvatarChatApp = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false); // Default to hidden
   const [activeTab, setActiveTab] = useState('chat'); // default tab
   const dropdownRef = useRef(null);
+  const [isLiveChat, setIsLiveChat] = useState(false);
+
+  const handleEndLiveChat = () => {
+    setIsLiveChat(false);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -71,27 +78,35 @@ const AvatarChatApp = () => {
         <Header
           sidebarVisible={sidebarVisible}
           setSidebarVisible={setSidebarVisible}
+          setActiveTab={setActiveTab}
         />
         <div className="relative flex flex-grow overflow-hidden">
           <Sidebar
             setShowCreateModal={setShowCreateModal}
             isOpen={sidebarVisible}
             onClose={() => setSidebarVisible(false)}
+            activeTab={activeTab} // pass current tab
+            setActiveTab={setActiveTab} // allow switching tabs
+            onEndLiveChat={handleEndLiveChat} // <-- NEW
           />
-
-          {activeTab === 'chat' && (
+          {activeTab === 'account' ? (
+            <AccountSettings />
+          ) : !isLiveChat ? (
             <ChatArea
               className="flex flex-grow w-full h-full z-50"
               showDataExchangeDropdown={showDataExchangeDropdown}
               setShowDataExchangeDropdown={setShowDataExchangeDropdown}
               dropdownRef={dropdownRef}
-              onOpenDocs={() => setActiveTab('docs')} // new prop
+              onOpenDocs={() => setActiveTab('docs')}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              onActivateLiveChat={() => setIsLiveChat(true)}
             />
-          )}
-
-          {activeTab === 'docs' && (
-            <DocumentPane
-              onClose={() => setActiveTab('chat')} // back to chat
+          ) : (
+            <LiveChat
+              avatarIcon={activeAvatar?.icon}
+              onEndLiveChat={handleEndLiveChat}
+              onSendVoice={sendMessage}
             />
           )}
         </div>
