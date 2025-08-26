@@ -172,7 +172,7 @@ const AvatarSettings = ({ avatarId, accessToken }) => {
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col p-2">
+    <div className="h-screen bg-gray-300 flex flex-col p-2">
       <Card className="flex-grow flex flex-col gap-3 p-3 overflow-auto rounded-xl">
         <h2 className="text-lg font-bold">Avatar Info & Documents</h2>
 
@@ -334,7 +334,7 @@ const AvatarSettings = ({ avatarId, accessToken }) => {
             {({ getRootProps, getInputProps }) => (
               <div
                 {...getRootProps()}
-                className="flex-grow border border-dashed p-3 text-center text-gray-500 hover:bg-gray-100 cursor-pointer rounded overflow-y-auto flex items-center justify-center"
+                className="flex-grow border border-dashed p-3 text-center text-gray-500 hover:bg-gray-200 cursor-pointer rounded overflow-y-auto flex items-center justify-center"
               >
                 <input {...getInputProps()} />
                 <p>Drag & drop media here or click to upload</p>

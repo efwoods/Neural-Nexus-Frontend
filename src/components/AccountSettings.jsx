@@ -126,28 +126,6 @@ const AccountSettings = ({ activeTab }) => {
         >
           Update
         </button>
-
-        <label>Custom LLM API Key</label>
-        <input
-          type="text"
-          value={customLLMKey}
-          onChange={(e) => setCustomLLMKey(e.target.value)}
-          className="p-2 rounded bg-gray-700 text-white"
-        />
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={customLLMEnabled}
-            onChange={() => setCustomLLMEnabled(!customLLMEnabled)}
-          />
-          <span>Enable Custom LLM</span>
-        </div>
-        <button
-          onClick={() => handleApiKeyUpdate('Custom LLM')}
-          className="bg-teal-600 px-4 py-2 rounded"
-        >
-          Update
-        </button>
       </div>
 
       {/* Billing / Subscription */}

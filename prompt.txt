@@ -1,0 +1,739 @@
+I need a default view for the neural nexus frontend. I am refactoring the frontend to give it a new look and feel. The home view of the neural nexus is the avatar-selection screen which is a card view implementing the following code:
+
+import { Camera, Mesh, Plane, Program, Renderer, Texture, Transform } from "ogl";
+import { useEffect, useRef } from "react";
+
+function debounce(func, wait) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+function lerp(p1, p2, t) {
+  return p1 + (p2 - p1) * t;
+}
+
+function autoBind(instance) {
+  const proto = Object.getPrototypeOf(instance);
+  Object.getOwnPropertyNames(proto).forEach((key) => {
+    if (key !== "constructor" && typeof instance[key] === "function") {
+      instance[key] = instance[key].bind(instance);
+    }
+  });
+}
+
+function createTextTexture(gl, text, font = "bold 30px monospace", color = "black") {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  context.font = font;
+  const metrics = context.measureText(text);
+  const textWidth = Math.ceil(metrics.width);
+  const textHeight = Math.ceil(parseInt(font, 10) * 1.2);
+  canvas.width = textWidth + 20;
+  canvas.height = textHeight + 20;
+  context.font = font;
+  context.fillStyle = color;
+  context.textBaseline = "middle";
+  context.textAlign = "center";
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillText(text, canvas.width / 2, canvas.height / 2);
+  const texture = new Texture(gl, { generateMipmaps: false });
+  texture.image = canvas;
+  return { texture, width: canvas.width, height: canvas.height };
+}
+
+class Title {
+  constructor({ gl, plane, renderer, text, textColor = "#545050", font = "30px sans-serif" }) {
+    autoBind(this);
+    this.gl = gl;
+    this.plane = plane;
+    this.renderer = renderer;
+    this.text = text;
+    this.textColor = textColor;
+    this.font = font;
+    this.createMesh();
+  }
+  createMesh() {
+    const { texture, width, height } = createTextTexture(this.gl, this.text, this.font, this.textColor);
+    const geometry = new Plane(this.gl);
+    const program = new Program(this.gl, {
+      vertex: `
+        attribute vec3 position;
+        attribute vec2 uv;
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragment: `
+        precision highp float;
+        uniform sampler2D tMap;
+        varying vec2 vUv;
+        void main() {
+          vec4 color = texture2D(tMap, vUv);
+          if (color.a < 0.1) discard;
+          gl_FragColor = color;
+        }
+      `,
+      uniforms: { tMap: { value: texture } },
+      transparent: true,
+    });
+    this.mesh = new Mesh(this.gl, { geometry, program });
+    const aspect = width / height;
+    const textHeight = this.plane.scale.y * 0.15;
+    const textWidth = textHeight * aspect;
+    this.mesh.scale.set(textWidth, textHeight, 1);
+    this.mesh.position.y = -this.plane.scale.y * 0.5 - textHeight * 0.5 - 0.05;
+    this.mesh.setParent(this.plane);
+  }
+}
+
+class Media {
+  constructor({
+    geometry,
+    gl,
+    image,
+    index,
+    length,
+    renderer,
+    scene,
+    screen,
+    text,
+    viewport,
+    bend,
+    textColor,
+    borderRadius = 0,
+    font,
+  }) {
+    this.extra = 0;
+    this.geometry = geometry;
+    this.gl = gl;
+    this.image = image;
+    this.index = index;
+    this.length = length;
+    this.renderer = renderer;
+    this.scene = scene;
+    this.screen = screen;
+    this.text = text;
+    this.viewport = viewport;
+    this.bend = bend;
+    this.textColor = textColor;
+    this.borderRadius = borderRadius;
+    this.font = font;
+    this.createShader();
+    this.createMesh();
+    this.createTitle();
+    this.onResize();
+  }
+  createShader() {
+    const texture = new Texture(this.gl, { 
+      generateMipmaps: true
+    });
+    this.program = new Program(this.gl, {
+      depthTest: false,
+      depthWrite: false,
+      vertex: `
+        precision highp float;
+        attribute vec3 position;
+        attribute vec2 uv;
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+        uniform float uTime;
+        uniform float uSpeed;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          vec3 p = position;
+          p.z = (sin(p.x * 4.0 + uTime) * 1.5 + cos(p.y * 2.0 + uTime) * 1.5) * (0.1 + uSpeed * 0.5);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+        }
+      `,
+      fragment: `
+        precision highp float;
+        uniform vec2 uImageSizes;
+        uniform vec2 uPlaneSizes;
+        uniform sampler2D tMap;
+        uniform float uBorderRadius;
+        varying vec2 vUv;
+        
+        float roundedBoxSDF(vec2 p, vec2 b, float r) {
+          vec2 d = abs(p) - b;
+          return length(max(d, vec2(0.0))) + min(max(d.x, d.y), 0.0) - r;
+        }
+        
+        void main() {
+          vec2 ratio = vec2(
+            min((uPlaneSizes.x / uPlaneSizes.y) / (uImageSizes.x / uImageSizes.y), 1.0),
+            min((uPlaneSizes.y / uPlaneSizes.x) / (uImageSizes.y / uImageSizes.x), 1.0)
+          );
+          vec2 uv = vec2(
+            vUv.x * ratio.x + (1.0 - ratio.x) * 0.5,
+            vUv.y * ratio.y + (1.0 - ratio.y) * 0.5
+          );
+          vec4 color = texture2D(tMap, uv);
+          
+          float d = roundedBoxSDF(vUv - 0.5, vec2(0.5 - uBorderRadius), uBorderRadius);
+          
+          // Smooth antialiasing for edges
+          float edgeSmooth = 0.002;
+          float alpha = 1.0 - smoothstep(-edgeSmooth, edgeSmooth, d);
+          
+          gl_FragColor = vec4(color.rgb, alpha);
+        }
+      `,
+      uniforms: {
+        tMap: { value: texture },
+        uPlaneSizes: { value: [0, 0] },
+        uImageSizes: { value: [0, 0] },
+        uSpeed: { value: 0 },
+        uTime: { value: 100 * Math.random() },
+        uBorderRadius: { value: this.borderRadius },
+      },
+      transparent: true,
+    });
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = this.image;
+    img.onload = () => {
+      texture.image = img;
+      this.program.uniforms.uImageSizes.value = [img.naturalWidth, img.naturalHeight];
+    };
+  }
+  createMesh() {
+    this.plane = new Mesh(this.gl, {
+      geometry: this.geometry,
+      program: this.program,
+    });
+    this.plane.setParent(this.scene);
+  }
+  createTitle() {
+    this.title = new Title({
+      gl: this.gl,
+      plane: this.plane,
+      renderer: this.renderer,
+      text: this.text,
+      textColor: this.textColor,
+      fontFamily: this.font,
+    });
+  }
+  update(scroll, direction) {
+    this.plane.position.x = this.x - scroll.current - this.extra;
+
+    const x = this.plane.position.x;
+    const H = this.viewport.width / 2;
+
+    if (this.bend === 0) {
+      this.plane.position.y = 0;
+      this.plane.rotation.z = 0;
+    } else {
+      const B_abs = Math.abs(this.bend);
+      const R = (H * H + B_abs * B_abs) / (2 * B_abs);
+      const effectiveX = Math.min(Math.abs(x), H);
+
+      const arc = R - Math.sqrt(R * R - effectiveX * effectiveX);
+      if (this.bend > 0) {
+        this.plane.position.y = -arc;
+        this.plane.rotation.z = -Math.sign(x) * Math.asin(effectiveX / R);
+      } else {
+        this.plane.position.y = arc;
+        this.plane.rotation.z = Math.sign(x) * Math.asin(effectiveX / R);
+      }
+    }
+
+    this.speed = scroll.current - scroll.last;
+    this.program.uniforms.uTime.value += 0.04;
+    this.program.uniforms.uSpeed.value = this.speed;
+
+    const planeOffset = this.plane.scale.x / 2;
+    const viewportOffset = this.viewport.width / 2;
+    this.isBefore = this.plane.position.x + planeOffset < -viewportOffset;
+    this.isAfter = this.plane.position.x - planeOffset > viewportOffset;
+    if (direction === "right" && this.isBefore) {
+      this.extra -= this.widthTotal;
+      this.isBefore = this.isAfter = false;
+    }
+    if (direction === "left" && this.isAfter) {
+      this.extra += this.widthTotal;
+      this.isBefore = this.isAfter = false;
+    }
+  }
+  onResize({ screen, viewport } = {}) {
+    if (screen) this.screen = screen;
+    if (viewport) {
+      this.viewport = viewport;
+      if (this.plane.program.uniforms.uViewportSizes) {
+        this.plane.program.uniforms.uViewportSizes.value = [this.viewport.width, this.viewport.height];
+      }
+    }
+    this.scale = this.screen.height / 1500;
+    this.plane.scale.y = (this.viewport.height * (900 * this.scale)) / this.screen.height;
+    this.plane.scale.x = (this.viewport.width * (700 * this.scale)) / this.screen.width;
+    this.plane.program.uniforms.uPlaneSizes.value = [this.plane.scale.x, this.plane.scale.y];
+    this.padding = 2;
+    this.width = this.plane.scale.x + this.padding;
+    this.widthTotal = this.width * this.length;
+    this.x = this.width * this.index;
+  }
+}
+
+class App {
+  constructor(
+    container,
+    {
+      items,
+      bend,
+      textColor = "#ffffff",
+      borderRadius = 0,
+      font = "bold 30px Figtree",
+      scrollSpeed = 2,
+      scrollEase = 0.05,
+    } = {}
+  ) {
+    document.documentElement.classList.remove("no-js");
+    this.container = container;
+    this.scrollSpeed = scrollSpeed;
+    this.scroll = { ease: scrollEase, current: 0, target: 0, last: 0 };
+    this.onCheckDebounce = debounce(this.onCheck, 200);
+    this.createRenderer();
+    this.createCamera();
+    this.createScene();
+    this.onResize();
+    this.createGeometry();
+    this.createMedias(items, bend, textColor, borderRadius, font);
+    this.update();
+    this.addEventListeners();
+  }
+  createRenderer() {
+    this.renderer = new Renderer({ 
+      alpha: true,
+      antialias: true,
+      dpr: Math.min(window.devicePixelRatio || 1, 2)
+    });
+    this.gl = this.renderer.gl;
+    this.gl.clearColor(0, 0, 0, 0);
+    this.container.appendChild(this.gl.canvas);
+  }
+  createCamera() {
+    this.camera = new Camera(this.gl);
+    this.camera.fov = 45;
+    this.camera.position.z = 20;
+  }
+  createScene() {
+    this.scene = new Transform();
+  }
+  createGeometry() {
+    this.planeGeometry = new Plane(this.gl, {
+      heightSegments: 50,
+      widthSegments: 100,
+    });
+  }
+  createMedias(items, bend = 1, textColor, borderRadius, font) {
+    const defaultItems = [
+      { image: `https://picsum.photos/seed/1/800/600?grayscale`, text: "Bridge" },
+      { image: `https://picsum.photos/seed/2/800/600?grayscale`, text: "Desk Setup" },
+      { image: `https://picsum.photos/seed/3/800/600?grayscale`, text: "Waterfall" },
+      { image: `https://picsum.photos/seed/4/800/600?grayscale`, text: "Strawberries" },
+      { image: `https://picsum.photos/seed/5/800/600?grayscale`, text: "Deep Diving" },
+      { image: `https://picsum.photos/seed/16/800/600?grayscale`, text: "Train Track" },
+      { image: `https://picsum.photos/seed/17/800/600?grayscale`, text: "Santorini" },
+      { image: `https://picsum.photos/seed/8/800/600?grayscale`, text: "Blurry Lights" },
+      { image: `https://picsum.photos/seed/9/800/600?grayscale`, text: "New York" },
+      { image: `https://picsum.photos/seed/10/800/600?grayscale`, text: "Good Boy" },
+      { image: `https://picsum.photos/seed/21/800/600?grayscale`, text: "Coastline" },
+      { image: `https://picsum.photos/seed/12/800/600?grayscale`, text: "Palm Trees" },
+    ];
+    const galleryItems = items && items.length ? items : defaultItems;
+    this.mediasImages = galleryItems.concat(galleryItems);
+    this.medias = this.mediasImages.map((data, index) => {
+      return new Media({
+        geometry: this.planeGeometry,
+        gl: this.gl,
+        image: data.image,
+        index,
+        length: this.mediasImages.length,
+        renderer: this.renderer,
+        scene: this.scene,
+        screen: this.screen,
+        text: data.text,
+        viewport: this.viewport,
+        bend,
+        textColor,
+        borderRadius,
+        font,
+      });
+    });
+  }
+  onTouchDown(e) {
+    this.isDown = true;
+    this.scroll.position = this.scroll.current;
+    this.start = e.touches ? e.touches[0].clientX : e.clientX;
+  }
+  onTouchMove(e) {
+    if (!this.isDown) return;
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const distance = (this.start - x) * (this.scrollSpeed * 0.025);
+    this.scroll.target = this.scroll.position + distance;
+  }
+  onTouchUp() {
+    this.isDown = false;
+    this.onCheck();
+  }
+  onWheel(e) {
+    const delta = e.deltaY || e.wheelDelta || e.detail;
+    this.scroll.target += (delta > 0 ? this.scrollSpeed : -this.scrollSpeed) * 0.2;
+    this.onCheckDebounce();
+  }
+  onCheck() {
+    if (!this.medias || !this.medias[0]) return;
+    const width = this.medias[0].width;
+    const itemIndex = Math.round(Math.abs(this.scroll.target) / width);
+    const item = width * itemIndex;
+    this.scroll.target = this.scroll.target < 0 ? -item : item;
+  }
+  onResize() {
+    this.screen = {
+      width: this.container.clientWidth,
+      height: this.container.clientHeight,
+    };
+    this.renderer.setSize(this.screen.width, this.screen.height);
+    this.camera.perspective({
+      aspect: this.screen.width / this.screen.height,
+    });
+    const fov = (this.camera.fov * Math.PI) / 180;
+    const height = 2 * Math.tan(fov / 2) * this.camera.position.z;
+    const width = height * this.camera.aspect;
+    this.viewport = { width, height };
+    if (this.medias) {
+      this.medias.forEach((media) => media.onResize({ screen: this.screen, viewport: this.viewport }));
+    }
+  }
+  update() {
+    this.scroll.current = lerp(this.scroll.current, this.scroll.target, this.scroll.ease);
+    const direction = this.scroll.current > this.scroll.last ? "right" : "left";
+    if (this.medias) {
+      this.medias.forEach((media) => media.update(this.scroll, direction));
+    }
+    this.renderer.render({ scene: this.scene, camera: this.camera });
+    this.scroll.last = this.scroll.current;
+    this.raf = window.requestAnimationFrame(this.update.bind(this));
+  }
+  addEventListeners() {
+    this.boundOnResize = this.onResize.bind(this);
+    this.boundOnWheel = this.onWheel.bind(this);
+    this.boundOnTouchDown = this.onTouchDown.bind(this);
+    this.boundOnTouchMove = this.onTouchMove.bind(this);
+    this.boundOnTouchUp = this.onTouchUp.bind(this);
+    window.addEventListener("resize", this.boundOnResize);
+    window.addEventListener("mousewheel", this.boundOnWheel);
+    window.addEventListener("wheel", this.boundOnWheel);
+    window.addEventListener("mousedown", this.boundOnTouchDown);
+    window.addEventListener("mousemove", this.boundOnTouchMove);
+    window.addEventListener("mouseup", this.boundOnTouchUp);
+    window.addEventListener("touchstart", this.boundOnTouchDown);
+    window.addEventListener("touchmove", this.boundOnTouchMove);
+    window.addEventListener("touchend", this.boundOnTouchUp);
+  }
+  destroy() {
+    window.cancelAnimationFrame(this.raf);
+    window.removeEventListener("resize", this.boundOnResize);
+    window.removeEventListener("mousewheel", this.boundOnWheel);
+    window.removeEventListener("wheel", this.boundOnWheel);
+    window.removeEventListener("mousedown", this.boundOnTouchDown);
+    window.removeEventListener("mousemove", this.boundOnTouchMove);
+    window.removeEventListener("mouseup", this.boundOnTouchUp);
+    window.removeEventListener("touchstart", this.boundOnTouchDown);
+    window.removeEventListener("touchmove", this.boundOnTouchMove);
+    window.removeEventListener("touchend", this.boundOnTouchUp);
+    if (this.renderer && this.renderer.gl && this.renderer.gl.canvas.parentNode) {
+      this.renderer.gl.canvas.parentNode.removeChild(this.renderer.gl.canvas);
+    }
+  }
+}
+
+export default function CircularGallery({
+  items,
+  bend = 3,
+  textColor = "#ffffff",
+  borderRadius = 0.05,
+  font = "bold 30px Figtree",
+  scrollSpeed = 2,
+  scrollEase = 0.05,
+}) {
+  const containerRef = useRef(null);
+  useEffect(() => {
+    const app = new App(containerRef.current, { items, bend, textColor, borderRadius, font, scrollSpeed, scrollEase });
+    return () => {
+      app.destroy();
+    };
+  }, [items, bend, textColor, borderRadius, font, scrollSpeed, scrollEase]);
+  return <div className="w-full h-full overflow-hidden cursor-grab active:cursor-grabbing" ref={containerRef} />;
+}
+----
+In this view there is always the following:
+There is always a persistent button beneath the circular gallery. 
+There is always a search bar with a dropdown menu at the very top of the app to search for and select avatars.
+beneath that and above the current avatar card in the circular gallery is the name of the current avatar. The description of the avatar is overlaid onto the avatar image. The image of the avater (if available) is presented on the avatar card in the circular gallery. If there is no image, a placeholder image is used. 
+
+There are always at minimum two cards. 
+The first card on the left is always the card used for account settings/ billing dashboard. Instead of the avatar name in this slot, "User Settings" is displayed. The persistent button is a reverse drop-down menu that says "More Settings" and will allow the user to select other settings for this card view. 
+
+The last card at the end of the list on the right is always "Create Avatar". Create Avatar is the label above the card in the circular gallery. clicking on this card will bring up the create avatar modal to create a new avatar and select the avatar. 
+
+When the avatar is selected or created or after the user settings is selected, the card is zoomed-in to become full-screen. for the user settings, the user settings is displayed. if the persistent "Avatar Settings" button is pressed, the selected avatar is zoomed in with the icon as the background and the avatar settings overlaid onto the avatar image if availabe. 
+
+Double-clicking (or holding a click or press on mobile) on the background when in user settings or in avatar settings or in avatar chat or avatar live chat mode will return to the avatar selection screen.  
+
+The transition between the avatar selection and the selected avatar view is always a zoom in to the avatar to full screen or a zoom out from the avatar to the circular gallery. 
+
+There is a number of dots between the circular gallery and the persistent button to indicate the position of the current card in the list and allow the user to select a given card position immediately by clicking the button. This is as in the following code (just the buttons indicating current position to be used with the circular gallery)
+
+import { useEffect, useState, useRef } from "react";
+import { motion, useMotionValue, useTransform } from "motion/react";
+// replace icons with your own if needed
+import {
+  FiCircle,
+  FiCode,
+  FiFileText,
+  FiLayers,
+  FiLayout,
+} from "react-icons/fi";
+
+const DEFAULT_ITEMS = [
+  {
+    title: "Text Animations",
+    description: "Cool text animations for your projects.",
+    id: 1,
+    icon: <FiFileText className="h-[16px] w-[16px] text-white" />,
+  },
+  {
+    title: "Animations",
+    description: "Smooth animations for your projects.",
+    id: 2,
+    icon: <FiCircle className="h-[16px] w-[16px] text-white" />,
+  },
+  {
+    title: "Components",
+    description: "Reusable components for your projects.",
+    id: 3,
+    icon: <FiLayers className="h-[16px] w-[16px] text-white" />,
+  },
+  {
+    title: "Backgrounds",
+    description: "Beautiful backgrounds and patterns for your projects.",
+    id: 4,
+    icon: <FiLayout className="h-[16px] w-[16px] text-white" />,
+  },
+  {
+    title: "Common UI",
+    description: "Common UI components are coming soon!",
+    id: 5,
+    icon: <FiCode className="h-[16px] w-[16px] text-white" />,
+  },
+];
+
+const DRAG_BUFFER = 0;
+const VELOCITY_THRESHOLD = 500;
+const GAP = 16;
+const SPRING_OPTIONS = { type: "spring", stiffness: 300, damping: 30 };
+
+export default function Carousel({
+  items = DEFAULT_ITEMS,
+  baseWidth = 300,
+  autoplay = false,
+  autoplayDelay = 3000,
+  pauseOnHover = false,
+  loop = false,
+  round = false,
+}) {
+  const containerPadding = 16;
+  const itemWidth = baseWidth - containerPadding * 2;
+  const trackItemOffset = itemWidth + GAP;
+
+  const carouselItems = loop ? [...items, items[0]] : items;
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const x = useMotionValue(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
+  const containerRef = useRef(null);
+  useEffect(() => {
+    if (pauseOnHover && containerRef.current) {
+      const container = containerRef.current;
+      const handleMouseEnter = () => setIsHovered(true);
+      const handleMouseLeave = () => setIsHovered(false);
+      container.addEventListener("mouseenter", handleMouseEnter);
+      container.addEventListener("mouseleave", handleMouseLeave);
+      return () => {
+        container.removeEventListener("mouseenter", handleMouseEnter);
+        container.removeEventListener("mouseleave", handleMouseLeave);
+      };
+    }
+  }, [pauseOnHover]);
+
+  useEffect(() => {
+    if (autoplay && (!pauseOnHover || !isHovered)) {
+      const timer = setInterval(() => {
+        setCurrentIndex((prev) => {
+          if (prev === items.length - 1 && loop) {
+            return prev + 1;
+          }
+          if (prev === carouselItems.length - 1) {
+            return loop ? 0 : prev;
+          }
+          return prev + 1;
+        });
+      }, autoplayDelay);
+      return () => clearInterval(timer);
+    }
+  }, [
+    autoplay,
+    autoplayDelay,
+    isHovered,
+    loop,
+    items.length,
+    carouselItems.length,
+    pauseOnHover,
+  ]);
+
+  const effectiveTransition = isResetting ? { duration: 0 } : SPRING_OPTIONS;
+
+  const handleAnimationComplete = () => {
+    if (loop && currentIndex === carouselItems.length - 1) {
+      setIsResetting(true);
+      x.set(0);
+      setCurrentIndex(0);
+      setTimeout(() => setIsResetting(false), 50);
+    }
+  };
+
+  const handleDragEnd = (_, info) => {
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
+    if (offset < -DRAG_BUFFER || velocity < -VELOCITY_THRESHOLD) {
+      if (loop && currentIndex === items.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+      } else {
+        setCurrentIndex((prev) => Math.min(prev + 1, carouselItems.length - 1));
+      }
+    } else if (offset > DRAG_BUFFER || velocity > VELOCITY_THRESHOLD) {
+      if (loop && currentIndex === 0) {
+        setCurrentIndex(items.length - 1);
+      } else {
+        setCurrentIndex((prev) => Math.max(prev - 1, 0));
+      }
+    }
+  };
+
+  const dragProps = loop
+    ? {}
+    : {
+      dragConstraints: {
+        left: -trackItemOffset * (carouselItems.length - 1),
+        right: 0,
+      },
+    };
+
+  return (
+    <div
+      ref={containerRef}
+      className={`relative overflow-hidden p-4 ${round
+        ? "rounded-full border border-white"
+        : "rounded-[24px] border border-[#222]"
+        }`}
+      style={{
+        width: `${baseWidth}px`,
+        ...(round && { height: `${baseWidth}px` }),
+      }}
+    >
+      <motion.div
+        className="flex"
+        drag="x"
+        {...dragProps}
+        style={{
+          width: itemWidth,
+          gap: `${GAP}px`,
+          perspective: 1000,
+          perspectiveOrigin: `${currentIndex * trackItemOffset + itemWidth / 2}px 50%`,
+          x,
+        }}
+        onDragEnd={handleDragEnd}
+        animate={{ x: -(currentIndex * trackItemOffset) }}
+        transition={effectiveTransition}
+        onAnimationComplete={handleAnimationComplete}
+      >
+        {carouselItems.map((item, index) => {
+          const range = [
+            -(index + 1) * trackItemOffset,
+            -index * trackItemOffset,
+            -(index - 1) * trackItemOffset,
+          ];
+          const outputRange = [90, 0, -90];
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const rotateY = useTransform(x, range, outputRange, { clamp: false });
+          return (
+            <motion.div
+              key={index}
+              className={`relative shrink-0 flex flex-col ${round
+                ? "items-center justify-center text-center bg-[#060010] border-0"
+                : "items-start justify-between bg-[#222] border border-[#222] rounded-[12px]"
+                } overflow-hidden cursor-grab active:cursor-grabbing`}
+              style={{
+                width: itemWidth,
+                height: round ? itemWidth : "100%",
+                rotateY: rotateY,
+                ...(round && { borderRadius: "50%" }),
+              }}
+              transition={effectiveTransition}
+            >
+              <div className={`${round ? "p-0 m-0" : "mb-4 p-5"}`}>
+                <span className="flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[#060010]">
+                  {item.icon}
+                </span>
+              </div>
+              <div className="p-5">
+                <div className="mb-1 font-black text-lg text-white">
+                  {item.title}
+                </div>
+                <p className="text-sm text-white">{item.description}</p>
+              </div>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+      <div
+        className={`flex w-full justify-center ${round ? "absolute z-20 bottom-12 left-1/2 -translate-x-1/2" : ""
+          }`}
+      >
+        <div className="mt-4 flex w-[150px] justify-between px-8">
+          {items.map((_, index) => (
+            <motion.div
+              key={index}
+              className={`h-2 w-2 rounded-full cursor-pointer transition-colors duration-150 ${currentIndex % items.length === index
+                ? round
+                  ? "bg-white"
+                  : "bg-[#333333]"
+                : round
+                  ? "bg-[#555]"
+                  : "bg-[rgba(51,51,51,0.4)]"
+                }`}
+              animate={{
+                scale: currentIndex % items.length === index ? 1.2 : 1,
+              }}
+              onClick={() => setCurrentIndex(index)}
+              transition={{ duration: 0.15 }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+---
+
+
+
