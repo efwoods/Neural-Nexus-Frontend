@@ -1,14 +1,9 @@
 // services/AvatarService.jsx
-import { getNgrokHttpsUrl, getDbHttpsUrl } from '../context/NgrokAPIStore';
+import { getDbHttpsUrl } from '../context/NgrokAPIStore';
 
 export const AvatarService = {
   async getAll(accessToken) {
     try {
-      const ngrokHttpsUrl = getNgrokHttpsUrl();
-      console.log('Avatar Service call of getDbHttpsUrl():', getDbHttpsUrl());
-      console.log(
-        'Calling `${getDbHttpsUrl()}/avatars/get_all`, from Avatar Service'
-      );
       const res = await fetch(`${getDbHttpsUrl()}/avatars/get_all`, {
         method: 'GET',
         headers: {
@@ -27,13 +22,8 @@ export const AvatarService = {
 
   async createAvatar(accessToken, payload) {
     try {
-      console.log('createAvatar payload:', payload);
-      console.log(
-        'calling `${getDbHttpsUrl()}/avatars/create` from Avatar Service'
-      );
       const response = await fetch(`${getDbHttpsUrl()}/avatars/create`, {
         method: 'POST',
-
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
@@ -44,7 +34,7 @@ export const AvatarService = {
       });
 
       if (!response.ok) throw new Error(await response.text());
-      return await response.json(); // Returns the created avatar
+      return await response.json();
     } catch (error) {
       console.error('Error creating avatar:', error);
       throw error;
@@ -52,12 +42,7 @@ export const AvatarService = {
   },
 
   async deleteAvatar(accessToken, avatar_id) {
-    console.log('Avatar_id: ' + avatar_id);
     try {
-      const ngrokHttpsUrl = getNgrokHttpsUrl();
-      console.log(
-        'calling `${getDbHttpsUrl()}/avatars/delete` from Avatar Service'
-      );
       const response = await fetch(`${getDbHttpsUrl()}/avatars/delete`, {
         method: 'POST',
         headers: {
@@ -65,14 +50,33 @@ export const AvatarService = {
           'Content-Type': 'application/x-www-form-urlencoded',
           Accept: 'application/json',
         },
-        body: new URLSearchParams({ avatar_id: avatar_id }),
+        body: new URLSearchParams({ avatar_id }),
       });
-      let res = await response.json();
-      console.log('AvatarService: Delete avatar response:', res);
-      if (res.status !== 'success') throw new Error(await JSON.stringify(res));
-      return true;
+      const res = await response.json();
+      if (res.status !== 'success') throw new Error(JSON.stringify(res));
+      return res;
     } catch (error) {
       console.error('Avatar Service: Error deleting avatar:', error);
+      throw error;
+    }
+  },
+
+  async selectAvatar(accessToken, avatar_id) {
+    try {
+      const response = await fetch(`${getDbHttpsUrl()}/avatars/select_avatar`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Accept: 'application/json',
+        },
+        body: new URLSearchParams({ avatar_id }),
+      });
+      const res = await response.json();
+      if (res.status !== 'success') throw new Error(JSON.stringify(res));
+      return res;
+    } catch (error) {
+      console.error('Avatar Service: Error selecting avatar:', error);
       throw error;
     }
   },

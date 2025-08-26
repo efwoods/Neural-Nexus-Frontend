@@ -1,16 +1,13 @@
 // components/AuthContext.jsx
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNgrokApiUrl } from './NgrokAPIContext';
 import { AvatarService } from '../services/AvatarService';
 import { useMedia } from './MediaContext';
-import { useCallback } from 'react';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const { ngrokHttpsUrl, dbHttpsUrl } = useNgrokApiUrl();
-  console.log('AuthProvider Service call of ngrokHttpsUrl:', ngrokHttpsUrl);
+  const { dbHttpsUrl } = useNgrokApiUrl();
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [accessToken, setAccessToken] = useState(null);
@@ -21,21 +18,24 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('access_token');
     if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
+      const userData = JSON.parse(storedUser);
+      setUser(userData);
       setAccessToken(storedToken);
       setIsLoggedIn(true);
+      if (userData.last_used_avatar) {
+        setActiveAvatar({ avatar_id: userData.last_used_avatar });
+      }
     }
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn && accessToken && ngrokHttpsUrl) {
+    if (isLoggedIn && accessToken && dbHttpsUrl) {
       getAvatars(accessToken);
     }
-  }, [isLoggedIn, accessToken, ngrokHttpsUrl]);
+  }, [isLoggedIn, accessToken, dbHttpsUrl]);
 
   const signup = async (username, email, password) => {
     const signupData = { username, email, password };
-    console.log('calling `${dbHttpsUrl}/signup`, from AUTHCONTEXT');
     const signupResponse = await fetch(`${dbHttpsUrl}/signup`, {
       method: 'POST',
       headers: {
@@ -50,7 +50,6 @@ export const AuthProvider = ({ children }) => {
     }
 
     const { access_token } = await signupResponse.json();
-    console.log('Calling `${dbHttpsUrl}/profile`, from AUTHCONTEXT');
     const profileResponse = await fetch(`${dbHttpsUrl}/profile`, {
       headers: {
         Authorization: `Bearer ${access_token}`,
@@ -69,7 +68,10 @@ export const AuthProvider = ({ children }) => {
     setIsLoggedIn(true);
     localStorage.setItem('user', JSON.stringify(profileData));
     localStorage.setItem('access_token', access_token);
-    localStorage.setItem('avatars', JSON.stringify(profileData.avatars)); // Set Avatars
+    localStorage.setItem('avatars', JSON.stringify(profileData.avatars));
+    if (profileData.last_used_avatar) {
+      setActiveAvatar({ avatar_id: profileData.last_used_avatar });
+    }
   };
 
   const login = async (email, password) => {
@@ -77,8 +79,6 @@ export const AuthProvider = ({ children }) => {
     loginParams.append('username', email);
     loginParams.append('password', password);
 
-    console.log(loginParams.toString());
-    console.log('calling `${dbHttpsUrl}/login`, from AUTHCONTEXT');
     const loginResponse = await fetch(`${dbHttpsUrl}/login`, {
       method: 'POST',
       headers: {
@@ -94,7 +94,6 @@ export const AuthProvider = ({ children }) => {
     }
 
     const { access_token } = await loginResponse.json();
-    console.log('Calling `${dbHttpsUrl}/profile`, from AUTHCONTEXT');
     const profileResponse = await fetch(`${dbHttpsUrl}/profile`, {
       headers: {
         Authorization: `Bearer ${access_token}`,
@@ -113,12 +112,14 @@ export const AuthProvider = ({ children }) => {
     setIsLoggedIn(true);
     localStorage.setItem('user', JSON.stringify(profileData));
     localStorage.setItem('access_token', access_token);
-    localStorage.setItem('avatars', JSON.stringify(profileData.avatars)); // Set Avatars
+    localStorage.setItem('avatars', JSON.stringify(profileData.avatars));
+    if (profileData.last_used_avatar) {
+      setActiveAvatar({ avatar_id: profileData.last_used_avatar });
+    }
   };
 
   const logout = async () => {
     const token = localStorage.getItem('access_token');
-    console.log('calling `${dbHttpsUrl}/logout`, from AUTHCONTEXT');
     await fetch(`${dbHttpsUrl}/logout`, {
       method: 'POST',
       headers: {
@@ -130,18 +131,14 @@ export const AuthProvider = ({ children }) => {
     setAccessToken(null);
     setIsLoggedIn(false);
     setAvatars([]);
+    setActiveAvatar(null);
     localStorage.removeItem('user');
     localStorage.removeItem('access_token');
     localStorage.removeItem('avatars');
   };
 
   const getAvatars = async (token = accessToken) => {
-    if (!token || ngrokHttpsUrl === null) return;
-    console.log(
-      'Get Avatars of AuthContext call of ngrokHttpsUrl: ' +
-        JSON.stringify(ngrokHttpsUrl)
-    );
-    console.log('calling `${dbHttpsUrl}/avatars/get_all`, from AUTHCONTEXT');
+    if (!token || !dbHttpsUrl) return;
     const res = await fetch(`${dbHttpsUrl}/avatars/get_all`, {
       method: 'GET',
       headers: {
@@ -155,6 +152,10 @@ export const AuthProvider = ({ children }) => {
     }
     const data = await res.json();
     setAvatars(data);
+    if (user?.last_used_avatar) {
+      const lastUsed = data.find((a) => a.avatar_id === user.last_used_avatar);
+      if (lastUsed) setActiveAvatar(lastUsed);
+    }
   };
 
   const createAvatar = async ({ name, description = '' }) => {
@@ -164,15 +165,14 @@ export const AuthProvider = ({ children }) => {
       name: name.trim(),
       description: description.trim(),
     };
-    console.log(
-      'Calling createAvatar from AuthContext: await AvatarService.createAvatar( '
-    );
     try {
       const created = await AvatarService.createAvatar(
         accessToken,
         newAvatarPayload
       );
       setAvatars((prev) => [...prev, created]);
+      setActiveAvatar(created); // Set as active avatar
+      await AvatarService.selectAvatar(accessToken, created.avatar_id); // Update last_used_avatar
       return created;
     } catch (error) {
       console.error('Create avatar failed:', error);
@@ -183,17 +183,36 @@ export const AuthProvider = ({ children }) => {
     if (!accessToken) return;
 
     try {
-      setAvatars((prev) => prev.filter((a) => a.id !== avatarId));
       const delete_response = await AvatarService.deleteAvatar(
         accessToken,
         avatarId
       );
-      console.log('Delete avatar response:', JSON.stringify(delete_response));
-      if (delete_response !== true) throw new Error('Failed to delete avatar');
-      // ✅ Refetch avatars to update UI
-      await getAvatars(accessToken);
+      if (delete_response.status !== 'success')
+        throw new Error('Failed to delete avatar');
+      await getAvatars(accessToken); // Refetch avatars
+      if (activeAvatar?.avatar_id === avatarId) {
+        setActiveAvatar(null); // Clear active avatar if deleted
+      }
     } catch (error) {
       console.error('AuthContext: Delete avatar failed:', error);
+    }
+  };
+
+  const selectAvatar = async (avatarId) => {
+    if (!accessToken) return;
+    try {
+      const response = await AvatarService.selectAvatar(accessToken, avatarId);
+      if (response.status === 'success') {
+        const selectedAvatar = avatars.find((a) => a.avatar_id === avatarId);
+        setActiveAvatar(selectedAvatar);
+        setUser((prev) => ({ ...prev, last_used_avatar: avatarId }));
+        localStorage.setItem(
+          'user',
+          JSON.stringify({ ...user, last_used_avatar: avatarId })
+        );
+      }
+    } catch (error) {
+      console.error('Select avatar failed:', error);
     }
   };
 
@@ -212,6 +231,7 @@ export const AuthProvider = ({ children }) => {
         getAvatars,
         createAvatar,
         deleteAvatar,
+        selectAvatar,
       }}
     >
       {children}

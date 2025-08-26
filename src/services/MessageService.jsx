@@ -1,6 +1,5 @@
-// Updated MessageService.jsx
-
-import { getNgrokHttpsUrl, getDbHttpsUrl } from '../context/NgrokAPIStore';
+// services/MessageService.jsx
+import { getDbHttpsUrl } from '../context/NgrokAPIStore';
 
 export async function saveMessage(
   avatar_id,
@@ -23,7 +22,6 @@ export async function saveMessage(
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      // Accept: 'application/json',
     },
     body: formData,
   });

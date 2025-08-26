@@ -1,4 +1,19 @@
-I need a default view for the neural nexus frontend. I am refactoring the frontend to give it a new look and feel. The home view of the neural nexus is the avatar-selection screen which is a card view implementing the following code:
+FRONTEND UPDATE:
+
+I need a default view for the neural nexus frontend. I am refactoring the frontend to give it a new look and feel. I am going to give a series of instructions. Only respond with "Acknowledged" until i have sent the final [COMPLETE] token. Then I will need your response. only respond with "Acknowledged" to confirm you understand these instructions.
+I need the following components:
+
+AvatarSelectionComponent (this will be the root view)
+ChatArea (complete; to be integrated and updated)
+LiveChat (complete; to be integrated and updated)
+Account Settings (complete; to be integrated and updated)
+Billing Dashboard (complete; to be integrated and updated)
+AuthComponent (used for login & signup, complete; to be integrated and updated)
+AddCommunityAvatar (refactor the sidebar;)
+
+I need the Avatar AvatarSelectionComponent and transitions. I will integrate the created components as cards in the AvatarSelectionComponent. 
+
+The home view of the neural nexus is the avatar-selection screen which is a card view implementing the following code:
 
 import { Camera, Mesh, Plane, Program, Renderer, Texture, Transform } from "ogl";
 import { useEffect, useRef } from "react";
@@ -474,21 +489,28 @@ export default function CircularGallery({
   return <div className="w-full h-full overflow-hidden cursor-grab active:cursor-grabbing" ref={containerRef} />;
 }
 ----
-In this view there is always the following:
+There is always a persistent background. in the avatar selection view (VantaBackground)
+If the user is not currently logged in, there is only a single card with buttons for signup and login. 
+
+After the user has successfully signed-up/logged-in; the user is brought to the last-used-avatar (if available) or the create new avatar cards of the AvatarSelectionComponent. 
+
+If not logged in or signed up, the avatar selection component view only shows a signle card used to signup or login. 
+
+In this view (AvatarSelectionComponent) there is always the following (after logging in or signing up):
 There is always a persistent button beneath the circular gallery. 
-There is always a search bar with a dropdown menu at the very top of the app to search for and select avatars.
-beneath that and above the current avatar card in the circular gallery is the name of the current avatar. The description of the avatar is overlaid onto the avatar image. The image of the avater (if available) is presented on the avatar card in the circular gallery. If there is no image, a placeholder image is used. 
+There is always a search bar in the header with a dropdown menu at the very top of the app to search for and select avatars.
+beneath the search bar and above the current avatar card in the circular gallery is the name of the current avatar. The description of the avatar is overlaid onto the avatar image. The image of the avater (if available) is presented on the avatar card in the circular gallery. If there is no image, a placeholder image is used. A VantaBackground is used in the background behind the circular gallery.
 
 There are always at minimum two cards. 
-The first card on the left is always the card used for account settings/ billing dashboard. Instead of the avatar name in this slot, "User Settings" is displayed. The persistent button is a reverse drop-down menu that says "More Settings" and will allow the user to select other settings for this card view. 
+The first card on the left is always the card used for account settings/ billing dashboard. Instead of the avatar name in this slot, "User Settings" is displayed. The persistent button is modified in when the user navigates to this spot of the circular gallery into a button that is a  reverse drop-down menu that says "More Settings" and will allow the user to select other settings for this card view. Otherwise, the persistent button is avatar Settings. Under the "Create Avatar" Card the button becomes "Add Avatar" to add avatars other people have created or other models such as from restaurants etc. This will use the refactored sidebar. It will implement an animated list: https://www.reactbits.dev/components/animated-list. There is an option to share your avatar in avatar settings. There are proprietary avatars for restaurants and celebrities that have no avatar settings to modify the avatars that are created exclusively by Afterlife Systems Inc. Interaction with these avatars grant royalties to the likeness of the individual. (celebrity)
 
 The last card at the end of the list on the right is always "Create Avatar". Create Avatar is the label above the card in the circular gallery. clicking on this card will bring up the create avatar modal to create a new avatar and select the avatar. 
 
-When the avatar is selected or created or after the user settings is selected, the card is zoomed-in to become full-screen. for the user settings, the user settings is displayed. if the persistent "Avatar Settings" button is pressed, the selected avatar is zoomed in with the icon as the background and the avatar settings overlaid onto the avatar image if availabe. 
+When the avatar is selected or created or after the user settings is selected, the card is zoomed-in to become full-screen using a transition. There is no longer a header at this point. for the user settings, the user settings is displayed. if the persistent "Avatar Settings" button is pressed, the selected avatar is zoomed in with the icon as the background and the avatar settings overlaid onto the avatar image if availabe. if the  "Add Avatar" button is pressed, there is a scrollable list of proprietary/community avatars that instantly change the image of the background that has an infinite scroll feature. There is cancel in the top left corner to return to the AvatarSelectionComponent view or Add button to add a community/proprietary avatar. 
 
 Double-clicking (or holding a click or press on mobile) on the background when in user settings or in avatar settings or in avatar chat or avatar live chat mode will return to the avatar selection screen.  
 
-The transition between the avatar selection and the selected avatar view is always a zoom in to the avatar to full screen or a zoom out from the avatar to the circular gallery. 
+The transition between the avatar selection (AvatarSelectionComponent) and the selected avatar view is always a zoom in to the avatar to full screen or a zoom out from the avatar to the circular gallery of the AvatarSelectionComponent. 
 
 There is a number of dots between the circular gallery and the persistent button to indicate the position of the current card in the list and allow the user to select a given card position immediately by clicking the button. This is as in the following code (just the buttons indicating current position to be used with the circular gallery)
 

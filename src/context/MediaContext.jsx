@@ -1,7 +1,4 @@
 // components/MediaContext.jsx
-// This handles sending messages, thought-to-text, thought-to-image, and conversation suggestions.
-// provides interfaces to the services that handle the actual fetch requests.
-
 import React, {
   createContext,
   useContext,
@@ -11,21 +8,18 @@ import React, {
 } from 'react';
 import { useNgrokApiUrl } from './NgrokAPIContext';
 import { MessageService } from '../services/MessageService';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from './AuthContext';
 
 const MediaContext = createContext();
 
 export const MediaProvider = ({ children }) => {
   const { ngrokHttpsUrl, ngrokWsUrl, dbHttpsUrl } = useNgrokApiUrl();
   const { accessToken, activeAvatar, user } = useAuth();
-  console.log('MediaProvider Service call of ngrokHttpsUrl:', ngrokHttpsUrl);
-
-  // variables
   const [isThoughtToImageEnabled, setIsThoughtToImageEnabled] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [messages, setMessages] = useState({});
   const [inputMessage, setInputMessage] = useState('');
-  const [sender, setSender] = useState('');
+  const [sender, setSender] = useState('user');
   const [mediaFiles, setMediaFiles] = useState([]);
 
   const messagesEndRef = useRef(null);
@@ -37,8 +31,7 @@ export const MediaProvider = ({ children }) => {
   const mediaStreamRef = useRef(null);
   const sourceRef = useRef(null);
   const processorRef = useRef(null);
-  const NUM_OF_BYTES_FILE_SIZE = 1; // # of Bytes
-  const MAX_FILE_SIZE_MB = NUM_OF_BYTES_FILE_SIZE * 1024 * 1024;
+  const MAX_FILE_SIZE_MB = 1 * 1024 * 1024;
 
   const [dataExchangeTypes, setDataExchangeTypes] = useState({
     text: true,
@@ -52,22 +45,13 @@ export const MediaProvider = ({ children }) => {
     telepathy: true,
   });
 
-  // function interface
   const startThoughtToImage = async () => {
-    if (!accessToken) return;
-    console.log('startThoughtToImage');
-    console.log('isThoughtToImageEnabled:' + isThoughtToImageEnabled);
+    if (!accessToken || !user?.enable_grok_imagine) return;
     setIsThoughtToImageEnabled(true);
-    //send post request
   };
 
-  // function interface
   const stopThoughtToImage = () => {
-    console.log('stopThoughtToImage');
-    console.log('isThoughtToImageEnabled:' + isThoughtToImageEnabled);
     setIsThoughtToImageEnabled(false);
-    console.log('user.user_id:', user.user_id);
-    console.log('activeAvatar.avatar_id:', activeAvatar.avatar_id);
   };
 
   async function sendMessage() {
@@ -84,49 +68,63 @@ export const MediaProvider = ({ children }) => {
       );
 
       if (!response || response.status !== 'success') {
-        throw new Error(
-          `Message post failed: ${response.statusText || 'Unknown error'}`
-        );
+        throw new Error(response?.detail || 'Message post failed');
       }
 
-      const result = await JSON.stringify(response);
-      console.log(response);
-      console.log('result:' + result);
-
       const newMessage = {
-        id: result.message_id || Date.now().toString(),
+        id: response.user_message_id,
         content: inputMessage,
         sender: sender,
         timestamp: new Date().toISOString(),
+        media:
+          response.media_items > 0
+            ? mediaFiles.map((f) => ({
+                filename: f.name,
+                content_type: f.type,
+                url: response.media_items[0]?.url,
+              }))
+            : [],
       };
 
-      setMessages((prev) => ({
-        ...prev,
-        [activeAvatar.avatar_id]: [
-          ...(prev[activeAvatar.avatar_id] || []),
-          newMessage,
-        ],
-      }));
-      setSender('');
+      if (response.ai_response) {
+        const aiMessage = {
+          id: response.ai_message_id,
+          content: response.ai_response,
+          sender: 'assistant',
+          timestamp: new Date().toISOString(),
+          media: [],
+        };
+        setMessages((prev) => ({
+          ...prev,
+          [activeAvatar.avatar_id]: [
+            ...(prev[activeAvatar.avatar_id] || []),
+            newMessage,
+            aiMessage,
+          ],
+        }));
+      } else {
+        setMessages((prev) => ({
+          ...prev,
+          [activeAvatar.avatar_id]: [
+            ...(prev[activeAvatar.avatar_id] || []),
+            newMessage,
+          ],
+        }));
+      }
+
       setInputMessage('');
       setMediaFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
       fetchMessages();
     } catch (err) {
-      // Special handling for 413 status code
       if (err.status === 413) {
-        alert(
-          `One or more of the files exceeds the maximum upload size of 1 MB.`
-        );
+        alert(`One or more files exceed the maximum upload size of 1 MB.`);
       } else {
-        alert(
-          `One or more of the files exceeds the maximum upload size of 1 MB.`
-        );
+        alert(err.message || 'Failed to send message');
       }
     }
   }
 
-  // On Avatar Selection or app load call fetch Messages
   const fetchMessages = async () => {
     if (!activeAvatar || !accessToken) return;
     try {
@@ -140,9 +138,7 @@ export const MediaProvider = ({ children }) => {
           id: msg._id,
           content: msg.message,
           media: msg.media || [],
-          sender:
-            msg.sender ||
-            (msg.type === 'text' && msg.from_avatar ? 'avatar' : 'user'), // fallback if backend lacks sender
+          sender: msg.sender,
           timestamp: msg.timestamp,
         })),
       }));
@@ -156,47 +152,13 @@ export const MediaProvider = ({ children }) => {
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
 
-    setAvatars((prev) =>
-      prev.map((avatar) => {
-        if (avatar.id === activeAvatar.id) {
-          const newFiles = files.map((file) => ({
-            id: Date.now() + Math.random(),
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            uploadedAt: new Date().toISOString(),
-          }));
-          const isImage = (type) => type.startsWith('image/');
-          const newDocuments = newFiles.filter((f) => !isImage(f.type));
-          const newImages = newFiles.filter((f) => isImage(f.type));
-          return {
-            ...avatar,
-            documents: [...avatar.documents, ...newDocuments],
-            images: [...avatar.images, ...newImages],
-          };
-        }
-        return avatar;
-      })
-    );
+    const validFiles = files.filter((f) => f.size <= MAX_FILE_SIZE_MB);
+    if (validFiles.length < files.length) {
+      alert('Some files exceed the 1 MB limit and were ignored.');
+    }
 
-    const uploadMessage = {
-      id: Date.now(),
-      content: `Uploaded ${files.length} file(s): ${files
-        .map((f) => f.name)
-        .join(', ')}`,
-      sender: sender,
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages((prev) => ({
-      ...prev,
-      [activeAvatar.avatar_id]: [
-        ...(prev[activeAvatar.avatar_id] || []),
-        uploadMessage,
-      ],
-    }));
+    setMediaFiles((prev) => [...prev, ...validFiles]);
     event.target.value = '';
-    setSender('');
   };
 
   const startRecording = async () => {
@@ -241,18 +203,11 @@ export const MediaProvider = ({ children }) => {
       isVoice: true,
       audioBlob,
     };
-    const avatarResponse = {
-      id: Date.now() + 1,
-      content: `I received your voice message! As ${activeAvatar.name}, I would process your audio and respond accordingly. I have ${activeAvatar.documents.length} documents and ${activeAvatar.images.length} images in my knowledge base.`,
-      sender: 'avatar',
-      timestamp: new Date().toISOString(),
-    };
     setMessages((prev) => ({
       ...prev,
       [activeAvatar.avatar_id]: [
         ...(prev[activeAvatar.avatar_id] || []),
         voiceMessage,
-        avatarResponse,
       ],
     }));
   };
@@ -304,11 +259,9 @@ export const MediaProvider = ({ children }) => {
           document.dispatchEvent(
             new CustomEvent('transcription', { detail: text })
           );
-        } else {
-          console.warn('Empty or invalid transcript received:', data);
         }
       } catch (error) {
-        console.error('Error parsing WebSocket message:', error, event.data);
+        console.error('Error parsing WebSocket message:', error);
       }
     };
 
@@ -365,7 +318,9 @@ export const MediaProvider = ({ children }) => {
   };
 
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files).filter(
+      (f) => f.size <= MAX_FILE_SIZE_MB
+    );
     setMediaFiles((prev) => [...prev, ...files]);
   };
 
