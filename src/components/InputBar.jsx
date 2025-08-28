@@ -276,7 +276,7 @@ const InputBar = ({
             ) : (
               <>
                 <AudioLines className="w-5 h-5" />
-                Live Chat
+                {/* Live Chat */}
               </>
             )}
           </button>

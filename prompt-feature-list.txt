@@ -1,0 +1,195 @@
+"""# Neural Nexus Frontend Refactor - Iterative Feature List
+
+You can now prompt me one feature at a time by referencing its number:
+
+---
+
+### Iterative Feature List
+
+1. **AvatarSelectionComponent (Root View)**
+   - Implement as the home view.
+   - Integrates CircularGallery and VantaBackground.
+   - Handles login/signup state vs. logged-in state (single card vs. avatar cards).
+
+2. **CircularGallery Integration**
+   - Implement scrolling avatar card gallery.
+   - First card always "User Settings".
+   - Last card always "Create Avatar".
+   - Cards display avatar name, description overlay, and image (or placeholder).
+
+3. **Persistent Background (VantaBackground)**
+   - Ensure background is always active in AvatarSelectionComponent.
+
+4. **Login/Signup State Handling**
+   - If not logged in: show single card with signup/login buttons.
+   - After login: show last-used avatar or "Create Avatar" cards.
+
+5. **Persistent Button Behavior**
+   - Default: "Avatar Settings".
+   - On "User Settings" card: becomes "More Settings" dropdown.
+   - On "Create Avatar" card: becomes "Add Avatar".
+
+6. **Search Bar with Dropdown**
+   - At top of AvatarSelectionComponent.
+   - Allows searching and selecting avatars.
+
+7. **Card Transitions (Zoom In/Out)**
+   - Zoom-in animation when selecting a card (full screen).
+   - Zoom-out animation back to AvatarSelectionComponent.
+
+8. **Dots Position Indicator Component**
+   - Displays between CircularGallery and persistent button.
+   - Allows direct selection of cards.
+
+9. **User Settings Card**
+   - Always the first card.
+   - Zooms to full-screen with account settings and billing dashboard.
+
+10. **Create Avatar Card**
+    - Always the last card.
+    - Opens a modal to create new avatars.
+
+11. **Avatar Settings View**
+    - Zoom-in transition with avatar image as background.
+    - Settings overlaid on top.
+    - Option to share avatar.
+
+12. **Add Avatar View**
+    - Opens animated scrollable list (ReactBits animated list).
+    - Includes proprietary and community avatars.
+    - Infinite scroll feature.
+    - Cancel (top-left) returns to AvatarSelectionComponent.
+    - Add button confirms adding avatar.
+
+13. **Proprietary Avatars Handling**
+    - Special avatars for celebrities/restaurants.
+    - No modifiable settings.
+    - Royalties handled via Afterlife Systems Inc.
+
+14. **LiveChat & ChatArea Integration**
+    - Zoom-in to avatar launches chat features.
+    - Integrate existing LiveChat + ChatArea.
+
+15. **AuthComponent Integration**
+    - Used for login & signup modal.
+    - Linked to single card when not logged in.
+
+16. **Navigation Shortcuts**
+    - Double-click/long-press background returns to AvatarSelectionComponent.
+
+---
+
+# LIVE CHAT 
+I need LiveChat input audio to be collected
+I need LiveChat input audio to be sent to avatar/post_message 
+I need the LiveChat to receive responses from avatar/post_message
+I need LiveChat to audibly play the responses with an audible default voice
+I need to be able to use the current conversation context and grok imagine to move the image of the avatar
+I need the avatar image to not be so zoomed in if not on mobile 
+I need "Hey {AvatarName}" to for the avatar input or "(optional Hey) {Avatar First Name or Avatar Last Name only}" to trigger the input to the Live Chat
+I need to see any LiveChat messages as persisted in the ChatArea  
+
+# AVATAR SELECTION COMPONENT
+I need the cards on the circular gallery to be icons that have a transparent background (they are currently black) if the avatar does not have an image.
+I need the cards on the circular gallery to be a plus icon for the create avatar card (it is currently black)
+I need to be able to see "Community Avatars" in the search bar
+I need to be able to select one or more "Community Avatars" in the search bar and add all at once
+I need to be able to use the arrows on the keyboard to navigate the circular gallery
+I need the circular gallery to be larger
+I need to be able to see the edges of the other cards of the circular gallery
+I need less space between the top and bottom of the circular gallery
+
+# ACCOUNT SETTINGS
+I need a button in the top left-hand corner to have a cancel button to navigate back to avatar-selection in Account Settings
+I need a button in the top right-hand corner to have a done button to update the user settings (if anything changed) and navigate back to avatar-selection in Account Settings
+I need all the update buttons in the Account Settings to call user settings with the update
+I need to Download my Data with the Download Data in the Account Settings view
+I need to Delete Account with the Delete Account in the Account Settings view (delete all avatars and the user)
+
+# BILLING DASHBOARD
+I need to be able to see API usage
+I need to be able to allow users to create API keys to call the avatar/post_message endpoint
+I need to monitor API usage
+I need to see billing history
+I need to allow users to add a credit card in the Billing Dashboard
+I need to integrate this with the Stripe API
+I need to allow users to subscripe for three tiers Free, Pro, and Enterprise
+I need an "X" button to return to avatar-selection
+
+# CHAT AREA
+I need the ChatArea messages to receive websocket requests from the backend API
+I want to post a message with a post request and receive responses from the backend API via websocket connection.
+I need to be able to have a button on messages to audibly play any chat message.
+I need to audibly play the chat message with the custom voice if elvenlabs key is defined. (otherwise use a default voice)
+I need lower latency for the chat area
+I need to be able to see synthetic waveforms as they are generated in the input bar for the thought-to-image button (live feed)
+I need the messages to be added to the context of the vector store for the avatar so the avatar knows the context of the conversation.
+I need to be able to see a small user icon bubble of the avatar I am chatting with
+I need to be able to see a small user icon bubble of the user
+I need to be able to click on the user icon bubble of the avatar I am chatting with and update the icon (saved in the api)
+I need to be able to click on the user icon bubble of the user and update the icon (saved in the api)
+I need the Live Chat button to say Live Chat on hover
+I need the upload button to say Upload on hover
+I need the buttons for conversation suggestions and enable thought to image to be the same color as the other buttons
+I need the chat area window to not need a scroll bar on mobile
+I need conversation suggestions to be able to be re-rolled
+I need conversation suggestions to be presented as toasts
+I need conversation suggestions to be contextually relevant to the conversation
+
+# AVATAR SETTINGS (creating avatars on sparse data for nostalgic purposes; true value of talking to your loved ones)
+I need to be able to drag and drop media files
+I need to be able to add social media links
+I need to be able to add youtube links
+I need to be able to see the current avatar icon and update it with the same text (Drag and drop icon here or click to upload)
+I need to be able to see the current avatar description and update it
+I need to be able to preprocess any data that is added to the avatar settings (automatically navigate links and scrape data, preprocess the data into a useful format)
+I need to be able to edit data that has been scraped from automated processes
+I need to be able to add my own context as a document for the avatar (window with custom context)
+I need to be able to train the avatar on this data.
+I need to be able to delete data that the avatar has been trained on
+I need to be able to update data that the avatar has been trained on
+I need the avatar settings to not be white as a background.
+I need to process github documents as text
+I need to process youtube videos from links into text and audio
+
+# NEURAL NEXUS DB API
+I need to be able to train QLoRA adapters from a /train endpoint
+I need to be able to add documents to the chromadb vector store
+I need the responses from the avatar at post message to be contextually relevant using the chromadb vectorstore
+I need the responses from the avatar at post_message to be fine-tuned to allow for messages to be in the style of writing of the avatar
+
+# INTEGRATIONS (financial use to keep the app profitable and generally useful)
+I need to create integrations with social media apps for 
+  - custom email responses
+  - responses to tweets
+  - custom voicemail
+  - responses to instagram messages
+  - responses to twitch chat with twitch chat context (twitch bot)
+These need to use the API and charge a fee per call.
+
+# AUDITING, ABUSE, & FRAUD prevention (safety and security)
+I need an immutable blockchain to trace user activity
+I need to be able to detect and prevent prohibited use such as child-abuse/child-pornography/ or illegal activity
+I need to be able to prevent the application from fraudulent use 
+I need to use end-to-end encryption to secure the user's details and sensitive information
+
+# Terms and Conditions and Privacy Policy
+I need to update the Terms and Conditions and Privacy Policy to prevent abuse, fraud, and illegal activity. 
+I need to update the Privacy Policy to ensure the user is aware of auditing (immutable blockchain)
+I need to allow people to create any avatar but state that it is against terms and conditions for creating the likeness of others and/or sharing the likeness of other for non-personal use
+
+# DEPLOYMENT
+I need the current deployment to be deployed to cloud for the backend & frontend
+
+# LOGIN SCREEN
+I need the icon to be the icon of the last used avatar, the user if the user has added an icon and the last used avatar is not available, or community avatar icons that auto scroll position (chick-fil-a; onboarded community celebrities)
+
+# NEURAL DATA (the true value of the application to the neuroscience community and those in need; future use)
+I need thought to text api to no longer use skip connections and use inpainting instead to create the image and leave-one-out to associate the receptive field of the image with with the neural signal
+I need a data set for thought-to-text to train encoder/decoder models on neural data to allow BCI conceptual telepathy
+I need to integrate thought-to-motion into the app in a useful way.
+
+# COMMUNITY AVATARS (finacial aspect of the application to allow it to exist)
+I need to create community avatars that are publicly available to all users (chick-fil-a, starbucks, outback (sit-down restaurant use), kanji ordering (local restaurant use); 
+I need to onboard celebrities or otherwise public figures & present royalties for use of their content in the application)
+

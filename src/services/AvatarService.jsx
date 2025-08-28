@@ -4,7 +4,7 @@ import { getDbHttpsUrl } from '../context/NgrokAPIStore';
 export const AvatarService = {
   async getAll(accessToken) {
     try {
-      const res = await fetch(`${getDbHttpsUrl()}/avatars/get_all`, {
+      const res = await fetch(`${getDbHttpsUrl()}/management/avatars/get_all`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -22,16 +22,19 @@ export const AvatarService = {
 
   async createAvatar(accessToken, payload) {
     try {
-      const response = await fetch(`${getDbHttpsUrl()}/avatars/create`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'ngrok-skip-browser-warning': '69420',
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `${getDbHttpsUrl()}/management/avatars/create`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'ngrok-skip-browser-warning': '69420',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!response.ok) throw new Error(await response.text());
       return await response.json();
@@ -43,15 +46,18 @@ export const AvatarService = {
 
   async deleteAvatar(accessToken, avatar_id) {
     try {
-      const response = await fetch(`${getDbHttpsUrl()}/avatars/delete`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Accept: 'application/json',
-        },
-        body: new URLSearchParams({ avatar_id }),
-      });
+      const response = await fetch(
+        `${getDbHttpsUrl()}/management/avatars/delete`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Accept: 'application/json',
+          },
+          body: new URLSearchParams({ avatar_id }),
+        }
+      );
       const res = await response.json();
       if (res.status !== 'success') throw new Error(JSON.stringify(res));
       return res;
@@ -63,15 +69,18 @@ export const AvatarService = {
 
   async selectAvatar(accessToken, avatar_id) {
     try {
-      const response = await fetch(`${getDbHttpsUrl()}/avatars/select_avatar`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Accept: 'application/json',
-        },
-        body: new URLSearchParams({ avatar_id }),
-      });
+      const response = await fetch(
+        `${getDbHttpsUrl()}/management/avatars/select_avatar`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Accept: 'application/json',
+          },
+          body: new URLSearchParams({ avatar_id }),
+        }
+      );
       const res = await response.json();
       if (res.status !== 'success') throw new Error(JSON.stringify(res));
       return res;

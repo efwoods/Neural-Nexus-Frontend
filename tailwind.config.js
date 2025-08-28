@@ -33,4 +33,5 @@ module.exports = {
       addVariant('landscape', '@media (orientation: landscape)');
     },
   ], 
+  darkMode: 'class',
 };

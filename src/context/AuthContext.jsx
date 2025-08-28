@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }) => {
 
   const getAvatars = async (token = accessToken) => {
     if (!token || !dbHttpsUrl) return;
-    const res = await fetch(`${dbHttpsUrl}/avatars/get_all`, {
+    const res = await fetch(`${dbHttpsUrl}/management/avatars/get_all`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

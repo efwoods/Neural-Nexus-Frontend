@@ -12,6 +12,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LandingPage from './components/Landing/LandingPage.jsx';
 import PrivacyPolicy from './components/Landing/PrivacyPolicy.jsx';
 import TermsOfService from './components/Landing/TermsOfService.jsx';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -19,6 +21,7 @@ createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <MediaProvider>
           <BrowserRouter>
+            <ToastContainer position="top-center" autoClose={3000} />
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/app" element={<App />} />

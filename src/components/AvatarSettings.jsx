@@ -40,22 +40,22 @@ const AvatarSettings = ({ avatarId, accessToken }) => {
       .then((data) => {
         setAvatarData(data);
         setUpdatedDesc(data.description || '');
-      })
-      .catch(() => toast.error('Failed to load avatar info'));
+      });
+    // .catch(() => toast.error('Failed to load avatar info'));
 
     fetch(`/api/avatars/${avatarId}/links`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
       .then((res) => res.json())
-      .then(setLinks)
-      .catch(() => toast.error('Failed to load links'));
+      .then(setLinks);
+    // .catch(() => toast.error('Failed to load links'));
 
     fetch(`/api/avatars/${avatarId}/documents`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
       .then((res) => res.json())
-      .then(setFiles)
-      .catch(() => toast.error('Failed to load documents'));
+      .then(setFiles);
+    // .catch(() => toast.error('Failed to load documents'));
   }, [avatarId]);
 
   const handleDescSave = async () => {

@@ -1,10 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { LogIn, LogOut, LogOutIcon, UserPlus } from 'lucide-react';
+import { LogIn, LogOut, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
 import VantaBackground from './VantaBackground';
-import { LucideLogOut } from 'lucide-react';
 
 const modalRoot =
   document.getElementById('modal-root') ||
@@ -31,8 +30,6 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
     setActiveAvatar,
   } = useAuth();
   const { messages, setMessages } = useMedia();
-
-  // Dropdown state for user menu
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -42,7 +39,7 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
       if (isSignup) {
         await signup(username, email, password);
       } else {
-        await login(email, password);
+        await login(email, password, setActiveTab);
       }
       setUsername('');
       setEmail('');
@@ -56,9 +53,10 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
 
   const handleLogout = () => {
     setMessages('');
-    setActiveAvatar('');
+    setActiveAvatar(null);
     logout();
     setDropdownOpen(false);
+    onEndLiveChat?.();
   };
 
   // Close dropdown on outside click
@@ -78,7 +76,6 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
     };
   }, [dropdownOpen]);
 
-  // Modal JSX as a Portal child (unchanged)
   const modalContent = (
     <div className="fixed inset-0 flex items-center justify-center z-[999]">
       <VantaBackground />
@@ -135,7 +132,6 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
             >
               Cancel
             </button>
-
             <button
               type="submit"
               className="px-4 py-2 bg-white/5 hover:bg-teal-600 rounded-lg text-white"
@@ -149,12 +145,12 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
   );
 
   return (
-    <div className="relative flex items-center space-x-4">
+    <div className="relative flex items-center justify-center space-x-4">
       {isLoggedIn ? (
         <div ref={dropdownRef} className="relative">
           <button
             onClick={() => setDropdownOpen((open) => !open)}
-            className="flex items-center space-x-2 px-4 py-2 bg-white/5 hover:bg-white/5 rounded-full text-white transition focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="flex items-center space-x-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full text-white transition focus:outline-none focus:ring-2 focus:ring-teal-500"
             aria-haspopup="true"
             aria-expanded={dropdownOpen}
             aria-controls="user-menu"
@@ -176,7 +172,6 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
               />
             </svg>
           </button>
-
           {dropdownOpen && (
             <div
               id="user-menu"
@@ -185,8 +180,8 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
             >
               <button
                 onClick={() => {
-                  onEndLiveChat?.(); // stop live chat if active
-                  setActiveTab('account'); // switch to account settings
+                  onEndLiveChat?.();
+                  setActiveTab('account');
                   setDropdownOpen(false);
                 }}
                 className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-teal-600 transition"
@@ -194,11 +189,10 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
               >
                 Account Settings
               </button>
-
               <button
                 onClick={() => {
-                  setActiveTab('billing'); // switch to billing dashboard
-                  if (onEndLiveChat) onEndLiveChat(); // stop live chat if active
+                  setActiveTab('billing');
+                  onEndLiveChat?.();
                   setDropdownOpen(false);
                 }}
                 className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-teal-600 transition"
@@ -206,13 +200,12 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
               >
                 Billing
               </button>
-
               <button
                 onClick={handleLogout}
                 className="block w-full text-left flex flex-row items-center px-4 py-2 text-sm text-red-500 hover:bg-red-900 hover:text-white transition"
                 role="menuitem"
               >
-                Logout <LogOutIcon className="ml-2" />
+                Logout <LogOutIcon className="ml-2 w-4 h-4" />
               </button>
             </div>
           )}
@@ -227,9 +220,8 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
             className="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
           >
             <UserPlus size={16} />
-            <span className="portrait:hidden landscape:ml-2">Signup</span>
+            <span className="ml-2">Signup</span>
           </button>
-
           <button
             onClick={() => {
               setIsSignup(false);
@@ -238,11 +230,10 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
             className="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
           >
             <LogIn size={16} />
-            <span className="portrait:hidden landscape:ml-2">Login</span>
+            <span className="ml-2">Login</span>
           </button>
         </>
       )}
-
       {showModal && ReactDOM.createPortal(modalContent, modalRoot)}
     </div>
   );

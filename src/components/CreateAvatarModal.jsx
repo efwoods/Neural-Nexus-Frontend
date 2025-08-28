@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { UserPenIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
+
 const CreateAvatarModal = ({ setShowCreateModal }) => {
   const { createAvatar } = useAuth();
-  const [loading, setLoading] = React.useState(null);
-  const [error, setError] = React.useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [newAvatarName, setNewAvatarName] = useState('');
   const [newAvatarDescription, setNewAvatarDescription] = useState('');
 
   const handleCreate = async () => {
-    if (!newAvatarName.trim()) return;
+    if (!newAvatarName.trim()) {
+      setError('Avatar name is required');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -21,11 +26,18 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
         setShowCreateModal(false);
         setNewAvatarName('');
         setNewAvatarDescription('');
+        toast.success('Avatar created successfully');
       } else {
         setError('Failed to create avatar');
+        toast.error('Failed to create avatar');
       }
     } catch (err) {
-      setError(err.message || 'Failed to create avatar');
+      const errorMessage = err.message.includes('detail')
+        ? JSON.parse(err.message).detail
+        : err.message || 'Failed to create avatar';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      console.error('Create avatar error:', err);
     } finally {
       setLoading(false);
     }
@@ -59,40 +71,48 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
             <span className="portrait:hidden">Create Avatar</span>
           </div>
         </h2>
+        {error && (
+          <div className="mb-4 text-red-500 text-sm" role="alert">
+            {error}
+          </div>
+        )}
         <label className="block mb-2 text-xl sm:text-2xl text-gray-300">
           Name
           <input
             type="text"
             value={newAvatarName}
             onChange={(e) => setNewAvatarName(e.target.value)}
-            className="w-full p-2 mt-1 rounded bg-black/35 from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-900 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg"
+            className="w-full p-2 mt-1 rounded bg-black/35 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all duration-300"
             autoFocus
             aria-required="true"
+            disabled={loading}
           />
         </label>
-        <label className="block mb-4 text-xl sm:text-2xl text-gray-300 ">
+        <label className="block mb-4 text-xl sm:text-2xl text-gray-300">
           Description
           <textarea
             value={newAvatarDescription}
             onChange={(e) => setNewAvatarDescription(e.target.value)}
-            className="w-full p-2 mt-1 rounded bg-black/35 from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-900 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg"
+            className="w-full p-2 mt-1 rounded bg-black/35 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all duration-300"
             rows={3}
             aria-multiline="true"
+            disabled={loading}
           />
         </label>
         <div className="flex justify-end gap-2">
           <button
             onClick={() => setShowCreateModal(false)}
-            className="transition-transform duration-300 hover:scale-105 px-4 py-2 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 min-w-0 rounded px-3 py-2 border border-gray-700 text-white bg-black/35 from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-900 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform shadow-lg"
+            className="px-4 py-2 rounded bg-black/35 text-white border border-gray-700 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all duration-300 transform hover:scale-105"
+            disabled={loading}
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
-            className="transition-transform duration-300 hover:scale-105 px-4 py-2 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 min-w-0 rounded px-3 py-2 border border-gray-700 text-white bg-black/35 from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-900 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 transform shadow-lg"
-            disabled={!newAvatarName.trim()}
+            className="px-4 py-2 rounded bg-black/35 text-white border border-gray-700 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all duration-300 transform hover:scale-105 disabled:opacity-50"
+            disabled={loading || !newAvatarName.trim()}
           >
-            Create
+            {loading ? 'Creating...' : 'Create'}
           </button>
         </div>
       </div>
