@@ -14,7 +14,6 @@ import {
   Texture,
   Transform,
 } from 'ogl';
-
 function debounce(func, wait) {
   let timeout;
   return function (...args) {
@@ -22,11 +21,9 @@ function debounce(func, wait) {
     timeout = setTimeout(() => func.apply(this, args), wait);
   };
 }
-
 function lerp(p1, p2, t) {
   return p1 + (p2 - p1) * t;
 }
-
 function autoBind(instance) {
   const proto = Object.getPrototypeOf(instance);
   Object.getOwnPropertyNames(proto).forEach((key) => {
@@ -35,7 +32,6 @@ function autoBind(instance) {
     }
   });
 }
-
 function createTextTexture(
   gl,
   text,
@@ -60,7 +56,74 @@ function createTextTexture(
   texture.image = canvas;
   return { texture, width: canvas.width, height: canvas.height };
 }
-
+// Create a placeholder texture for null images
+function createPlaceholderTexture(
+  gl,
+  type = 'avatar',
+  width = 512,
+  height = 512
+) {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  canvas.width = width;
+  canvas.height = height;
+  // Create dark gradient background for glassmorphism effect
+  const gradient = context.createRadialGradient(
+    width / 2,
+    height / 2,
+    0,
+    width / 2,
+    height / 2,
+    width / 2
+  );
+  gradient.addColorStop(0, 'rgba(30, 30, 30, 0.8)'); // Dark center
+  gradient.addColorStop(1, 'rgba(20, 20, 20, 0.9)'); // Darker edges
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, width, height);
+  // Add subtle border
+  context.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  context.lineWidth = 2;
+  context.strokeRect(1, 1, width - 2, height - 2);
+  // Draw icon based on type with lighter color
+  context.fillStyle = 'rgba(200, 200, 200, 0.6)'; // Lighter gray for better contrast
+  context.font = 'bold 48px system-ui';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  if (type === 'create') {
+    // Draw plus icon
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const size = 40;
+    context.lineWidth = 8;
+    context.strokeStyle = 'rgba(200, 200, 200, 0.6)';
+    context.lineCap = 'round';
+    // Vertical line
+    context.beginPath();
+    context.moveTo(centerX, centerY - size);
+    context.lineTo(centerX, centerY + size);
+    context.stroke();
+    // Horizontal line
+    context.beginPath();
+    context.moveTo(centerX - size, centerY);
+    context.lineTo(centerX + size, centerY);
+    context.stroke();
+  } else {
+    // Draw user icon (simplified)
+    const centerX = width / 2;
+    const centerY = height / 2;
+    // Head (circle)
+    context.beginPath();
+    context.arc(centerX, centerY - 30, 30, 0, Math.PI * 2);
+    context.fill();
+    // Body (arc)
+    context.beginPath();
+    context.arc(centerX, centerY + 60, 50, 0, Math.PI, true);
+    context.fill();
+  }
+  const texture = new Texture(gl, { generateMipmaps: false });
+  texture.image = canvas;
+  return { texture, width, height };
+}
 class Title {
   constructor({
     gl,
@@ -79,7 +142,6 @@ class Title {
     this.font = font;
     this.createMesh();
   }
-
   createMesh() {
     const { texture, width, height } = createTextTexture(
       this.gl,
@@ -122,7 +184,6 @@ class Title {
     this.mesh.setParent(this.plane);
   }
 }
-
 class Media {
   constructor({
     geometry,
@@ -140,6 +201,7 @@ class Media {
     borderRadius = 0,
     font,
     onCardClick,
+    cardType = 'avatar', // New prop to identify card type
   }) {
     this.extra = 0;
     this.geometry = geometry;
@@ -157,12 +219,12 @@ class Media {
     this.borderRadius = borderRadius;
     this.font = font;
     this.onCardClick = onCardClick;
+    this.cardType = cardType;
     this.createShader();
     this.createMesh();
     this.createTitle();
     this.onResize();
   }
-
   createShader() {
     const texture = new Texture(this.gl, {
       generateMipmaps: true,
@@ -229,18 +291,41 @@ class Media {
       },
       transparent: true,
     });
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = this.image;
-    img.onload = () => {
-      texture.image = img;
-      this.program.uniforms.uImageSizes.value = [
-        img.naturalWidth,
-        img.naturalHeight,
-      ];
-    };
+    // Handle null/invalid images
+    if (!this.image) {
+      // Create placeholder texture
+      const {
+        texture: placeholderTexture,
+        width,
+        height,
+      } = createPlaceholderTexture(this.gl, this.cardType, 512, 512);
+      this.program.uniforms.tMap.value = placeholderTexture;
+      this.program.uniforms.uImageSizes.value = [width, height];
+    } else {
+      // Load actual image
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = this.image;
+      img.onload = () => {
+        texture.image = img;
+        this.program.uniforms.uImageSizes.value = [
+          img.naturalWidth,
+          img.naturalHeight,
+        ];
+      };
+      img.onerror = () => {
+        // Fallback to placeholder if image fails to load
+        console.warn(`Failed to load image: ${this.image}, using placeholder`);
+        const {
+          texture: placeholderTexture,
+          width,
+          height,
+        } = createPlaceholderTexture(this.gl, this.cardType, 512, 512);
+        this.program.uniforms.tMap.value = placeholderTexture;
+        this.program.uniforms.uImageSizes.value = [width, height];
+      };
+    }
   }
-
   createMesh() {
     this.plane = new Mesh(this.gl, {
       geometry: this.geometry,
@@ -248,7 +333,6 @@ class Media {
     });
     this.plane.setParent(this.scene);
   }
-
   createTitle() {
     this.title = new Title({
       gl: this.gl,
@@ -259,7 +343,6 @@ class Media {
       fontFamily: this.font,
     });
   }
-
   update(scroll, direction) {
     this.plane.position.x = this.x - scroll.current - this.extra;
     const x = this.plane.position.x;
@@ -296,7 +379,6 @@ class Media {
       this.isBefore = this.isAfter = false;
     }
   }
-
   onResize({ screen, viewport } = {}) {
     if (screen) this.screen = screen;
     if (viewport) {
@@ -323,7 +405,6 @@ class Media {
     this.x = this.width * this.index;
   }
 }
-
 class App {
   constructor(
     container,
@@ -349,7 +430,6 @@ class App {
     this.currentIndex = currentIndex;
     this.onIndexChange = onIndexChange;
     this.isExternalControl = false;
-
     this.createRenderer();
     this.createCamera();
     this.createScene();
@@ -358,11 +438,9 @@ class App {
     this.createMedias(items, bend, textColor, borderRadius, font);
     this.update();
     this.addEventListeners();
-
     // Set initial position based on currentIndex
     this.setCurrentIndex(currentIndex, false);
   }
-
   createRenderer() {
     this.renderer = new Renderer({
       alpha: true,
@@ -373,24 +451,20 @@ class App {
     this.gl.clearColor(0, 0, 0, 0);
     this.container.appendChild(this.gl.canvas);
   }
-
   createCamera() {
     this.camera = new Camera(this.gl);
     this.camera.fov = 45;
     this.camera.position.z = 20;
   }
-
   createScene() {
     this.scene = new Transform();
   }
-
   createGeometry() {
     this.planeGeometry = new Plane(this.gl, {
       heightSegments: 50,
       widthSegments: 100,
     });
   }
-
   createMedias(items, bend = 1, textColor, borderRadius, font) {
     const defaultItems = [
       {
@@ -462,47 +536,40 @@ class App {
         borderRadius,
         font,
         onCardClick: this.onCardClick,
+        cardType: data.type || 'avatar', // Pass card type
       });
     });
   }
-
   onTouchDown(e) {
     this.isDown = true;
     this.scroll.position = this.scroll.current;
     this.start = e.touches ? e.touches[0].clientX : e.clientX;
   }
-
   onTouchMove(e) {
     if (!this.isDown) return;
     const x = e.touches ? e.touches[0].clientX : e.clientX;
     const distance = (this.start - x) * (this.scrollSpeed * 0.025);
     this.scroll.target = this.scroll.position + distance;
   }
-
   onTouchUp() {
     this.isDown = false;
     this.onCheck();
   }
-
   onWheel(e) {
     const delta = e.deltaY || e.wheelDelta || e.detail;
     this.scroll.target +=
       (delta > 0 ? this.scrollSpeed : -this.scrollSpeed) * 0.2;
     this.onCheckDebounce();
   }
-
   onClick(e) {
     if (!this.medias || !this.medias[0]) return;
-
     const rect = this.gl.canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const centerX = rect.width / 2;
-
     // Check if clicked on the center card (current card)
     const cardWidth = this.medias[0].width * (rect.width / this.viewport.width);
     const cardLeft = centerX - cardWidth / 2;
     const cardRight = centerX + cardWidth / 2;
-
     if (x >= cardLeft && x <= cardRight && this.onCardClick) {
       // Get the current item data
       const currentItemIndex = this.getCurrentItemIndex();
@@ -512,14 +579,12 @@ class App {
       }
     }
   }
-
   onCheck() {
     if (!this.medias || !this.medias[0]) return;
     const width = this.medias[0].width;
     const itemIndex = Math.round(Math.abs(this.scroll.target) / width);
     const item = width * itemIndex;
     this.scroll.target = this.scroll.target < 0 ? -item : item;
-
     // Update current index and notify parent
     const newIndex = this.getCurrentItemIndex();
     if (newIndex !== this.currentIndex && !this.isExternalControl) {
@@ -529,36 +594,29 @@ class App {
       }
     }
   }
-
   getCurrentItemIndex() {
     if (!this.medias || !this.medias[0]) return 0;
     const width = this.medias[0].width;
     const itemIndex = Math.round(Math.abs(this.scroll.target) / width);
     return itemIndex % this.originalItems.length;
   }
-
   setCurrentIndex(index, animate = true) {
     if (!this.medias || !this.medias[0]) return;
-
     this.isExternalControl = true;
     const width = this.medias[0].width;
     const targetPosition = width * index;
-
     if (animate) {
       this.scroll.target = targetPosition;
     } else {
       this.scroll.target = targetPosition;
       this.scroll.current = targetPosition;
     }
-
     this.currentIndex = index;
-
     // Reset external control flag after a short delay
     setTimeout(() => {
       this.isExternalControl = false;
     }, 100);
   }
-
   onResize() {
     this.screen = {
       width: this.container.clientWidth,
@@ -578,7 +636,6 @@ class App {
       );
     }
   }
-
   update() {
     this.scroll.current = lerp(
       this.scroll.current,
@@ -593,7 +650,6 @@ class App {
     this.scroll.last = this.scroll.current;
     this.raf = window.requestAnimationFrame(this.update.bind(this));
   }
-
   addEventListeners() {
     this.boundOnResize = this.onResize.bind(this);
     this.boundOnWheel = this.onWheel.bind(this);
@@ -601,7 +657,6 @@ class App {
     this.boundOnTouchMove = this.onTouchMove.bind(this);
     this.boundOnTouchUp = this.onTouchUp.bind(this);
     this.boundOnClick = this.onClick.bind(this);
-
     window.addEventListener('resize', this.boundOnResize);
     window.addEventListener('mousewheel', this.boundOnWheel);
     window.addEventListener('wheel', this.boundOnWheel);
@@ -613,7 +668,6 @@ class App {
     window.addEventListener('touchend', this.boundOnTouchUp);
     this.gl.canvas.addEventListener('click', this.boundOnClick);
   }
-
   destroy() {
     window.cancelAnimationFrame(this.raf);
     window.removeEventListener('resize', this.boundOnResize);
@@ -637,7 +691,6 @@ class App {
     }
   }
 }
-
 const CircularGallery = forwardRef(
   (
     {
@@ -656,7 +709,6 @@ const CircularGallery = forwardRef(
   ) => {
     const containerRef = useRef(null);
     const appRef = useRef(null);
-
     useImperativeHandle(ref, () => ({
       setCurrentIndex: (index, animate = true) => {
         if (appRef.current) {
@@ -670,7 +722,6 @@ const CircularGallery = forwardRef(
         return 0;
       },
     }));
-
     useEffect(() => {
       const app = new App(containerRef.current, {
         items,
@@ -685,29 +736,24 @@ const CircularGallery = forwardRef(
         onIndexChange,
       });
       appRef.current = app;
-
       return () => {
         app.destroy();
         appRef.current = null;
       };
     }, [items, bend, textColor, borderRadius, font, scrollSpeed, scrollEase]);
-
     // Update current index when prop changes
     useEffect(() => {
       if (appRef.current && appRef.current.currentIndex !== currentIndex) {
         appRef.current.setCurrentIndex(currentIndex, true);
       }
     }, [currentIndex]);
-
     return (
       <div
-        className="w-full h-full overflow-hidden cursor-grab active:cursor-grabbing"
+        className="w-full h-full overflow-hidden cursor-grab active:cursor-grabbing bg-white/5 backdrop-blur-lg"
         ref={containerRef}
       />
     );
   }
 );
-
 CircularGallery.displayName = 'CircularGallery';
-
 export default CircularGallery;

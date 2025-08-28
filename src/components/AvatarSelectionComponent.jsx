@@ -12,18 +12,12 @@ import {
   LogOut as LogOutIcon,
   X,
   UserPen,
+  User,
 } from 'lucide-react';
 import { FiCircle, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import AuthComponent from './AuthComponent';
 import CreateAvatarComponent from './CreateAvatarComponent';
 import AvatarCardComponent from './AvatarCardComponent';
-
-// Improved default images (base64-encoded PNGs, 64x64, transparent background)
-const defaultIcons = {
-  user: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAPUlEQVR4nO3YsQ3AMAwFQU7/A3YgJiZGEAEBJ0aS3hH8Z+ABJ0aS3hH8Z+ABJ0aS3hH8Z+ABJ0aS3hH8ZwB+0gq7QzMXIgAAAABJRU5ErkJggg==', // Placeholder: 64x64 gray silhouette
-  circlePlus:
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAABJklEQVR4nO2YsQ3CMBBEH2kE/hmYgJiYGEAEBJ0aS3hH8J+BB5wYSXhH8J+BB5wYSXhH8J+BB5wYSXhH8J8B+EF7QjMXRAgAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAADgAQcAAAAP4gq7QzMXIgAAAABJRU5ErkJggg==', // Placeholder: 64x64 green plus
-};
 
 const AvatarSelectionComponent = ({
   setShowCreateModal,
@@ -119,11 +113,6 @@ const AvatarSelectionComponent = ({
         );
         setActiveAvatar(selectedAvatar);
         setActiveTab('chat');
-        // toast.success(
-        //   `Selected avatar: ${
-        //     actualCardData.text || selectedAvatar?.avatar_name
-        //   }`
-        // );
       } catch (error) {
         console.error('Error selecting avatar:', error);
         toast.error('Failed to select avatar');
@@ -133,10 +122,9 @@ const AvatarSelectionComponent = ({
     }
   };
 
-  // Handle customize avatar (navigate to documents tab for selected avatar)
+  // Handle customize avatar
   const handleCustomizeAvatar = async () => {
     if (currentCardIndex === authenticatedCards.length - 1) {
-      // Create Avatar card
       setShowCreateModal(true);
       return;
     }
@@ -168,7 +156,7 @@ const AvatarSelectionComponent = ({
           (avatar) => avatar.avatar_id === avatarId
         );
         setActiveAvatar(selectedAvatar);
-        setActiveTab('documents'); // Navigate to AvatarSettings
+        setActiveTab('documents');
       } catch (error) {
         console.error('Error selecting avatar for settings:', error);
         toast.error('Failed to open avatar settings');
@@ -199,6 +187,34 @@ const AvatarSelectionComponent = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Utility function to validate image URLs
+  const isValidImageUrl = (url) => {
+    if (!url) return false;
+    if (url.startsWith('data:image/')) {
+      return url.includes('base64,');
+    }
+    return /^(https?:\/\/|\/)/.test(url);
+  };
+
+  // Updated getLoginCardIcon
+  const getLoginCardIcon = () => {
+    if (lastUsedAvatar && avatars?.length > 0) {
+      const lastUsedAvatarData = avatars.find(
+        (avatar) => avatar.avatar_id === lastUsedAvatar
+      );
+      if (
+        lastUsedAvatarData?.icon &&
+        isValidImageUrl(lastUsedAvatarData.icon)
+      ) {
+        return lastUsedAvatarData.icon;
+      }
+    }
+    if (user?.icon && isValidImageUrl(user.icon)) {
+      return user.icon;
+    }
+    return null; // Use <User> icon
+  };
+
   // Define cards: Avatars and Create Avatar
   const authenticatedCards = [
     ...paginatedAvatars.map((avatar) => ({
@@ -208,7 +224,7 @@ const AvatarSelectionComponent = ({
       ),
       type: 'avatar',
       text: avatar.avatar_name,
-      image: avatar.icon || defaultIcons.user,
+      image: avatar.icon && isValidImageUrl(avatar.icon) ? avatar.icon : null, // Null for <User>
       avatar_data: avatar,
     })),
     {
@@ -216,48 +232,30 @@ const AvatarSelectionComponent = ({
       component: <CreateAvatarComponent onCardClick={handleClick} />,
       type: 'create',
       text: 'Create Avatar',
-      image: defaultIcons.circlePlus,
+      image: null, // Use <CirclePlus>
     },
   ];
 
-  // Add this function to determine the correct icon to display
-  const getLoginCardIcon = () => {
-    // First priority: last_used_avatar icon
-    if (lastUsedAvatar && avatars?.length > 0) {
-      const lastUsedAvatarData = avatars.find(
-        (avatar) => avatar.avatar_id === lastUsedAvatar
-      );
-      if (lastUsedAvatarData?.icon) {
-        return lastUsedAvatarData.icon;
-      }
-    }
-
-    // Second priority: user's personal icon (if you have this stored)
-    // You'll need to add user.icon or user.profile_image to your user object
-    if (user?.icon) {
-      return user.icon;
-    }
-
-    // Third priority: default user icon
-    return defaultIcons.user;
-  };
-
-  // Updated login card with dynamic icon
+  // Updated login card with conditional rendering
   const loginCard = {
     id: 'login',
     component: (
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-16 text-center cursor-pointer hover:bg-white/10 transition-all duration-300">
+      <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-16 text-center cursor-pointer hover:bg-white/10 transition-all duration-300">
         <div className="flex justify-center mb-8">
           <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center">
-            <img
-              src={getLoginCardIcon()}
-              alt="User Icon"
-              className="w-16 h-16 object-contain"
-              onError={(e) => {
-                // Fallback to default icon if image fails to load
-                e.target.src = defaultIcons.user;
-              }}
-            />
+            {getLoginCardIcon() ? (
+              <img
+                src={getLoginCardIcon()}
+                alt="User Icon"
+                className="w-16 h-16 object-contain"
+                onError={(e) => {
+                  console.error('Login image load failed:', e.target.src);
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : (
+              <User className="w-16 h-16 text-gray-400 opacity-20" />
+            )}
           </div>
         </div>
         <h2 className="text-5xl font-bold text-white mb-6">
@@ -274,7 +272,7 @@ const AvatarSelectionComponent = ({
     ),
     type: 'login',
     text: 'Sign In',
-    image: getLoginCardIcon(), // Also update this for consistency
+    image: getLoginCardIcon(),
   };
 
   const currentCards = isLoggedIn ? authenticatedCards : [loginCard];
@@ -314,10 +312,16 @@ const AvatarSelectionComponent = ({
         id: avatar.avatar_id,
         type: 'avatar',
         text: avatar.avatar_name,
-        image: avatar.icon || defaultIcons.user,
+        image: avatar.icon && isValidImageUrl(avatar.icon) ? avatar.icon : null,
         originalIndex: idx,
       })) || []),
-      authenticatedCards[authenticatedCards.length - 1],
+      {
+        id: 'create-avatar',
+        type: 'create',
+        text: 'Create Avatar',
+        image: null, // Use <CirclePlus>
+        originalIndex: authenticatedCards.length - 1,
+      },
     ];
     const filteredSuggestions = allCards
       .filter((card) => card.text.toLowerCase().includes(value.toLowerCase()))
@@ -327,14 +331,12 @@ const AvatarSelectionComponent = ({
       }));
 
     if (value && filteredSuggestions.length === 0) {
-      const createAvatarCard =
-        authenticatedCards[authenticatedCards.length - 1];
       setSuggestions([
         {
-          id: createAvatarCard.id,
-          type: createAvatarCard.type,
-          text: createAvatarCard.text,
-          image: createAvatarCard.image,
+          id: 'create-avatar',
+          type: 'create',
+          text: 'Create Avatar',
+          image: null,
           originalIndex: authenticatedCards.length - 1,
         },
       ]);
@@ -351,10 +353,16 @@ const AvatarSelectionComponent = ({
         id: avatar.avatar_id,
         type: 'avatar',
         text: avatar.avatar_name,
-        image: avatar.icon || defaultIcons.user,
+        image: avatar.icon && isValidImageUrl(avatar.icon) ? avatar.icon : null,
         originalIndex: idx,
       })) || []),
-      authenticatedCards[authenticatedCards.length - 1],
+      {
+        id: 'create-avatar',
+        type: 'create',
+        text: 'Create Avatar',
+        image: null,
+        originalIndex: authenticatedCards.length - 1,
+      },
     ];
     setSuggestions(
       searchQuery &&
@@ -363,17 +371,14 @@ const AvatarSelectionComponent = ({
         )
         ? [
             {
-              id: authenticatedCards[authenticatedCards.length - 1].id,
+              id: 'create-avatar',
               type: 'create',
               text: 'Create Avatar',
-              image: defaultIcons.circlePlus,
+              image: null,
               originalIndex: authenticatedCards.length - 1,
             },
           ]
-        : allCards.map((card) => ({
-            ...card,
-            originalIndex: card.originalIndex ?? authenticatedCards.length - 1,
-          }))
+        : allCards
     );
     setIsDropdownOpen(true);
   };
@@ -491,7 +496,6 @@ const AvatarSelectionComponent = ({
     <div className="flex flex-col items-center justify-start p-4 relative">
       {isLoggedIn ? (
         <div className="w-full max-w-[1920px] flex flex-col items-center gap-2">
-          {/* Search Bar */}
           <div className="relative w-full max-w-md mt-8 mb-2" ref={searchRef}>
             <input
               type="text"

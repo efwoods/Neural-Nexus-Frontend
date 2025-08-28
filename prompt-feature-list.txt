@@ -159,6 +159,7 @@ I need to be able to add documents to the chromadb vector store
 I need the responses from the avatar at post message to be contextually relevant using the chromadb vectorstore
 I need the responses from the avatar at post_message to be fine-tuned to allow for messages to be in the style of writing of the avatar
 I need rate-limiting on the api endpoints
+I need cost monitoring to prevent over monthly usage of the api given the container size
 
 # INTEGRATIONS (financial use to keep the app profitable and generally useful)
 I need to create integrations with social media apps for 
