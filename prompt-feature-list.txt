@@ -135,6 +135,7 @@ I need the chat area window to not need a scroll bar on mobile
 I need conversation suggestions to be able to be re-rolled
 I need conversation suggestions to be presented as toasts
 I need conversation suggestions to be contextually relevant to the conversation
+I need to not fetch messages to new updates. I need websockets to receive messages from the post_message api endpoint. 
 
 # AVATAR SETTINGS (creating avatars on sparse data for nostalgic purposes; true value of talking to your loved ones)
 I need to be able to drag and drop media files
@@ -157,6 +158,7 @@ I need to be able to train QLoRA adapters from a /train endpoint
 I need to be able to add documents to the chromadb vector store
 I need the responses from the avatar at post message to be contextually relevant using the chromadb vectorstore
 I need the responses from the avatar at post_message to be fine-tuned to allow for messages to be in the style of writing of the avatar
+I need rate-limiting on the api endpoints
 
 # INTEGRATIONS (financial use to keep the app profitable and generally useful)
 I need to create integrations with social media apps for 
