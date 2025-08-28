@@ -1,3 +1,6 @@
+
+
+-----
 Here’s a **prioritized and organized version** of your feature list tailored for a **VC/employer demo tomorrow morning**. I’ve grouped and ordered features by **demo impact**:
 
 1. **Immediate Demo Impact (must-have for tomorrow)**
