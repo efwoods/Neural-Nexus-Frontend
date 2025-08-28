@@ -185,6 +185,7 @@ I need the current deployment to be deployed to cloud for the backend & frontend
 
 # LOGIN SCREEN
 I need the icon to be the icon of the last used avatar, the user if the user has added an icon and the last used avatar is not available, or community avatar icons that auto scroll position (chick-fil-a; onboarded community celebrities)
+I need to be able to login with social media accounts (github, google, twitter, apple, etc.)
 
 # NEURAL DATA (the true value of the application to the neuroscience community and those in need; future use)
 I need thought to text api to no longer use skip connections and use inpainting instead to create the image and leave-one-out to associate the receptive field of the image with with the neural signal
