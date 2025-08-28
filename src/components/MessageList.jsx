@@ -1,5 +1,4 @@
-// components/MessageList.jsx
-
+// Modified MessageList.jsx - Update to handle the correct message format from select_avatar
 import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getDbHttpsUrl, getNgrokHttpsUrl } from '../context/NgrokAPIStore';
@@ -35,36 +34,50 @@ const MessageList = ({ messages, messagesEndRef }) => {
                 : 'bg-gray-600 self-center italic text-gray-300'
             }`}
           >
-            {/* TEXT CONTENT */}
-            {msg.content && (
-              <div className="whitespace-pre-wrap">{msg.content}</div>
+            {/* TEXT CONTENT - Updated to handle both 'content' and 'message' fields */}
+            {(msg.content || msg.message) && (
+              <div className="whitespace-pre-wrap">
+                {msg.content || msg.message}
+              </div>
             )}
 
             {/* MEDIA CONTENT */}
             {msg.media &&
               Array.isArray(msg.media) &&
-              msg.media.map((media) => (
-                <div key={media.media_id} className="mt-2">
-                  {media.content_type.startsWith('image/') ? (
+              msg.media.map((media, index) => (
+                <div
+                  key={media.media_id || media.filename || index}
+                  className="mt-2"
+                >
+                  {media.content_type?.startsWith('image/') ? (
                     <SecureImage
                       mediaId={media.media_id}
                       filename={media.filename}
                       accessToken={accessToken}
                     />
-                  ) : media.content_type.startsWith('audio/') ? (
+                  ) : media.content_type?.startsWith('audio/') ? (
                     <audio
                       controls
-                      src={`${dbHttpsUrl}/media/${media.media_id}?token=${accessToken}`}
+                      src={
+                        media.url ||
+                        `${dbHttpsUrl}/media/${media.media_id}?token=${accessToken}`
+                      }
                     />
-                  ) : media.content_type.startsWith('video/') ? (
+                  ) : media.content_type?.startsWith('video/') ? (
                     <video
                       controls
                       className="max-w-full max-h-64"
-                      src={`${dbHttpsUrl}/media/${media.media_id}?token=${accessToken}`}
+                      src={
+                        media.url ||
+                        `${dbHttpsUrl}/media/${media.media_id}?token=${accessToken}`
+                      }
                     />
                   ) : (
                     <a
-                      href={`${dbHttpsUrl}/media/${media.media_id}?token=${accessToken}`}
+                      href={
+                        media.url ||
+                        `${dbHttpsUrl}/media/${media.media_id}?token=${accessToken}`
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline text-blue-300"

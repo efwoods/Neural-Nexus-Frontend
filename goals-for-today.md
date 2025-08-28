@@ -1,7 +1,3 @@
-Perfect — I’ll keep your **original list text exactly as you wrote it** and only **reorganize it into the priority tiers** we defined.
-
-Here’s the reorganized version:
-
 ---
 
 # PRIORITIZED LIST
@@ -12,8 +8,8 @@ Here’s the reorganized version:
 
 ### CHAT AREA
 
-I need the ChatArea messages to receive websocket requests from the backend API
-I want to post a message with a post request and receive responses from the backend API via websocket connection.
+I need the ChatArea messages to receive websocket requests from the backend API (create standalone messaging API) <--- currently working on 
+I want to post a message with a post request and receive responses from the backend API via websocket connection.  <--- currently working on 
 I need lower latency for the chat area
 I need to be able to see a small user icon bubble of the avatar I am chatting with
 I need to be able to see a small user icon bubble of the user
@@ -25,7 +21,7 @@ I need the chat area window to not need a scroll bar on mobile
 
 ### DEPLOYMENT
 
-I need the current deployment to be deployed to cloud for the backend & frontend
+I need the current deployment to be deployed to cloud for the backend & frontend (create standalone DB api)
 
 ### LIVE CHAT
 
@@ -33,7 +29,7 @@ I need LiveChat input audio to be collected
 I need LiveChat input audio to be sent to avatar/post\_message
 I need the LiveChat to receive responses from avatar/post\_message
 I need LiveChat to audibly play the responses with an audible default voice
-I need to be able to use the current conversation context and grok imagine to move the image of the avatar
+<!-- I need to be able to use the current conversation context and grok imagine to move the image of the avatar -->
 I need the avatar image to not be so zoomed in if not on mobile
 I need "Hey {AvatarName}" to for the avatar input or "(optional Hey) {Avatar First Name or Avatar Last Name only}" to trigger the input to the Live Chat
 I need to see any LiveChat messages as persisted in the ChatArea

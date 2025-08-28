@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -18,6 +18,7 @@ import { FiCircle, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import AuthComponent from './AuthComponent';
 import CreateAvatarComponent from './CreateAvatarComponent';
 import AvatarCardComponent from './AvatarCardComponent';
+import { useMedia } from '../context/MediaContext';
 
 const AvatarSelectionComponent = ({
   setShowCreateModal,
@@ -33,6 +34,7 @@ const AvatarSelectionComponent = ({
     setActiveAvatar,
     lastUsedAvatar,
   } = useAuth();
+  const { setMessages } = useMedia();
   const { dbHttpsUrl } = useNgrokApiUrl();
   const navigate = useNavigate();
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -45,38 +47,84 @@ const AvatarSelectionComponent = ({
   const galleryRef = useRef(null);
   const searchRef = useRef(null);
   const dropdownRef = useRef(null);
+  const hasInitialized = useRef(false);
 
   const CARDS_PER_PAGE = 3;
-
-  // Paginate avatars
   const totalAvatarCards = avatars?.length || 0;
   const totalPages = Math.ceil(totalAvatarCards / CARDS_PER_PAGE);
   const startIndex = currentPage * CARDS_PER_PAGE;
-  const paginatedAvatars =
-    avatars?.slice(startIndex, startIndex + CARDS_PER_PAGE) || [];
+  const paginatedAvatars = useMemo(
+    () => avatars?.slice(startIndex, startIndex + CARDS_PER_PAGE) || [],
+    [avatars, currentPage]
+  );
 
-  // Set currentCardIndex to last_used_avatar on mount
-  useEffect(() => {
-    if (isLoggedIn && lastUsedAvatar && avatars?.length > 0) {
-      const lastUsedIndex = avatars.findIndex(
-        (avatar) => avatar.avatar_id === lastUsedAvatar
-      );
-      if (lastUsedIndex !== -1) {
-        const page = Math.floor(lastUsedIndex / CARDS_PER_PAGE);
-        const relativeIndex = lastUsedIndex % CARDS_PER_PAGE;
-        setCurrentPage(page);
-        setCurrentCardIndex(relativeIndex);
-        if (galleryRef.current) {
-          galleryRef.current.setCurrentIndex(relativeIndex);
+  const isValidImageUrl = (url) => {
+    if (!url) return false;
+    if (url.startsWith('data:image/')) return url.includes('base64,');
+    return /^(https?:\/\/|\/)/.test(url);
+  };
+
+  const clearOtherAvatarCache = (currentAvatarId) => {
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (
+          (key.startsWith('avatar_icon_') ||
+            key.startsWith('avatar_position_')) &&
+          key !== `avatar_icon_${currentAvatarId}` &&
+          key !== `avatar_position_${currentAvatarId}`
+        ) {
+          keysToRemove.push(key);
         }
       }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+    } catch (error) {
+      console.error('Failed to clear other avatar cache:', error);
     }
-  }, [isLoggedIn, lastUsedAvatar, avatars]);
+  };
 
-  // Handle click on cards
+  const cacheAvatarPosition = (avatarId, avatarIndex = null) => {
+    try {
+      localStorage.setItem('last_used_avatar_id', avatarId);
+
+      if (avatarIndex !== null && avatars?.length > 0) {
+        const positionData = {
+          avatarIndex,
+          page: Math.floor(avatarIndex / CARDS_PER_PAGE),
+          relativeIndex: avatarIndex % CARDS_PER_PAGE,
+        };
+        localStorage.setItem(
+          `avatar_position_${avatarId}`,
+          JSON.stringify(positionData)
+        );
+        localStorage.setItem(
+          'last_avatar_position',
+          JSON.stringify(positionData)
+        );
+      }
+    } catch (error) {
+      console.error('Failed to cache avatar position:', error);
+    }
+  };
+
+  const cacheAvatarIcon = (avatarId, iconUrl, avatarIndex = null) => {
+    if (iconUrl) {
+      try {
+        clearOtherAvatarCache(avatarId);
+        localStorage.setItem(`avatar_icon_${avatarId}`, iconUrl);
+        localStorage.setItem('last_avatar_icon', iconUrl);
+      } catch (error) {
+        console.error('Failed to cache avatar icon:', error);
+      }
+    }
+    // Always cache position regardless of icon
+    cacheAvatarPosition(avatarId, avatarIndex);
+  };
+
+  // Update your handleClick function
   const handleClick = async (cardData) => {
     let actualCardData = cardData;
-
     if (!cardData.type) {
       const matchingCard = authenticatedCards.find(
         (card) =>
@@ -97,6 +145,18 @@ const AvatarSelectionComponent = ({
           return;
         }
 
+        const avatarIndex = avatars.findIndex(
+          (avatar) => avatar.avatar_id === avatarId
+        );
+        const page = Math.floor(avatarIndex / CARDS_PER_PAGE);
+        const relativeIndex = avatarIndex % CARDS_PER_PAGE;
+
+        setCurrentPage(page);
+        setCurrentCardIndex(relativeIndex);
+        if (galleryRef.current) {
+          galleryRef.current.setCurrentIndex(relativeIndex);
+        }
+
         const response = await axios.post(
           `${dbHttpsUrl}/management/avatars/select_avatar`,
           new URLSearchParams({ avatar_id: avatarId }).toString(),
@@ -108,11 +168,34 @@ const AvatarSelectionComponent = ({
           }
         );
 
-        const selectedAvatar = avatars.find(
-          (avatar) => avatar.avatar_id === avatarId
-        );
-        setActiveAvatar(selectedAvatar);
-        setActiveTab('chat');
+        if (response.data.status === 'success') {
+          const selectedAvatar = avatars.find(
+            (avatar) => avatar.avatar_id === avatarId
+          );
+
+          // Cache position regardless of whether there's an icon
+          cacheAvatarPosition(avatarId, avatarIndex);
+
+          // Cache icon only if it exists
+          if (response.data.icon_url) {
+            cacheAvatarIcon(avatarId, response.data.icon_url, avatarIndex);
+          }
+
+          const avatarWithMessages = {
+            ...selectedAvatar,
+            icon: response.data.icon_url || selectedAvatar?.icon,
+            messages: response.data.messages || [],
+          };
+          setActiveAvatar(avatarWithMessages);
+
+          if (response.data.messages) {
+            setMessages((prev) => ({
+              ...prev,
+              [avatarId]: response.data.messages,
+            }));
+          }
+          setActiveTab('chat');
+        }
       } catch (error) {
         console.error('Error selecting avatar:', error);
         toast.error('Failed to select avatar');
@@ -122,7 +205,7 @@ const AvatarSelectionComponent = ({
     }
   };
 
-  // Handle customize avatar
+  // Update your handleCustomizeAvatar function similarly
   const handleCustomizeAvatar = async () => {
     if (currentCardIndex === authenticatedCards.length - 1) {
       setShowCreateModal(true);
@@ -152,11 +235,38 @@ const AvatarSelectionComponent = ({
           }
         );
 
-        const selectedAvatar = avatars.find(
-          (avatar) => avatar.avatar_id === avatarId
-        );
-        setActiveAvatar(selectedAvatar);
-        setActiveTab('documents');
+        if (response.data.status === 'success') {
+          const selectedAvatar = avatars.find(
+            (avatar) => avatar.avatar_id === avatarId
+          );
+
+          const avatarIndex = avatars.findIndex(
+            (avatar) => avatar.avatar_id === avatarId
+          );
+
+          // Cache position regardless of whether there's an icon
+          cacheAvatarPosition(avatarId, avatarIndex);
+
+          // Cache icon only if it exists
+          if (response.data.icon_url) {
+            cacheAvatarIcon(avatarId, response.data.icon_url, avatarIndex);
+          }
+
+          const avatarWithMessages = {
+            ...selectedAvatar,
+            icon: response.data.icon_url || selectedAvatar?.icon,
+            messages: response.data.messages || [],
+          };
+          setActiveAvatar(avatarWithMessages);
+
+          if (response.data.messages) {
+            setMessages((prev) => ({
+              ...prev,
+              [avatarId]: response.data.messages,
+            }));
+          }
+          setActiveTab('documents');
+        }
       } catch (error) {
         console.error('Error selecting avatar for settings:', error);
         toast.error('Failed to open avatar settings');
@@ -164,7 +274,84 @@ const AvatarSelectionComponent = ({
     }
   };
 
-  // Handle logout
+  const authenticatedCards = useMemo(
+    () => [
+      ...paginatedAvatars.map((avatar) => ({
+        id: avatar.avatar_id,
+        component: (
+          <AvatarCardComponent avatar={avatar} onCardClick={handleClick} />
+        ),
+        type: 'avatar',
+        text: avatar.avatar_name,
+        image: avatar.icon && isValidImageUrl(avatar.icon) ? avatar.icon : null,
+        avatar_data: avatar,
+      })),
+      {
+        id: 'create-avatar',
+        component: <CreateAvatarComponent onCardClick={handleClick} />,
+        type: 'create',
+        text: 'Create Avatar',
+        image: null,
+      },
+    ],
+    [paginatedAvatars]
+  );
+
+  const getCachedAvatarPosition = (avatarId = null) => {
+    try {
+      if (avatarId) {
+        const cachedPosition = localStorage.getItem(
+          `avatar_position_${avatarId}`
+        );
+        if (cachedPosition) return JSON.parse(cachedPosition);
+      }
+      const lastPosition = localStorage.getItem('last_avatar_position');
+      if (lastPosition) return JSON.parse(lastPosition);
+      return null;
+    } catch (error) {
+      console.error('Error getting cached avatar position:', error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    if (isLoggedIn && avatars?.length > 0 && !hasInitialized.current) {
+      let targetIndex = 0;
+      let page = 0;
+      let relativeIndex = 0;
+
+      const cachedLastAvatarId = localStorage.getItem('last_used_avatar_id');
+      if (cachedLastAvatarId) {
+        const cachedPosition = getCachedAvatarPosition(cachedLastAvatarId);
+        if (cachedPosition && cachedPosition.avatarIndex < avatars.length) {
+          targetIndex = cachedPosition.avatarIndex;
+          page = cachedPosition.page;
+          relativeIndex = cachedPosition.relativeIndex;
+        }
+      } else if (lastUsedAvatar) {
+        const lastUsedIndex = avatars.findIndex(
+          (avatar) => avatar.avatar_id === lastUsedAvatar
+        );
+        if (lastUsedIndex !== -1) {
+          targetIndex = lastUsedIndex;
+          page = Math.floor(targetIndex / CARDS_PER_PAGE);
+          relativeIndex = targetIndex % CARDS_PER_PAGE;
+        }
+      }
+
+      setCurrentPage(page);
+      setCurrentCardIndex(relativeIndex);
+      if (galleryRef.current) {
+        galleryRef.current.setCurrentIndex(relativeIndex);
+      }
+      hasInitialized.current = true;
+    }
+
+    if (!isLoggedIn || !avatars?.length) {
+      hasInitialized.current = false;
+    }
+  }, [isLoggedIn, avatars]);
+
   const handleLogout = () => {
     setActiveAvatar(null);
     logout();
@@ -172,7 +359,6 @@ const AvatarSelectionComponent = ({
     onEndLiveChat?.();
   };
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -187,17 +373,14 @@ const AvatarSelectionComponent = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Utility function to validate image URLs
-  const isValidImageUrl = (url) => {
-    if (!url) return false;
-    if (url.startsWith('data:image/')) {
-      return url.includes('base64,');
-    }
-    return /^(https?:\/\/|\/)/.test(url);
-  };
-
-  // Updated getLoginCardIcon
   const getLoginCardIcon = () => {
+    try {
+      const cachedIcon = localStorage.getItem('last_avatar_icon');
+      if (cachedIcon && isValidImageUrl(cachedIcon)) return cachedIcon;
+    } catch (error) {
+      console.error('Error getting cached avatar icon:', error);
+    }
+
     if (lastUsedAvatar && avatars?.length > 0) {
       const lastUsedAvatarData = avatars.find(
         (avatar) => avatar.avatar_id === lastUsedAvatar
@@ -209,75 +392,53 @@ const AvatarSelectionComponent = ({
         return lastUsedAvatarData.icon;
       }
     }
-    if (user?.icon && isValidImageUrl(user.icon)) {
-      return user.icon;
-    }
-    return null; // Use <User> icon
+    if (user?.icon && isValidImageUrl(user.icon)) return user.icon;
+    return null;
   };
 
-  // Define cards: Avatars and Create Avatar
-  const authenticatedCards = [
-    ...paginatedAvatars.map((avatar) => ({
-      id: avatar.avatar_id,
+  const loginCard = useMemo(
+    () => ({
+      id: 'login',
       component: (
-        <AvatarCardComponent avatar={avatar} onCardClick={handleClick} />
-      ),
-      type: 'avatar',
-      text: avatar.avatar_name,
-      image: avatar.icon && isValidImageUrl(avatar.icon) ? avatar.icon : null, // Null for <User>
-      avatar_data: avatar,
-    })),
-    {
-      id: 'create-avatar',
-      component: <CreateAvatarComponent onCardClick={handleClick} />,
-      type: 'create',
-      text: 'Create Avatar',
-      image: null, // Use <CirclePlus>
-    },
-  ];
-
-  // Updated login card with conditional rendering
-  const loginCard = {
-    id: 'login',
-    component: (
-      <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-16 text-center cursor-pointer hover:bg-white/10 transition-all duration-300">
-        <div className="flex justify-center mb-8">
-          <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center">
-            {getLoginCardIcon() ? (
-              <img
-                src={getLoginCardIcon()}
-                alt="User Icon"
-                className="w-16 h-16 object-contain"
-                onError={(e) => {
-                  console.error('Login image load failed:', e.target.src);
-                  e.target.style.display = 'none';
-                }}
-              />
-            ) : (
-              <User className="w-16 h-16 text-gray-400 opacity-20" />
-            )}
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-16 text-center cursor-pointer hover:bg-white/10 transition-all duration-300">
+          <div className="flex justify-center mb-8">
+            <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center">
+              {getLoginCardIcon() ? (
+                <img
+                  src={getLoginCardIcon()}
+                  alt="User Icon"
+                  className="w-32 h-32 object-cover rounded-full"
+                  onError={(e) => {
+                    console.error('Login image load failed:', e.target.src);
+                    e.target.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <User className="w-16 h-16 text-gray-400 opacity-20" />
+              )}
+            </div>
           </div>
+          <h2 className="text-5xl font-bold text-white mb-6">
+            Welcome to Neural Nexus
+          </h2>
+          <p className="text-white/80 mb-10 text-xl">
+            Sign in or create an account to get started
+          </p>
+          <AuthComponent
+            setActiveTab={setActiveTab}
+            onEndLiveChat={onEndLiveChat}
+          />
         </div>
-        <h2 className="text-5xl font-bold text-white mb-6">
-          Welcome to Neural Nexus
-        </h2>
-        <p className="text-white/80 mb-10 text-xl">
-          Sign in or create an account to get started
-        </p>
-        <AuthComponent
-          setActiveTab={setActiveTab}
-          onEndLiveChat={onEndLiveChat}
-        />
-      </div>
-    ),
-    type: 'login',
-    text: 'Sign In',
-    image: getLoginCardIcon(),
-  };
+      ),
+      type: 'login',
+      text: 'Sign In',
+      image: getLoginCardIcon(),
+    }),
+    [user, lastUsedAvatar, avatars]
+  );
 
   const currentCards = isLoggedIn ? authenticatedCards : [loginCard];
 
-  // Handle dot navigation
   const handleDotClick = (index) => {
     setCurrentCardIndex(index);
     if (galleryRef.current) {
@@ -285,9 +446,9 @@ const AvatarSelectionComponent = ({
     }
   };
 
-  // Handle pagination
   const handlePreviousPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 0));
+    const newPage = Math.max(currentPage - 1, 0);
+    setCurrentPage(newPage);
     setCurrentCardIndex(0);
     if (galleryRef.current) {
       galleryRef.current.setCurrentIndex(0);
@@ -295,14 +456,14 @@ const AvatarSelectionComponent = ({
   };
 
   const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
+    const newPage = Math.min(currentPage + 1, totalPages - 1);
+    setCurrentPage(newPage);
     setCurrentCardIndex(0);
     if (galleryRef.current) {
       galleryRef.current.setCurrentIndex(0);
     }
   };
 
-  // Handle search input and autocomplete
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
@@ -319,7 +480,7 @@ const AvatarSelectionComponent = ({
         id: 'create-avatar',
         type: 'create',
         text: 'Create Avatar',
-        image: null, // Use <CirclePlus>
+        image: null,
         originalIndex: authenticatedCards.length - 1,
       },
     ];
@@ -330,23 +491,22 @@ const AvatarSelectionComponent = ({
         originalIndex: card.originalIndex ?? authenticatedCards.length - 1,
       }));
 
-    if (value && filteredSuggestions.length === 0) {
-      setSuggestions([
-        {
-          id: 'create-avatar',
-          type: 'create',
-          text: 'Create Avatar',
-          image: null,
-          originalIndex: authenticatedCards.length - 1,
-        },
-      ]);
-    } else {
-      setSuggestions(filteredSuggestions);
-    }
+    setSuggestions(
+      value && filteredSuggestions.length === 0
+        ? [
+            {
+              id: 'create-avatar',
+              type: 'create',
+              text: 'Create Avatar',
+              image: null,
+              originalIndex: authenticatedCards.length - 1,
+            },
+          ]
+        : filteredSuggestions
+    );
     setIsDropdownOpen(true);
   };
 
-  // Handle search focus
   const handleSearchFocus = () => {
     const allCards = [
       ...(avatars?.map((avatar, idx) => ({
@@ -383,29 +543,20 @@ const AvatarSelectionComponent = ({
     setIsDropdownOpen(true);
   };
 
-  // Handle suggestion selection
   const handleSuggestionSelect = (index) => {
-    if (index < authenticatedCards.length - 1) {
-      const avatarIndex = index;
-      const page = Math.floor(avatarIndex / CARDS_PER_PAGE);
-      const relativeIndex = index - page * CARDS_PER_PAGE;
-      setCurrentPage(page);
-      setCurrentCardIndex(relativeIndex);
-      if (galleryRef.current) {
-        galleryRef.current.setCurrentIndex(relativeIndex);
-      }
-    } else {
-      setCurrentCardIndex(index);
-      if (galleryRef.current) {
-        galleryRef.current.setCurrentIndex(index);
-      }
+    const avatarIndex = index;
+    const page = Math.floor(avatarIndex / CARDS_PER_PAGE);
+    const relativeIndex = avatarIndex % CARDS_PER_PAGE;
+    setCurrentPage(page);
+    setCurrentCardIndex(relativeIndex);
+    if (galleryRef.current) {
+      galleryRef.current.setCurrentIndex(relativeIndex);
     }
     setSearchQuery(authenticatedCards[index]?.text || '');
     setIsDropdownOpen(false);
     setHighlightedIndex(-1);
   };
 
-  // Handle keyboard navigation
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && suggestions.length > 0 && highlightedIndex >= 0) {
       handleSuggestionSelect(suggestions[highlightedIndex].originalIndex);
@@ -424,7 +575,6 @@ const AvatarSelectionComponent = ({
     }
   };
 
-  // Log state for debugging
   useEffect(() => {
     console.log(
       'Authentication state:',
@@ -476,21 +626,6 @@ const AvatarSelectionComponent = ({
     currentCardIndex,
     dropdownOpen,
   ]);
-
-  // Reset card index and page when authentication state or avatars change
-  useEffect(() => {
-    console.log(
-      'Resetting card index and page, isLoggedIn:',
-      isLoggedIn,
-      'avatars:',
-      avatars
-    );
-    setCurrentCardIndex(0);
-    setCurrentPage(0);
-    if (galleryRef.current) {
-      galleryRef.current.setCurrentIndex(0);
-    }
-  }, [isLoggedIn, avatars]);
 
   return (
     <div className="flex flex-col items-center justify-start p-4 relative">

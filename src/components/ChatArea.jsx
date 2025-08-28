@@ -21,11 +21,22 @@ const ChatArea = ({
   className,
 }) => {
   const { isLoggedIn, accessToken, activeAvatar, setActiveAvatar } = useAuth();
-  const { messages, fetchMessages, messagesEndRef } = useMedia();
+  const { messages, setMessages, fetchMessages, messagesEndRef } = useMedia();
 
+  // Modified ChatArea.jsx - Update useEffect to use messages from activeAvatar
   useEffect(() => {
     if (isLoggedIn && activeAvatar && accessToken && activeTab === 'chat') {
-      fetchMessages();
+      // If activeAvatar already has messages, use them directly
+      if (activeAvatar.messages && activeAvatar.messages.length > 0) {
+        // Set messages in MediaContext from activeAvatar
+        setMessages((prev) => ({
+          ...prev,
+          [activeAvatar.avatar_id]: activeAvatar.messages,
+        }));
+      } else {
+        // Fallback to fetchMessages if no messages in activeAvatar
+        fetchMessages();
+      }
     }
   }, [
     isLoggedIn,
@@ -33,8 +44,9 @@ const ChatArea = ({
     activeTab,
     accessToken,
     fetchMessages,
+    setMessages, // Add setMessages dependency
+    activeAvatar?.messages, // Add messages dependency
   ]);
-
   return (
     <div
       className={`flex flex-row flex-grow bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden relative ${className}`}

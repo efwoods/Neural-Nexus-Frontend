@@ -1,4 +1,3 @@
-// /src/components/LiveChat.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Mic, MicOff, CircleX } from 'lucide-react';
 
@@ -22,10 +21,8 @@ const LiveChat = ({ avatarIcon, onEndLiveChat, onSendVoice }) => {
     mediaRecorderRef.current = new MediaRecorder(stream);
     mediaRecorderRef.current.start();
     setIsRecording(true);
-
     mediaRecorderRef.current.ondataavailable = (event) => {
       onSendVoice(event.data);
-
       // Example: simulate avatar response after sending voice
       addToast('Avatar is thinking...');
       setTimeout(() => {
@@ -34,7 +31,6 @@ const LiveChat = ({ avatarIcon, onEndLiveChat, onSendVoice }) => {
         setTimeout(() => setIsAvatarSpeaking(false), 2000);
       }, 1000);
     };
-
     mediaRecorderRef.current.onstop = () => {
       setIsRecording(false);
     };
@@ -67,22 +63,41 @@ const LiveChat = ({ avatarIcon, onEndLiveChat, onSendVoice }) => {
 
   return (
     <div className="relative flex flex-col items-center justify-end h-full w-full overflow-hidden">
-      {/* Background Image or User Icon */}
-      {avatarIcon ? (
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url(${avatarIcon})`,
-          }}
-        />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/5">
-          <User className="w-64 h-64 text-gray-400 opacity-20" />
-        </div>
-      )}
+      {/* Background Image or User Icon - Large circular image like loginCard but bigger */}
+      <div className="absolute inset-0 flex items-center justify-center bg-white/5">
+        {avatarIcon ? (
+          // Desktop: Large circular image (4x loginCard size), Mobile: full background
+          <div className="hidden md:flex w-80 h-80 bg-white/20 rounded-full items-center justify-center">
+            <img
+              src={avatarIcon}
+              alt="Avatar Icon"
+              className="w-80 h-80 object-cover rounded-full"
+              onError={(e) => {
+                console.error('Avatar image load failed:', e.target.src);
+                e.target.style.display = 'none';
+              }}
+            />
+          </div>
+        ) : (
+          // Fallback User icon - larger circular container
+          <div className="w-80 h-80 bg-white/10 rounded-full flex items-center justify-center border-4 border-white/20">
+            <User className="w-40 h-40 text-gray-400 opacity-20" />
+          </div>
+        )}
 
-      {/* Overlay for better contrast */}
-      <div className="absolute inset-0 bg-black/30" />
+        {/* Mobile: Full background image */}
+        {avatarIcon && (
+          <div
+            className="md:hidden absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${avatarIcon})`,
+            }}
+          />
+        )}
+      </div>
+
+      {/* Overlay for better contrast - lighter on desktop to show the circumscribed image better */}
+      <div className="absolute inset-0 bg-black/30 md:bg-black/20" />
 
       {/* Toast container */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex flex-col gap-2 z-50">
@@ -96,14 +111,14 @@ const LiveChat = ({ avatarIcon, onEndLiveChat, onSendVoice }) => {
         ))}
       </div>
 
-      {/* Speaking indicator overlay */}
+      {/* Speaking indicator overlay - circumscribed on desktop */}
       {isAvatarSpeaking && (
-        <div className="absolute inset-0 border-4 border-green-500 animate-pulse rounded-2xl z-10" />
+        <div className="absolute inset-0 border-4 border-green-500 animate-pulse  z-10" />
       )}
 
-      {/* Recording indicator overlay */}
+      {/* Recording indicator overlay - circumscribed on desktop */}
       {isRecording && (
-        <div className="absolute inset-0 border-4 border-blue-500 animate-pulse rounded-2xl z-10" />
+        <div className="absolute inset-0 border-4 border-blue-500 animate-pulse  z-10" />
       )}
 
       {/* Control buttons at bottom */}
@@ -126,7 +141,6 @@ const LiveChat = ({ avatarIcon, onEndLiveChat, onSendVoice }) => {
             <Mic className="w-6 h-6" />
           )}
         </button>
-
         {/* End button with CircleX icon */}
         <button
           className="p-4 rounded-full bg-gray-500/80 hover:bg-gray-600/80 text-white transition-all duration-300 backdrop-blur-sm"
