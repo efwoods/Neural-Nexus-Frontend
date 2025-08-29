@@ -21,7 +21,8 @@ I need the chat area window to not need a scroll bar on mobile
 
 ### DEPLOYMENT
 
-I need the current deployment to be deployed to cloud for the backend & frontend (create standalone DB api)
+<!-- I need the current deployment to be deployed to cloud for the backend & frontend (create standalone DB api) -->
+I need to create a standalone api for messaging (uses chromadb vectorstore, websockets, qlora models, llama models, rest api)
 
 ### LIVE CHAT
 
@@ -143,6 +144,10 @@ I need to update the Terms and Conditions and Privacy Policy to prevent abuse, f
 I need to update the Privacy Policy to ensure the user is aware of auditing (immutable blockchain)
 I need to allow people to create any avatar but state that it is against terms and conditions for creating the likeness of others and/or sharing the likeness of other for non-personal use
 
+add message above text input bar such as "By messaging ChatGPT, you agree to our Terms and have read our Privacy Policy. Don't share sensitive info. Chats may be reviewed and used to train our models. Learn more"
+
+add browser permissions: allow neural nexus to use persistent storage?
+
 ---
 
 ## Tier 5: Future Roadmap (show vision beyond demo)
@@ -157,12 +162,13 @@ I need to integrate thought-to-motion into the app in a useful way.
 
 I need to create community avatars that are publicly available to all users (chick-fil-a, starbucks, outback (sit-down restaurant use), kanji ordering (local restaurant use);
 I need to onboard celebrities or otherwise public figures & present royalties for use of their content in the application)
+coinbase voice assistant for transactions
 
 ### LOGIN SCREEN
 
 I need the icon to be the icon of the last used avatar, the user if the user has added an icon and the last used avatar is not available, or community avatar icons that auto scroll position (chick-fil-a; onboarded community celebrities)
 I need to be able to login with social media accounts (github, google, twitter, apple, etc.)
-
+I need the login screen on mobile to not have a scroll bar or have cut-off content (needs to fill the screen properly and be the correct size for the mobile device)
 ---
 
 ## GATHERING DATA AND TRAINING REQUIREMENTS (Elon Avatar Example)
