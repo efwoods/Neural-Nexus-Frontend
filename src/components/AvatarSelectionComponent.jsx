@@ -682,6 +682,19 @@ const AvatarSelectionComponent = ({
             ref={dropdownRef}
           >
             <div className="flex gap-2">
+              {totalAvatarCards > CARDS_PER_PAGE && (
+                <div
+                  onClick={handlePreviousPage}
+                  className={`p-0.5 rounded-full ${
+                    currentPage === 0
+                      ? 'text-white/30 cursor-not-allowed'
+                      : 'text-white/50 hover:text-white hover:bg-white/10 cursor-pointer'
+                  } transition-all duration-300`}
+                  aria-label="Previous page"
+                >
+                  <FiChevronLeft className="w-2 h-2" />
+                </div>
+              )}
               {currentCards.map((card, index) => {
                 const isCreateAvatar = card.type === 'create';
                 const isSelected = currentCardIndex === index;
@@ -716,17 +729,6 @@ const AvatarSelectionComponent = ({
                     aria-label="Next page"
                   >
                     <FiChevronRight className="w-2 h-2" />
-                  </div>
-                  <div
-                    onClick={handlePreviousPage}
-                    className={`p-0.5 rounded-full ${
-                      currentPage === 0
-                        ? 'text-white/30 cursor-not-allowed'
-                        : 'text-white/50 hover:text-white hover:bg-white/10 cursor-pointer'
-                    } transition-all duration-300`}
-                    aria-label="Previous page"
-                  >
-                    <FiChevronLeft className="w-2 h-2" />
                   </div>
                 </>
               )}

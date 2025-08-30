@@ -1,3 +1,19 @@
+# KPI
+## Primary KPI
+- Users Signing Up then Revenue Growth 
+  
+## Secondary KPI
+- Retension/churn (Payback acquisition cost & tell friends [word of mouth])
+- Engagement
+- Unit Economics (Cost Per Unit of Product/ Service; Tokens)
+- Customer Acquisition Cost
+- Payback Period
+  
+<!-- 5-7% week over week growth is good -->
+<!-- 10% week over week growth is exceptional -->
+
+# What will get my users using my product every day instead of once per week.
+
 ---
 
 # PRIORITIZED LIST
@@ -10,9 +26,12 @@
 
 I need the ChatArea messages to receive websocket requests from the backend API (create standalone messaging API) <--- currently working on 
 I want to post a message with a post request and receive responses from the backend API via websocket connection.  <--- currently working on 
+
 I need lower latency for the chat area
+
 I need to be able to see a small user icon bubble of the avatar I am chatting with
 I need to be able to see a small user icon bubble of the user
+
 I need the Live Chat button to say Live Chat on hover
 I need the upload button to say Upload on hover
 I need the chat area window to not need a scroll bar on mobile
@@ -147,6 +166,7 @@ I need to allow people to create any avatar but state that it is against terms a
 add message above text input bar such as "By messaging ChatGPT, you agree to our Terms and have read our Privacy Policy. Don't share sensitive info. Chats may be reviewed and used to train our models. Learn more"
 
 add browser permissions: allow neural nexus to use persistent storage?
+enable browser notifications from avatar
 
 ---
 
@@ -166,7 +186,8 @@ coinbase voice assistant for transactions
 
 ### LOGIN SCREEN
 
-I need the icon to be the icon of the last used avatar, the user if the user has added an icon and the last used avatar is not available, or community avatar icons that auto scroll position (chick-fil-a; onboarded community celebrities)
+<!-- I need the icon to be the icon of the last used avatar, the user if the user has added an icon and the last used avatar is not available, or -->
+I need the icon to be the community avatar icons that auto scroll position (chick-fil-a; onboarded community celebrities)
 I need to be able to login with social media accounts (github, google, twitter, apple, etc.)
 I need the login screen on mobile to not have a scroll bar or have cut-off content (needs to fill the screen properly and be the correct size for the mobile device)
 ---
