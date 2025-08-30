@@ -22,17 +22,31 @@ export const AvatarService = {
 
   async createAvatar(accessToken, payload) {
     try {
+      // Create FormData instead of JSON
+      const formData = new FormData();
+
+      // Add required fields
+      formData.append('name', payload.name);
+
+      // Add optional description (only if provided)
+      if (payload.description) {
+        formData.append('description', payload.description);
+      }
+
+      // Add optional icon file
+      if (payload.iconFile) {
+        formData.append('icon', payload.iconFile);
+      }
+
       const response = await fetch(
         `${getDbHttpsUrl()}/management/avatars/create`,
         {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
             Accept: 'application/json',
-            'ngrok-skip-browser-warning': '69420',
           },
-          body: JSON.stringify(payload),
+          body: formData,
         }
       );
 

@@ -1,14 +1,23 @@
 # KPI
 ## Primary KPI
-- Users Signing Up then Revenue Growth 
+- Users Signing Up 
+- Revenue Growth (after user sign up)
   
 ## Secondary KPI
 - Retension/churn (Payback acquisition cost & tell friends [word of mouth])
 - Engagement
 - Unit Economics (Cost Per Unit of Product/ Service; Tokens)
 - Customer Acquisition Cost
-- Payback Period
+- Payback Period (how long does it take to payback the cost of acquiring a customer)
   
+
+## Free vs. Paid subscription for custom avatars goals:
+<!-- You just hit your free message limit. Upgrade to Pro (or Max) to send more messages. You also get:
+Access to tools like research and web search
+Claude Code directly in your terminal
+Integration to Google Workspace: email, calendar, and docs
+Full access to the newest Claude models including Opus
+Extended thinking for complex work -->
 <!-- 5-7% week over week growth is good -->
 <!-- 10% week over week growth is exceptional -->
 
@@ -17,6 +26,15 @@
 ---
 
 # PRIORITIZED LIST
+
+### Top Priorities
+I need to be able to manage avatars
+I need to be able to message and receive messages
+I need to be able to train avatars for personalization
+I need to be able to track Primary and Secondary KPI metrics
+
+Create message limits
+Create integrations
 
 ---
 
@@ -65,6 +83,7 @@ I need the Live Chat button to say Live Chat on hover
 I need the upload button to say Upload on hover
 I need the chat area window to not need a scroll bar on mobile
 
+I need the mobile view to not be cutoff
 
 ---
 
@@ -72,20 +91,24 @@ I need the chat area window to not need a scroll bar on mobile
 
 ### AVATAR SELECTION COMPONENT
 
-I need the cards on the circular gallery to be icons that have a transparent background (they are currently black) if the avatar does not have an image.
-I need the cards on the circular gallery to be a plus icon for the create avatar card (it is currently black)
-I need to be able to see "Community Avatars" in the search bar
-I need to be able to select one or more "Community Avatars" in the search bar and add all at once
-I need to be able to use the arrows on the keyboard to navigate the circular gallery
-I need the circular gallery to be larger
-I need to be able to see the edges of the other cards of the circular gallery
-I need less space between the top and bottom of the circular gallery
+<!-- I need the cards on the circular gallery to be icons that have a transparent background (they are currently black) if the avatar does not have an image. -->
+<!-- I need the cards on the circular gallery to be a plus icon for the create avatar card (it is currently black) -->
+
+I need to be able to see "Community Avatars" in the search bar (NTH)
+I need to be able to select one or more "Community Avatars" in the search bar and add all at once (NTH)
+
+I need to be able to use the arrows on the keyboard to navigate the circular gallery (NTH)
+<!-- I need the circular gallery to be larger -->
+<!-- I need to be able to see the edges of the other cards of the circular gallery -->
+<!-- I need less space between the top and bottom of the circular gallery -->
 
 ### ACCOUNT SETTINGS
 
 I need a button in the top left-hand corner to have a cancel button to navigate back to avatar-selection in Account Settings
 I need a button in the top right-hand corner to have a done button to update the user settings (if anything changed) and navigate back to avatar-selection in Account Settings
+
 I need all the update buttons in the Account Settings to call user settings with the update
+
 I need to Download my Data with the Download Data in the Account Settings view
 I need to Delete Account with the Delete Account in the Account Settings view (delete all avatars and the user)
 

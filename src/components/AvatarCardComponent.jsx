@@ -13,7 +13,7 @@ const AvatarCardComponent = ({ avatar, onCardClick }) => {
           {avatar.icon && isValidImageUrl(avatar.icon) ? (
             <img
               src={avatar.icon}
-              alt={avatar.avatar_name}
+              alt={avatar.name}
               className="w-16 h-16 object-contain"
               onError={(e) => {
                 console.error('Avatar image load failed:', e.target.src);
@@ -25,9 +25,7 @@ const AvatarCardComponent = ({ avatar, onCardClick }) => {
           )}
         </div>
       </div>
-      <h3 className="text-2xl font-bold text-white mb-2">
-        {avatar.avatar_name}
-      </h3>
+      <h3 className="text-2xl font-bold text-white mb-2">{avatar.name}</h3>
       <p className="text-white/70 text-sm">
         {avatar.description || 'Click to select this avatar'}
       </p>

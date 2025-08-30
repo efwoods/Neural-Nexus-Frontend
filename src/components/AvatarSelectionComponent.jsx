@@ -58,6 +58,10 @@ const AvatarSelectionComponent = ({
     [avatars, currentPage]
   );
 
+  // Determine if we should show create avatar button on current page
+  const isLastPage = currentPage === totalPages - 1;
+  const shouldShowCreateAvatar = totalPages <= 1 || isLastPage;
+
   const isValidImageUrl = (url) => {
     if (!url) return false;
     if (url.startsWith('data:image/')) return url.includes('base64,');
@@ -138,7 +142,7 @@ const AvatarSelectionComponent = ({
       try {
         const avatarId =
           actualCardData.id ||
-          avatars?.find((avatar) => avatar.avatar_name === actualCardData.text)
+          avatars?.find((avatar) => avatar.name === actualCardData.text)
             ?.avatar_id;
         if (!avatarId) {
           toast.error('Avatar ID not found');
@@ -217,7 +221,7 @@ const AvatarSelectionComponent = ({
       try {
         const avatarId =
           selectedCard.id ||
-          avatars?.find((avatar) => avatar.avatar_name === selectedCard.text)
+          avatars?.find((avatar) => avatar.name === selectedCard.text)
             ?.avatar_id;
         if (!avatarId) {
           toast.error('Avatar ID not found');
@@ -274,28 +278,31 @@ const AvatarSelectionComponent = ({
     }
   };
 
-  const authenticatedCards = useMemo(
-    () => [
-      ...paginatedAvatars.map((avatar) => ({
-        id: avatar.avatar_id,
-        component: (
-          <AvatarCardComponent avatar={avatar} onCardClick={handleClick} />
-        ),
-        type: 'avatar',
-        text: avatar.avatar_name,
-        image: avatar.icon && isValidImageUrl(avatar.icon) ? avatar.icon : null,
-        avatar_data: avatar,
-      })),
-      {
+  const authenticatedCards = useMemo(() => {
+    const avatarCards = paginatedAvatars.map((avatar) => ({
+      id: avatar.avatar_id,
+      component: (
+        <AvatarCardComponent avatar={avatar} onCardClick={handleClick} />
+      ),
+      type: 'avatar',
+      text: avatar.name,
+      image: avatar.icon && isValidImageUrl(avatar.icon) ? avatar.icon : null,
+      avatar_data: avatar,
+    }));
+
+    // Only add create avatar card if we should show it on this page
+    if (shouldShowCreateAvatar) {
+      avatarCards.push({
         id: 'create-avatar',
         component: <CreateAvatarComponent onCardClick={handleClick} />,
         type: 'create',
         text: 'Create Avatar',
         image: null,
-      },
-    ],
-    [paginatedAvatars]
-  );
+      });
+    }
+
+    return avatarCards;
+  }, [paginatedAvatars, shouldShowCreateAvatar]);
 
   const getCachedAvatarPosition = (avatarId = null) => {
     try {
@@ -472,7 +479,7 @@ const AvatarSelectionComponent = ({
       ...(avatars?.map((avatar, idx) => ({
         id: avatar.avatar_id,
         type: 'avatar',
-        text: avatar.avatar_name,
+        text: avatar.name,
         image: avatar.icon && isValidImageUrl(avatar.icon) ? avatar.icon : null,
         originalIndex: idx,
       })) || []),
@@ -512,7 +519,7 @@ const AvatarSelectionComponent = ({
       ...(avatars?.map((avatar, idx) => ({
         id: avatar.avatar_id,
         type: 'avatar',
-        text: avatar.avatar_name,
+        text: avatar.name,
         image: avatar.icon && isValidImageUrl(avatar.icon) ? avatar.icon : null,
         originalIndex: idx,
       })) || []),
@@ -682,19 +689,17 @@ const AvatarSelectionComponent = ({
             ref={dropdownRef}
           >
             <div className="flex gap-2">
-              {totalAvatarCards > CARDS_PER_PAGE && (
+              {/* Show left chevron only if not on first page and pagination is used */}
+              {totalAvatarCards > CARDS_PER_PAGE && currentPage > 0 && (
                 <div
                   onClick={handlePreviousPage}
-                  className={`p-0.5 rounded-full ${
-                    currentPage === 0
-                      ? 'text-white/30 cursor-not-allowed'
-                      : 'text-white/50 hover:text-white hover:bg-white/10 cursor-pointer'
-                  } transition-all duration-300`}
+                  className="p-0.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 cursor-pointer transition-all duration-300"
                   aria-label="Previous page"
                 >
                   <FiChevronLeft className="w-8 h-8" />
                 </div>
               )}
+
               {currentCards.map((card, index) => {
                 const isCreateAvatar = card.type === 'create';
                 const isSelected = currentCardIndex === index;
@@ -717,21 +722,18 @@ const AvatarSelectionComponent = ({
                   </div>
                 );
               })}
-              {totalAvatarCards > CARDS_PER_PAGE && (
-                <>
+
+              {/* Show right chevron only if not on last page and pagination is used */}
+              {totalAvatarCards > CARDS_PER_PAGE &&
+                currentPage < totalPages - 1 && (
                   <div
                     onClick={handleNextPage}
-                    className={`p-0.5 rounded-full ${
-                      currentPage === totalPages - 1
-                        ? 'text-white/30 cursor-not-allowed'
-                        : 'text-white/50 hover:text-white hover:bg-white/10 cursor-pointer'
-                    } transition-all duration-300`}
+                    className="p-0.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 cursor-pointer transition-all duration-300"
                     aria-label="Next page"
                   >
                     <FiChevronRight className="w-8 h-8" />
                   </div>
-                </>
-              )}
+                )}
             </div>
             <div className="min-h-[40px] w-full flex justify-center items-center gap-2">
               <button
