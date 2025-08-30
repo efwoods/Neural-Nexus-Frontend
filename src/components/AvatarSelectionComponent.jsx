@@ -692,7 +692,7 @@ const AvatarSelectionComponent = ({
                   } transition-all duration-300`}
                   aria-label="Previous page"
                 >
-                  <FiChevronLeft className="w-2 h-2" />
+                  <FiChevronLeft className="w-8 h-8" />
                 </div>
               )}
               {currentCards.map((card, index) => {
@@ -710,9 +710,9 @@ const AvatarSelectionComponent = ({
                     aria-label={`Go to ${card.text}`}
                   >
                     {isCreateAvatar ? (
-                      <CirclePlus className="w-2 h-2" />
+                      <CirclePlus className="w-8 h-8" />
                     ) : (
-                      <FiCircle className="w-2 h-2" />
+                      <FiCircle className="w-8 h-8" />
                     )}
                   </div>
                 );
@@ -728,7 +728,7 @@ const AvatarSelectionComponent = ({
                     } transition-all duration-300`}
                     aria-label="Next page"
                   >
-                    <FiChevronRight className="w-2 h-2" />
+                    <FiChevronRight className="w-8 h-8" />
                   </div>
                 </>
               )}
