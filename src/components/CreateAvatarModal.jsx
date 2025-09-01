@@ -26,7 +26,7 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
         setShowCreateModal(false);
         setNewAvatarName('');
         setNewAvatarDescription('');
-        toast.success('Avatar created successfully');
+        // toast.success('Avatar created successfully');
       } else {
         setError('Failed to create avatar');
         toast.error('Failed to create avatar');
