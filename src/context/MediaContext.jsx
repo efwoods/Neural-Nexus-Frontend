@@ -1,4 +1,4 @@
-// components/MediaContext.jsx
+// src/context/MediaContext.jsx
 import React, {
   createContext,
   useContext,

@@ -1,4 +1,5 @@
 // Modified MessageList.jsx - Update to handle the correct message format from select_avatar
+// src/components/MessageList.jsx
 import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getDbHttpsUrl, getNgrokHttpsUrl } from '../context/NgrokAPIStore';

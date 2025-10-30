@@ -1,3 +1,5 @@
+// src/components/ChatArea.jsx
+
 import React, { useEffect } from 'react';
 import { User, AudioLines } from 'lucide-react';
 import LiveTranscriptionTicker from './LiveTranscriptionTicker';
