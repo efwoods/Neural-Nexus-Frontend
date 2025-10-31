@@ -22,7 +22,7 @@ export default function Header() {
     { name: 'Home', href: '#home' },
     { name: 'Product', href: '#product' },
     { name: 'About', href: '#about' },
-    { name: 'Careers', href: '#careers' },
+    { name: 'Waitlist', href: '#careers' },
     { name: 'Contact', href: '#contact' },
   ];
 
