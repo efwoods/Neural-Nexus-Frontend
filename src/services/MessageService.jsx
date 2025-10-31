@@ -18,16 +18,13 @@ export async function saveMessage(
   }
   formData.append('sender', sender);
 
-  const response = await fetch(
-    `${getDbHttpsUrl()}/documents/avatars/post_message`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: formData,
-    }
-  );
+  const response = await fetch(`${getDbHttpsUrl()}/avatars/post_message`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -39,7 +36,7 @@ export async function saveMessage(
 
 export async function getAvatarMessages(avatar_id, accessToken) {
   const response = await fetch(
-    `${getDbHttpsUrl()}/documents/avatars/get_avatar_messages?avatar_id=${avatar_id}`,
+    `${getDbHttpsUrl()}/avatars/get_avatar_messages?avatar_id=${avatar_id}`,
     {
       method: 'GET',
       headers: {

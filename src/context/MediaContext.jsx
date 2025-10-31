@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import { useNgrokApiUrl } from './NgrokAPIContext';
 import { MessageService } from '../services/MessageService';
+import RedisWebSocketService from '../services/RedisWebSocketService';
 import { useAuth } from './AuthContext';
 
 const MediaContext = createContext();
@@ -54,76 +55,124 @@ export const MediaProvider = ({ children }) => {
     setIsThoughtToImageEnabled(false);
   };
 
-  async function sendMessage() {
-    if (!activeAvatar || (!inputMessage.trim() && mediaFiles.length === 0))
-      return;
+  // Connect WebSocket when avatar is selected
+  useEffect(() => {
+    if (activeAvatar && accessToken && user) {
+      console.log(`Setting up WebSocket for avatar ${activeAvatar.avatar_id}`);
 
-    try {
-      const response = await MessageService.saveMessage(
+      // Connect to WebSocket for real-time AI responses
+      RedisWebSocketService.connect(
+        user.user_id,
         activeAvatar.avatar_id,
-        inputMessage,
-        mediaFiles,
-        accessToken,
-        sender
+        accessToken
       );
 
-      if (!response || response.status !== 'success') {
-        throw new Error(response?.detail || 'Message post failed');
-      }
+      // Define message handler
+      const handleAIResponse = (data) => {
+        console.log('Received AI response:', data);
 
-      const newMessage = {
-        id: response.user_message_id,
-        content: inputMessage,
-        sender: sender,
-        timestamp: new Date().toISOString(),
-        media:
-          response.media_items > 0
-            ? mediaFiles.map((f) => ({
-                filename: f.name,
-                content_type: f.type,
-                url: response.media_items[0]?.url,
-              }))
-            : [],
-      };
-
-      if (response.ai_response) {
-        const aiMessage = {
-          id: response.ai_message_id,
-          content: response.ai_response,
-          sender: 'assistant',
-          timestamp: new Date().toISOString(),
+        const newMessage = {
+          id: data.message_id,
+          content: data.message,
+          sender: data.sender || 'assistant',
+          timestamp: data.timestamp,
           media: [],
         };
-        setMessages((prev) => ({
-          ...prev,
-          [activeAvatar.avatar_id]: [
-            ...(prev[activeAvatar.avatar_id] || []),
-            newMessage,
-            aiMessage,
-          ],
-        }));
-      } else {
-        setMessages((prev) => ({
-          ...prev,
-          [activeAvatar.avatar_id]: [
-            ...(prev[activeAvatar.avatar_id] || []),
-            newMessage,
-          ],
-        }));
-      }
 
-      setInputMessage('');
-      setMediaFiles([]);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+        // Add to messages state
+        setMessages((prev) => ({
+          ...prev,
+          [activeAvatar.avatar_id]: [
+            ...(prev[activeAvatar.avatar_id] || []),
+            newMessage,
+          ],
+        }));
+      };
+
+      // Register callback
+      RedisWebSocketService.onMessage(handleAIResponse);
+
+      // Load initial messages from cache (one-time fetch)
       fetchMessages();
-    } catch (err) {
-      if (err.status === 413) {
-        alert(`One or more files exceed the maximum upload size of 1 MB.`);
-      } else {
-        alert(err.message || 'Failed to send message');
-      }
+
+      // Cleanup on unmount or avatar change
+      return () => {
+        RedisWebSocketService.removeMessageListener(handleAIResponse);
+        RedisWebSocketService.disconnect();
+      };
     }
-  }
+  }, [activeAvatar?.avatar_id, accessToken, user?.user_id]);
+
+  // async function sendMessage() {
+  //   if (!activeAvatar || (!inputMessage.trim() && mediaFiles.length === 0))
+  //     return;
+
+  //   try {
+  //     const response = await MessageService.saveMessage(
+  //       activeAvatar.avatar_id,
+  //       inputMessage,
+  //       mediaFiles,
+  //       accessToken,
+  //       sender
+  //     );
+
+  //     if (!response || response.status !== 'success') {
+  //       throw new Error(response?.detail || 'Message post failed');
+  //     }
+
+  //     const newMessage = {
+  //       id: response.user_message_id,
+  //       content: inputMessage,
+  //       sender: sender,
+  //       timestamp: new Date().toISOString(),
+  //       media:
+  //         response.media_items > 0
+  //           ? mediaFiles.map((f) => ({
+  //               filename: f.name,
+  //               content_type: f.type,
+  //               url: response.media_items[0]?.url,
+  //             }))
+  //           : [],
+  //     };
+
+  //     if (response.ai_response) {
+  //       const aiMessage = {
+  //         id: response.ai_message_id,
+  //         content: response.ai_response,
+  //         sender: 'assistant',
+  //         timestamp: new Date().toISOString(),
+  //         media: [],
+  //       };
+  //       setMessages((prev) => ({
+  //         ...prev,
+  //         [activeAvatar.avatar_id]: [
+  //           ...(prev[activeAvatar.avatar_id] || []),
+  //           newMessage,
+  //           aiMessage,
+  //         ],
+  //       }));
+  //     } else {
+  //       setMessages((prev) => ({
+  //         ...prev,
+  //         [activeAvatar.avatar_id]: [
+  //           ...(prev[activeAvatar.avatar_id] || []),
+  //           newMessage,
+  //         ],
+  //       }));
+  //     }
+
+  //     setInputMessage('');
+  //     setMediaFiles([]);
+  //     if (fileInputRef.current) fileInputRef.current.value = '';
+  //     fetchMessages();
+  //   } catch (err) {
+  //     if (err.status === 413) {
+  //       alert(`One or more files exceed the maximum upload size of 1 MB.`);
+  //     } else {
+  //       alert(err.message || 'Failed to send message');
+  //     }
+  //   }
+  // }
 
   const fetchMessages = async () => {
     if (!activeAvatar || !accessToken) return;
@@ -146,6 +195,72 @@ export const MediaProvider = ({ children }) => {
       console.error('Failed to fetch messages:', error);
     }
   };
+
+  // sendMessage - Updated to only send to DB API
+  async function sendMessage() {
+    if (!activeAvatar || (!inputMessage.trim() && mediaFiles.length === 0))
+      return;
+
+    try {
+      // Optimistically add user message to UI
+      const tempMessage = {
+        id: `temp-${Date.now()}`,
+        content: inputMessage,
+        sender: sender,
+        timestamp: new Date().toISOString(),
+        media: mediaFiles.map((f) => ({
+          filename: f.name,
+          content_type: f.type,
+        })),
+      };
+
+      setMessages((prev) => ({
+        ...prev,
+        [activeAvatar.avatar_id]: [
+          ...(prev[activeAvatar.avatar_id] || []),
+          tempMessage,
+        ],
+      }));
+
+      // Send to DB API (which handles everything)
+      const response = await MessageService.saveMessage(
+        activeAvatar.avatar_id,
+        inputMessage,
+        mediaFiles,
+        accessToken,
+        sender
+      );
+
+      if (!response || response.status !== 'success') {
+        throw new Error(response?.detail || 'Message post failed');
+      }
+
+      console.log('Message sent successfully:', response.message_id);
+
+      // Clear input
+      setInputMessage('');
+      setMediaFiles([]);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+
+      // AI response will arrive via WebSocket automatically
+    } catch (err) {
+      console.error('Failed to send message:', err);
+
+      // Remove optimistic message on error
+      setMessages((prev) => ({
+        ...prev,
+        [activeAvatar.avatar_id]: (prev[activeAvatar.avatar_id] || []).filter(
+          (msg) => msg.id !== tempMessage.id
+        ),
+      }));
+
+      if (err.status === 413) {
+        alert('One or more files exceed the maximum upload size of 1 MB.');
+      } else {
+        alert(err.message || 'Failed to send message');
+      }
+    }
+  }
 
   const handleFileUpload = (event) => {
     if (!activeAvatar || !dataExchangeTypes.fileUpload) return;
