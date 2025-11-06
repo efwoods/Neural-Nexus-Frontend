@@ -103,77 +103,6 @@ export const MediaProvider = ({ children }) => {
     }
   }, [activeAvatar?.avatar_id, accessToken, user?.user_id]);
 
-  // async function sendMessage() {
-  //   if (!activeAvatar || (!inputMessage.trim() && mediaFiles.length === 0))
-  //     return;
-
-  //   try {
-  //     const response = await MessageService.saveMessage(
-  //       activeAvatar.avatar_id,
-  //       inputMessage,
-  //       mediaFiles,
-  //       accessToken,
-  //       sender
-  //     );
-
-  //     if (!response || response.status !== 'success') {
-  //       throw new Error(response?.detail || 'Message post failed');
-  //     }
-
-  //     const newMessage = {
-  //       id: response.user_message_id,
-  //       content: inputMessage,
-  //       sender: sender,
-  //       timestamp: new Date().toISOString(),
-  //       media:
-  //         response.media_items > 0
-  //           ? mediaFiles.map((f) => ({
-  //               filename: f.name,
-  //               content_type: f.type,
-  //               url: response.media_items[0]?.url,
-  //             }))
-  //           : [],
-  //     };
-
-  //     if (response.ai_response) {
-  //       const aiMessage = {
-  //         id: response.ai_message_id,
-  //         content: response.ai_response,
-  //         sender: 'assistant',
-  //         timestamp: new Date().toISOString(),
-  //         media: [],
-  //       };
-  //       setMessages((prev) => ({
-  //         ...prev,
-  //         [activeAvatar.avatar_id]: [
-  //           ...(prev[activeAvatar.avatar_id] || []),
-  //           newMessage,
-  //           aiMessage,
-  //         ],
-  //       }));
-  //     } else {
-  //       setMessages((prev) => ({
-  //         ...prev,
-  //         [activeAvatar.avatar_id]: [
-  //           ...(prev[activeAvatar.avatar_id] || []),
-  //           newMessage,
-  //         ],
-  //       }));
-  //     }
-
-  //     setInputMessage('');
-  //     setMediaFiles([]);
-  //     if (fileInputRef.current) fileInputRef.current.value = '';
-  //     fetchMessages();
-  //   } catch (err) {
-  //     if (err.status === 413) {
-  //       alert(`One or more files exceed the maximum upload size of 1 MB.`);
-  //     } else {
-  //       alert(err.message || 'Failed to send message');
-  //     }
-  //   }
-  // }
-
   const fetchMessages = async () => {
     if (!activeAvatar || !accessToken) return;
     try {
@@ -181,6 +110,9 @@ export const MediaProvider = ({ children }) => {
         activeAvatar.avatar_id,
         accessToken
       );
+
+      // console.log(`Loaded ${fetched.messages.length} messages from ${fetched.source}`);
+
       setMessages((prev) => ({
         ...prev,
         [activeAvatar.avatar_id]: fetched.map((msg) => ({

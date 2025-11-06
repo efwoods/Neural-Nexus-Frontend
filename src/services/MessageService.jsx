@@ -33,18 +33,17 @@ export async function saveMessage(
 
   return await response.json();
 }
-
 export async function getAvatarMessages(avatar_id, accessToken) {
-  const response = await fetch(
-    `${getDbHttpsUrl()}/avatars/get_avatar_messages?avatar_id=${avatar_id}`,
-    {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: 'application/json',
-      },
-    }
-  );
+  const formData = new FormData();
+  formData.append('avatar_id', avatar_id);
+
+  const response = await fetch(`${getDbHttpsUrl()}/avatars/get_messages`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+  });
 
   if (!response.ok) {
     const error = await response.json();
