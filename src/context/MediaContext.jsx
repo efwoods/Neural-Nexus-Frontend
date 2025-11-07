@@ -34,6 +34,13 @@ export const MediaProvider = ({ children }) => {
   const processorRef = useRef(null);
   const MAX_FILE_SIZE_MB = 1 * 1024 * 1024;
 
+  // ==================== CACHES ====================
+  // Avatar Cache: Stores avatar metadata
+  const [avatarCache, setAvatarCache] = useState({});
+  // Message Cache: Stores messages per avatar (max 50 per avatar)
+  const [messageCache, setMessageCache] = useState({});
+  const MAX_CACHED_MESSAGES = 50;
+
   const [dataExchangeTypes, setDataExchangeTypes] = useState({
     text: true,
     voice: true,
@@ -46,6 +53,96 @@ export const MediaProvider = ({ children }) => {
     telepathy: true,
   });
 
+  // ==================== CACHE FUNCTIONS ====================
+
+  /**
+   * Add avatar to cache
+   */
+  const cacheAvatar = (avatar) => {
+    setAvatarCache((prev) => ({
+      ...prev,
+      [avatar.avatar_id]: {
+        ...avatar,
+        cachedAt: new Date().toISOString(),
+      },
+    }));
+  };
+
+  /**
+   * Get avatar from cache
+   */
+  const getCachedAvatar = (avatarId) => {
+    return avatarCache[avatarId] || null;
+  };
+
+  /**
+   * Add message to cache (maintains rolling window of N messages)
+   */
+  const cacheMessage = (avatarId, message) => {
+    setMessageCache((prev) => {
+      const currentMessages = prev[avatarId] || [];
+      const updatedMessages = [...currentMessages, message];
+
+      // Keep only last N messages (rolling window)
+      const trimmedMessages =
+        updatedMessages.length > MAX_CACHED_MESSAGES
+          ? updatedMessages.slice(-MAX_CACHED_MESSAGES)
+          : updatedMessages;
+
+      return {
+        ...prev,
+        [avatarId]: trimmedMessages,
+      };
+    });
+  };
+
+  /**
+   * Get cached messages for an avatar
+   */
+  const getCachedMessages = (avatarId) => {
+    return messageCache[avatarId] || [];
+  };
+
+  /**
+   * Clear cache for specific avatar
+   */
+  const clearAvatarCache = (avatarId) => {
+    setMessageCache((prev) => {
+      const newCache = { ...prev };
+      delete newCache[avatarId];
+      return newCache;
+    });
+  };
+
+  /**
+   * Populate message cache from database
+   */
+  const populateMessageCache = async (avatarId) => {
+    try {
+      const fetched = await MessageService.getAvatarMessages(
+        avatarId,
+        accessToken
+      );
+
+      // Store in cache
+      setMessageCache((prev) => ({
+        ...prev,
+        [avatarId]: fetched.map((msg) => ({
+          id: msg._id,
+          content: msg.message,
+          media: msg.media || [],
+          sender: msg.sender,
+          timestamp: msg.timestamp,
+        })),
+      }));
+
+      return fetched;
+    } catch (error) {
+      console.error('Failed to populate message cache:', error);
+      return [];
+    }
+  };
+  // claude.ai/chat/33ca6b04-fb69-486a-9a0d-0780a444f557 working on removing redis
   const startThoughtToImage = async () => {
     if (!accessToken || !user?.enable_grok_imagine) return;
     setIsThoughtToImageEnabled(true);
