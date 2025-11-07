@@ -152,53 +152,26 @@ export const MediaProvider = ({ children }) => {
     setIsThoughtToImageEnabled(false);
   };
 
-  // Connect WebSocket when avatar is selected
   useEffect(() => {
-    if (activeAvatar && accessToken && user) {
-      console.log(`Setting up WebSocket for avatar ${activeAvatar.avatar_id}`);
+    if (activeAvatar && accessToken) {
+      console.log(`Loading messages for avatar ${activeAvatar.avatar_id}`);
 
-      // Connect to WebSocket for real-time AI responses
-      RedisWebSocketService.connect(
-        user.user_id,
-        activeAvatar.avatar_id,
-        accessToken
-      );
+      // Check cache first
+      const cachedMessages = getCachedMessages(activeAvatar.avatar_id);
 
-      // Define message handler
-      const handleAIResponse = (data) => {
-        console.log('Received AI response:', data);
-
-        const newMessage = {
-          id: data.message_id,
-          content: data.message,
-          sender: data.sender || 'assistant',
-          timestamp: data.timestamp,
-          media: [],
-        };
-
-        // Add to messages state
+      if (cachedMessages.length > 0) {
+        console.log(`Loaded ${cachedMessages.length} messages from cache`);
         setMessages((prev) => ({
           ...prev,
-          [activeAvatar.avatar_id]: [
-            ...(prev[activeAvatar.avatar_id] || []),
-            newMessage,
-          ],
+          [activeAvatar.avatar_id]: cachedMessages,
         }));
-      };
-
-      // Register callback
-      RedisWebSocketService.onMessage(handleAIResponse);
-
-      // Load initial messages from cache (one-time fetch)
-      fetchMessages();
-
-      // Cleanup on unmount or avatar change
-      return () => {
-        RedisWebSocketService.removeMessageListener(handleAIResponse);
-        RedisWebSocketService.disconnect();
-      };
+      } else {
+        // Fetch from database if cache is empty
+        console.log('Cache empty, fetching from database');
+        fetchMessages();
+      }
     }
-  }, [activeAvatar?.avatar_id, accessToken, user?.user_id]);
+  }, [activeAvatar?.avatar_id, accessToken]);
 
   const fetchMessages = async () => {
     if (!activeAvatar || !accessToken) return;
@@ -231,9 +204,11 @@ export const MediaProvider = ({ children }) => {
       return;
 
     try {
+      const tempId = `temp-${Date.now()}`;
+
       // Optimistically add user message to UI
       const tempMessage = {
-        id: `temp-${Date.now()}`,
+        id: tempId,
         content: inputMessage,
         sender: sender,
         timestamp: new Date().toISOString(),
@@ -251,7 +226,10 @@ export const MediaProvider = ({ children }) => {
         ],
       }));
 
-      // Send to DB API (which handles everything)
+      // Cache the user message
+      cacheMessage(activeAvatar.avatar_id, tempMessage);
+
+      // Send to DB API and wait for AI response
       const response = await MessageService.saveMessage(
         activeAvatar.avatar_id,
         inputMessage,
@@ -264,14 +242,44 @@ export const MediaProvider = ({ children }) => {
         throw new Error(response?.detail || 'Message post failed');
       }
 
-      console.log('Message sent successfully:', response.message_id);
+      console.log('Message sent successfully');
+
+      // Update temp message with real ID
+      setMessages((prev) => ({
+        ...prev,
+        [activeAvatar.avatar_id]: prev[activeAvatar.avatar_id].map((msg) =>
+          msg.id === tempId
+            ? { ...msg, id: response.user_message.message_id }
+            : msg
+        ),
+      }));
+
+      // If AI response is included, add it immediately
+      if (response.ai_response) {
+        const aiMessage = {
+          id: response.ai_response.message_id,
+          content: response.ai_response.message,
+          sender: 'assistant',
+          timestamp: response.ai_response.timestamp,
+          media: [],
+        };
+
+        setMessages((prev) => ({
+          ...prev,
+          [activeAvatar.avatar_id]: [
+            ...(prev[activeAvatar.avatar_id] || []),
+            aiMessage,
+          ],
+        }));
+
+        // Cache AI response
+        cacheMessage(activeAvatar.avatar_id, aiMessage);
+      }
 
       // Clear input
       setInputMessage('');
       setMediaFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
-
-      // AI response will arrive via WebSocket automatically
     } catch (err) {
       console.error('Failed to send message:', err);
 
@@ -279,7 +287,7 @@ export const MediaProvider = ({ children }) => {
       setMessages((prev) => ({
         ...prev,
         [activeAvatar.avatar_id]: (prev[activeAvatar.avatar_id] || []).filter(
-          (msg) => msg.id !== tempMessage.id
+          (msg) => msg.id !== tempId
         ),
       }));
 
