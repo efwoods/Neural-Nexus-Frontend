@@ -7,8 +7,6 @@ import AvatarSelectionComponent from './components/AvatarSelectionComponent';
 import VantaBackground from './components/VantaBackground';
 import { useAuth } from './context/AuthContext';
 import { useMedia } from './context/MediaContext';
-import { useAvatarCache } from './context/AvatarCacheContext';
-import { useMessageCache } from './context/MessageCacheContext';
 import { Toaster } from 'react-hot-toast';
 import LiveChat from './components/LiveChat';
 import AccountSettings from './components/AccountSettings';
