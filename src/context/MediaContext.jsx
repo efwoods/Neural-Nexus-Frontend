@@ -8,7 +8,6 @@ import React, {
 } from 'react';
 import { useNgrokApiUrl } from './NgrokAPIContext';
 import { MessageService } from '../services/MessageService';
-import RedisWebSocketService from '../services/RedisWebSocketService';
 import { useAuth } from './AuthContext';
 
 const MediaContext = createContext();
