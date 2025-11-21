@@ -1,4 +1,5 @@
 // Modified MessageList.jsx - Update to handle the correct message format from select_avatar
+// src/components/MessageList.jsx
 import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getDbHttpsUrl, getNgrokHttpsUrl } from '../context/NgrokAPIStore';
@@ -19,7 +20,7 @@ const MessageList = ({ messages, messagesEndRef }) => {
   }, [messages, messagesEndRef]);
 
   return (
-    <div className="flex-grow overflow-y-auto mb-4 space-y-2 px-2 flex flex-col">
+    <div className="flex-grow mb-4 space-y-2 px-2 flex flex-col">
       {messages.map((msg) => {
         if (!msg?.sender) return null; // preventing grey box from appearing
 

@@ -1,3 +1,5 @@
+// src/components/ChatArea.jsx
+
 import React, { useEffect } from 'react';
 import { User, AudioLines } from 'lucide-react';
 import LiveTranscriptionTicker from './LiveTranscriptionTicker';
@@ -23,30 +25,6 @@ const ChatArea = ({
   const { isLoggedIn, accessToken, activeAvatar, setActiveAvatar } = useAuth();
   const { messages, setMessages, fetchMessages, messagesEndRef } = useMedia();
 
-  // Modified ChatArea.jsx - Update useEffect to use messages from activeAvatar
-  useEffect(() => {
-    if (isLoggedIn && activeAvatar && accessToken && activeTab === 'chat') {
-      // If activeAvatar already has messages, use them directly
-      if (activeAvatar.messages && activeAvatar.messages.length > 0) {
-        // Set messages in MediaContext from activeAvatar
-        setMessages((prev) => ({
-          ...prev,
-          [activeAvatar.avatar_id]: activeAvatar.messages,
-        }));
-      } else {
-        // Fallback to fetchMessages if no messages in activeAvatar
-        fetchMessages();
-      }
-    }
-  }, [
-    isLoggedIn,
-    activeAvatar?.avatar_id,
-    activeTab,
-    accessToken,
-    fetchMessages,
-    setMessages, // Add setMessages dependency
-    activeAvatar?.messages, // Add messages dependency
-  ]);
   return (
     <div
       className={`flex flex-row flex-grow bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden relative ${className}`}
@@ -124,12 +102,15 @@ const ChatArea = ({
         )}
 
         {isLoggedIn && activeTab === 'chat' && activeAvatar && (
-          <div className="flex flex-col flex-grow p-2 sm:p-4 relative">
-            <MessageList
-              messages={messages[activeAvatar.avatar_id] || []}
-              messagesEndRef={messagesEndRef}
-            />
-            <div className="flex items-center mt-2">
+          <div className="flex flex-col flex-grow overflow-hidden">
+            <div className="flex-grow overflow-y-auto p-2 sm:p-4 relative">
+              <MessageList
+                messages={messages[activeAvatar.avatar_id] || []}
+                messagesEndRef={messagesEndRef}
+              />
+            </div>
+
+            <div className="flex-shrink-0 items-center mt-2">
               <InputBar
                 avatarId={activeAvatar.avatar_id}
                 accessToken={accessToken}

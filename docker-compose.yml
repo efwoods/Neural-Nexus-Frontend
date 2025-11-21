@@ -10,7 +10,9 @@ services:
       - ./:/app:cached # bind your code
       - /app/node_modules # keep container modules separate
     env_file:
-      - .env.production
+      - .env.dev
+      # - .env.local
+      # - .env.production
     environment:
       - CHOKIDAR_USEPOLLING=true # force Vite to poll for changes
       - CHOKIDAR_INTERVAL=100  # optional: faster polling
