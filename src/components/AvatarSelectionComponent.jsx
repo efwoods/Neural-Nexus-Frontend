@@ -637,7 +637,7 @@ const AvatarSelectionComponent = ({
   return (
     <div className="flex flex-col items-center justify-start p-4 relative">
       {isLoggedIn ? (
-        <div className="w-full max-w-[1920px] flex flex-col items-center gap-2">
+        <div className="w-full h-screen overflow-hidden max-w-[1920px] flex flex-col items-center gap-2">
           <div className="relative w-full max-w-md mt-8 mb-2" ref={searchRef}>
             <input
               type="text"
@@ -669,7 +669,7 @@ const AvatarSelectionComponent = ({
               </ul>
             )}
           </div>
-          <div className="h-[600px] w-full mb-2">
+          <div className="h-full flex flex-col min-h-0 w-full mb-2">
             <CircularGallery
               ref={galleryRef}
               items={authenticatedCards}
@@ -735,7 +735,7 @@ const AvatarSelectionComponent = ({
                   </div>
                 )}
             </div>
-            <div className="min-h-[40px] w-full flex justify-center items-center gap-2">
+            <div className="min-h-[40px] w-full flex justify-center items-center gap-2 mb-8">
               <button
                 onClick={handleCustomizeAvatar}
                 className="bg-white/10 rounded-lg border border-white/20 py-2 px-4 text-white hover:bg-white/15 transition-all duration-300 flex items-center gap-2"
