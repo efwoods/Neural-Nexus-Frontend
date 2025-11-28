@@ -428,13 +428,18 @@ const AvatarSelectionComponent = ({
           <h2 className="text-5xl font-bold text-white mb-6">
             Welcome to Neural Nexus
           </h2>
-          <p className="text-white/80 mb-10 text-xl">
-            Sign in or create an account to get started
+          <p className="text-white/80 mb-8 text-s">
+            Create Personalized AI Conversational Agents
           </p>
+          <p className="text-white/80 mb-8 text-s">
+            Sign In Or Create An Account To Get Started
+          </p>
+          {/* <div className="pb-10"> */}
           <AuthComponent
             setActiveTab={setActiveTab}
             onEndLiveChat={onEndLiveChat}
           />
+          {/* </div> */}
         </div>
       ),
       type: 'login',
