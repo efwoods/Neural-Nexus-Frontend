@@ -1,19 +1,6 @@
-# white button on mobile (init commit): 2a4969312d802f4269f476142f5c8c19e08f948a
+# [auto login after verification feature](https://claude.ai/chat/08f856de-4446-4538-a07d-410b7fd9784d)
 
-<button
+# Create Verification Modal Page
+# after signup verification page with resend email button and back button
+# after login verfiication page with resend email if not yet verified, back button, or back button and forgot email button if login was unsuccessful because the password was incorrect
 
-              type="submit"
-
-              className="px-4 py-2 bg-white/5 hover:bg-teal-600 rounded-lg text-white"
-
-            >
-
-              {isSignup ? 'Signup' : 'Login'}
-
-            </button>
-
-
-
-This button is rendering as white on google chrome on mobile, but it is rendering on laptop as:
-
-class="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
