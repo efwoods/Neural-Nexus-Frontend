@@ -82,6 +82,7 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
             type="text"
             value={newAvatarName}
             onChange={(e) => setNewAvatarName(e.target.value)}
+            placeholder="Name the Avatar"
             className="w-full p-2 mt-1 rounded bg-black/35 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all duration-300"
             autoFocus
             aria-required="true"
@@ -93,6 +94,7 @@ const CreateAvatarModal = ({ setShowCreateModal }) => {
           <textarea
             value={newAvatarDescription}
             onChange={(e) => setNewAvatarDescription(e.target.value)}
+            placeholder="Describe your avatar in 50 characters or less (Optional)"
             className="w-full p-2 mt-1 rounded bg-black/35 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all duration-300"
             rows={3}
             aria-multiline="true"
