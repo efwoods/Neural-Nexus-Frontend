@@ -434,12 +434,10 @@ const AvatarSelectionComponent = ({
           <p className="text-white/80 mb-8 text-s">
             Sign In Or Create An Account To Get Started
           </p>
-          {/* <div className="pb-10"> */}
           <AuthComponent
             setActiveTab={setActiveTab}
             onEndLiveChat={onEndLiveChat}
           />
-          {/* </div> */}
         </div>
       ),
       type: 'login',

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNgrokApiUrl } from './NgrokAPIContext';
 import { AvatarService } from '../services/AvatarService';
 import { useMedia } from './MediaContext';
+import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
@@ -13,6 +14,8 @@ export const AuthProvider = ({ children }) => {
   const [accessToken, setAccessToken] = useState(null);
   const [avatars, setAvatars] = useState([]);
   const [activeAvatar, setActiveAvatar] = useState(null);
+  const [loginResponse, setLoginResponse] = useState(false);
+  const [signupResponse, setSignupResponse] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -48,30 +51,31 @@ export const AuthProvider = ({ children }) => {
       const err = await signupResponse.json();
       throw new Error(err.detail || 'Signup failed');
     }
+    // Verification logic and auto-login
 
-    const { access_token } = await signupResponse.json();
-    const profileResponse = await fetch(`${dbHttpsUrl}/profile`, {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-        Accept: 'application/json',
-      },
-    });
+    // const { access_token } = await signupResponse.json();
+    // const profileResponse = await fetch(`${dbHttpsUrl}/profile`, {
+    //   headers: {
+    //     Authorization: `Bearer ${access_token}`,
+    //     Accept: 'application/json',
+    //   },
+    // });
 
-    if (!profileResponse.ok) {
-      const errText = await profileResponse.text();
-      throw new Error(errText || 'Failed to fetch profile');
-    }
+    // if (!profileResponse.ok) {
+    //   const errText = await profileResponse.text();
+    //   throw new Error(errText || 'Failed to fetch profile');
+    // }
 
-    const profileData = await profileResponse.json();
-    setUser(profileData);
-    setAccessToken(access_token);
-    setIsLoggedIn(true);
-    localStorage.setItem('user', JSON.stringify(profileData));
-    localStorage.setItem('access_token', access_token);
-    localStorage.setItem('avatars', JSON.stringify(profileData.avatars));
-    if (profileData.last_used_avatar) {
-      setActiveAvatar({ avatar_id: profileData.last_used_avatar });
-    }
+    // const profileData = await profileResponse.json();
+    // setUser(profileData);
+    // setAccessToken(access_token);
+    // setIsLoggedIn(true);
+    // localStorage.setItem('user', JSON.stringify(profileData));
+    // localStorage.setItem('access_token', access_token);
+    // localStorage.setItem('avatars', JSON.stringify(profileData.avatars));
+    // if (profileData.last_used_avatar) {
+    //   setActiveAvatar({ avatar_id: profileData.last_used_avatar });
+    // }
   };
 
   const login = async (email, password) => {
@@ -90,7 +94,7 @@ export const AuthProvider = ({ children }) => {
 
     if (!loginResponse.ok) {
       const err = await loginResponse.json();
-      throw new Error(err.detail || 'Login failed');
+      const message = err.detail || 'Login failed';
     }
 
     const { access_token } = await loginResponse.json();
@@ -232,6 +236,8 @@ export const AuthProvider = ({ children }) => {
         createAvatar,
         deleteAvatar,
         selectAvatar,
+        loginResponse,
+        signupResponse,
       }}
     >
       {children}
