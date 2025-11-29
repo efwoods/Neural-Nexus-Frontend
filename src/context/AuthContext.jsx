@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNgrokApiUrl } from './NgrokAPIContext';
 import { AvatarService } from '../services/AvatarService';
 import { useMedia } from './MediaContext';
-import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
@@ -94,8 +93,9 @@ export const AuthProvider = ({ children }) => {
 
     if (!loginResponse.ok) {
       const err = await loginResponse.json();
-      const message = err.detail || 'Login failed';
+      throw new Error(err.detail || 'Login failed');
     }
+    console.log('HERE');
 
     const { access_token } = await loginResponse.json();
     const profileResponse = await fetch(`${dbHttpsUrl}/profile`, {
@@ -139,6 +139,28 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     localStorage.removeItem('access_token');
     localStorage.removeItem('avatars');
+  };
+
+  const resendVerification = async (email) => {
+    try {
+      const response = await fetch(`${dbHttpsUrl}/resend-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }), // ← FastAPI reads this as JSON
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to resend');
+      }
+
+      // toast.success(data.message);
+    } catch (err) {
+      throw new Error(err.message || "Couldn't resend email");
+    }
   };
 
   const getAvatars = async (token = accessToken) => {
@@ -238,6 +260,7 @@ export const AuthProvider = ({ children }) => {
         selectAvatar,
         loginResponse,
         signupResponse,
+        resendVerification,
       }}
     >
       {children}
