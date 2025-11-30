@@ -407,8 +407,8 @@ const AvatarSelectionComponent = ({
     () => ({
       id: 'login',
       component: (
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-16 text-center cursor-pointer hover:bg-white/10 transition-all duration-300">
-          <div className="flex justify-center mb-8">
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-16 text-center cursor-pointer hover:bg-white/10 transition-all duration-300 min-h-screen w-full flex flex-col justify-evenly items-center ">
+          <div className="flex justify-center">
             <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center">
               {getLoginCardIcon() ? (
                 <img
@@ -428,10 +428,10 @@ const AvatarSelectionComponent = ({
           <h2 className="text-5xl font-bold text-white mb-6">
             Welcome to Neural Nexus
           </h2>
-          <p className="text-white/80 mb-8 text-s">
+          <p className="text-white/80 mb-8 text-lg mb-6 font-bold">
             Create Personalized AI Conversational Agents
           </p>
-          <p className="text-white/80 mb-8 text-s">
+          <p className="text-white/80 mb-8 text-lg mb-6 font-bold">
             Sign In Or Create An Account To Get Started
           </p>
           <AuthComponent
@@ -638,9 +638,9 @@ const AvatarSelectionComponent = ({
   ]);
 
   return (
-    <div className="flex flex-col items-center justify-start p-4 relative">
+    <div className="flex flex-col items-center justify-start p-4 relative mx-auto min-h-screen w-full">
       {isLoggedIn ? (
-        <div className="w-full h-screen overflow-hidden max-w-[1920px] flex flex-col items-center gap-2">
+        <div className="w-full h-screen overflow-hidden flex flex-col items-center gap-2">
           <div className="relative w-full max-w-md mt-8 mb-2" ref={searchRef}>
             <input
               type="text"

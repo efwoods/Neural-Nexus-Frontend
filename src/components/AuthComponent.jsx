@@ -39,6 +39,8 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
   const [showLoginButton, setShowLoginButton] = useState(true);
   const [showSignupButton, setShowSignupButton] = useState(true);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [showChangePasswordButton, setShowChangePasswordButton] =
+    useState(false);
   const [showVerifyEmailModal, setShowVerifyEmailModal] = useState(false);
   const [
     showResendVerificationEmailButton,
@@ -55,6 +57,7 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
     loginResponse,
     signupResponse,
     resendVerification,
+    forgotPassword,
   } = useAuth();
   const { messages, setMessages } = useMedia();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -212,7 +215,7 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
           setShowVerifyModal(true);
           setIsLoading(true);
           setShowResendVerificationEmailButton(false);
-          await login(email, password, setActiveTab);
+          await login(email, password);
         } catch (err) {
           toast(
             (t) => (
@@ -299,10 +302,15 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
                         className="px-3 py-1 bg-teal-600 hover:bg-teal-700 rounded"
                         onClick={() => {
                           // retryLogin(); Forgot Password?
+                          localStorage.setItem('email', email);
+                          console.log(localStorage.getItem('email'));
+                          setShowLoginButton(false);
+                          setShowLoginModal(false);
+                          setShowVerifyModal(false);
+                          setIsLoading(false);
+                          setShowChangePasswordModal(true);
+                          setShowChangePasswordButton(true);
                           toast.dismiss(t.id);
-                          setShowLoginButton(true);
-                          setShowVerifyModal(true);
-                          setIsLoading(true);
                         }}
                       >
                         Forgot Password?
@@ -354,7 +362,77 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
           setShowLoginModal(true);
           setShowVerifyModal(false);
           setIsLoading(false);
-          await login(email, password, setActiveTab);
+          await login(email, password);
+        }
+      }
+      if (showChangePasswordModal) {
+        try {
+          setShowLoginButton(false);
+          setShowChangePasswordButton(false);
+          setShowChangePasswordModal(false);
+          setShowVerifyModal(true);
+          setIsLoading(true);
+          await forgotPassword(password);
+
+          // Return to the Login Screen
+          setShowChangePasswordButton(false);
+          setShowChangePasswordModal(false);
+          setShowModal(true);
+          setShowSignupModal(false);
+          setShowLoginModal(true);
+          setShowVerifyModal(false);
+          setIsLoading(false);
+          setShowLoginButton(true);
+          setShowSignupButton(false);
+          setShowChangePasswordModal(false);
+          setShowVerifyEmailModal(false);
+          setEmail('');
+          setUsername('');
+          setPassword('');
+        } catch (err) {
+          toast.error(err.message);
+          toast(
+            (t) => (
+              <div className="flex flex-col items-center justify-center bg-gray-800 text-white p-4 rounded-lg shadow-lg">
+                {err.message == 'assignment to undeclared variable email' && (
+                  <>
+                    {/* Verified, but password fails */}
+                    <p className="mb-2">Could not log in. Please try again.</p>
+                    <div className="flex gap-2">
+                      <button
+                        className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
+                        onClick={() => {
+                          toast.dismiss(t.id);
+                          setShowLoginModal(true);
+                          setShowLoginButton(true);
+                          setShowVerifyModal(false);
+                          setIsLoading(false);
+                        }}
+                      >
+                        Dismiss
+                      </button>
+                      <form onSubmit={handleAuth}>
+                        <button
+                          type="submit"
+                          className="px-3 py-1 bg-teal-600 hover:bg-teal-700 rounded gap-2"
+                          onClick={() => {
+                            toast.dismiss(t.id);
+                            setShowLoginModal(true);
+                            setShowLoginButton(false);
+                          }}
+                        >
+                          Retry
+                        </button>
+                      </form>
+                    </div>
+                  </>
+                )}
+              </div>
+            ),
+            {
+              duration: Infinity,
+            }
+          );
         }
       }
 
@@ -362,6 +440,20 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
         setShowLoginModal(true);
         setShowVerifyModal(false);
         setIsLoading(false);
+      }
+      if (isLoggedIn) {
+        setShowModal(false);
+        setShowSignupModal(false);
+        setShowLoginModal(false);
+        setShowVerifyModal(false);
+        setIsLoading(false);
+        setShowLoginButton(false);
+        setShowSignupButton(false);
+        setShowChangePasswordModal(false);
+        setShowVerifyEmailModal(false);
+        setEmail('');
+        setUsername('');
+        setPassword('');
       }
     } catch (error) {
       console.error('Authentication error:', error);
@@ -423,6 +515,11 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
               </h2>
             </>
           )}
+          {showChangePasswordModal && (
+            <h2 className="text-2xl font-bold text-white mb-4">
+              Update Password
+            </h2>
+          )}
           <button
             type="button"
             onClick={() => {
@@ -433,6 +530,8 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
               setShowVerifyModal(false);
               setIsLoading(false);
               setShowResendVerificationEmailButton(false);
+              setShowChangePasswordModal(false);
+              setShowChangePasswordButton(false);
             }}
             className="px-4 py-2 bg-white/5 hover:bg-red-900 rounded-lg text-white"
           >
@@ -449,30 +548,35 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
           </p>
         )}
         <form onSubmit={handleAuth}>
-          {(showSignupModal || showVerifyEmailModal) && (
+          {(showSignupModal || showVerifyEmailModal) &&
+            !showChangePasswordModal && (
+              <div className="mb-4">
+                <label className="block text-white mb-1">Username</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  required
+                />
+              </div>
+            )}
+          {!showChangePasswordModal && (
             <div className="mb-4">
-              <label className="block text-white mb-1">Username</label>
+              <label className="block text-white mb-1">Email</label>
               <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                 required
               />
             </div>
           )}
           <div className="mb-4">
-            <label className="block text-white mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-white mb-1">Password</label>
+            <label className="block text-white mb-1">
+              {!showChangePasswordModal ? 'Password' : 'New Password'}
+            </label>
             <input
               type="password"
               value={password}
@@ -481,6 +585,7 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
               required
             />
           </div>
+
           <div className="flex flex-row justify-center space-x-3">
             {/* Buttons at bottom of modal */}
             {/* <button
@@ -500,6 +605,40 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
                 Resend Verification Email <SendIcon />
               </button>
               // </div>
+            )}
+            {showChangePasswordButton && (
+              <div className="flex flex-row justify-between mb-4 gap-2 ">
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('email');
+                    setShowModal(true);
+                    setShowSignupModal(true);
+                    setShowSignupButton(true);
+                    setShowLoginModal(false);
+                    setShowLoginButton(false);
+                    setShowVerifyModal(false);
+                    setIsLoading(false);
+                    setShowChangePasswordModal(false);
+                    setShowVerifyEmailModal(false);
+                    setShowChangePasswordModal(false);
+                    setShowChangePasswordButton(false);
+                    setEmail('');
+                    setUsername('');
+                    setPassword('');
+                  }}
+                  className="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
+                >
+                  <UserPlus size={16} />
+                  <span className="ml-2">Signup</span>
+                </button>
+
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-white/5 hover:bg-teal-600 rounded-lg text-white flex flex-row gap-2"
+                >
+                  Update Password <SendIcon />
+                </button>
+              </div>
             )}
             {showSignupButton && (
               // <div className="flex flex-row justify-between mb-4">
@@ -615,6 +754,8 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
           </button>
           <button
             onClick={() => {
+              setShowChangePasswordButton(false);
+              setShowChangePasswordModal(false);
               setShowModal(true);
               setShowSignupModal(false);
               setShowLoginModal(true);

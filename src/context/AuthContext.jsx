@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNgrokApiUrl } from './NgrokAPIContext';
 import { AvatarService } from '../services/AvatarService';
 import { useMedia } from './MediaContext';
+import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
@@ -36,19 +37,121 @@ export const AuthProvider = ({ children }) => {
     }
   }, [isLoggedIn, accessToken, dbHttpsUrl]);
 
+  useEffect(() => {
+    const handleVerification = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const verification = params.get('verification');
+      const reason = params.get('reason');
+      const autoLoginToken = params.get('token');
+
+      if (verification === 'success' && autoLoginToken) {
+        try {
+          // Store the token
+          setAccessToken(autoLoginToken);
+          localStorage.setItem('access_token', autoLoginToken);
+
+          // Fetch user profile
+          const profileResponse = await fetch(`${dbHttpsUrl}/profile`, {
+            headers: {
+              Authorization: `Bearer ${autoLoginToken}`,
+              Accept: 'application/json',
+            },
+          });
+
+          if (!profileResponse.ok) {
+            throw new Error('Failed to fetch profile');
+          }
+
+          const profileData = await profileResponse.json();
+
+          // Set user data
+          setUser(profileData);
+          localStorage.setItem('user', JSON.stringify(profileData));
+          localStorage.setItem('avatars', JSON.stringify(profileData.avatars));
+          setIsLoggedIn(true);
+
+          if (profileData.last_used_avatar) {
+            setActiveAvatar({ avatar_id: profileData.last_used_avatar });
+          }
+
+          // // Show success message
+          // toast.success('✅ Email verified! Welcome to Neural Nexus!', {
+          //   duration: 4000,
+          // });
+
+          // // Navigate to main page if setActiveTab is available
+          // if (setActiveTab) {
+          //   setActiveTab('avatars');
+          // }
+        } catch (error) {
+          console.error('Auto-login failed:', error);
+          toast.error(
+            'Verification successful but login failed. Please log in manually.'
+          );
+        }
+
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname);
+      } else if (verification === 'failed') {
+        if (reason === 'expired') {
+          toast.error(
+            '⏰ Verification link expired. Please request a new one.',
+            {
+              duration: 6000,
+            }
+          );
+        } else if (reason === 'invalid') {
+          toast.error('❌ Invalid verification link.', {
+            duration: 6000,
+          });
+        } else {
+          toast.error('❌ Verification failed. Please try again.', {
+            duration: 6000,
+          });
+        }
+
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname);
+      } else if (verification === 'error') {
+        toast.error('❌ An error occurred. Please try again.', {
+          duration: 6000,
+        });
+
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    };
+
+    handleVerification();
+  }, [dbHttpsUrl]); // Dependencies as needed
+
   const signup = async (username, email, password) => {
     const signupData = { username, email, password };
-    const signupResponse = await fetch(`${dbHttpsUrl}/signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(signupData),
-    });
+    try {
+      const signupResponse = await fetch(`${dbHttpsUrl}/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(signupData),
+      });
 
-    if (!signupResponse.ok) {
-      const err = await signupResponse.json();
-      throw new Error(err.detail || 'Signup failed');
+      if (!signupResponse.ok) {
+        const err = await signupResponse.json();
+        throw new Error(err.detail || 'Signup failed');
+      }
+    } catch (err) {
+      if (err.detail == 'Email already registered and verified.') {
+        toast.message('Email already registered and verified. Logging in...');
+      }
+      try {
+        await login(email, password);
+        toast.success(
+          'Email already registered and verified. AutoLogin Successful!'
+        );
+      } catch (err) {
+        throw new Error(err.detail || 'AutoLogin failed');
+      }
     }
     // Verification logic and auto-login
 
@@ -95,7 +198,6 @@ export const AuthProvider = ({ children }) => {
       const err = await loginResponse.json();
       throw new Error(err.detail || 'Login failed');
     }
-    console.log('HERE');
 
     const { access_token } = await loginResponse.json();
     const profileResponse = await fetch(`${dbHttpsUrl}/profile`, {
@@ -114,12 +216,15 @@ export const AuthProvider = ({ children }) => {
     setUser(profileData);
     setAccessToken(access_token);
     setIsLoggedIn(true);
+
     localStorage.setItem('user', JSON.stringify(profileData));
     localStorage.setItem('access_token', access_token);
     localStorage.setItem('avatars', JSON.stringify(profileData.avatars));
+
     if (profileData.last_used_avatar) {
       setActiveAvatar({ avatar_id: profileData.last_used_avatar });
     }
+    setIsLoggedIn(true);
   };
 
   const logout = async () => {
@@ -157,8 +262,39 @@ export const AuthProvider = ({ children }) => {
         throw new Error(data.detail || 'Failed to resend');
       }
 
-      // toast.success(data.message);
+      toast.success(data.message);
     } catch (err) {
+      throw new Error(err.message || "Couldn't resend email");
+    }
+  };
+
+  const forgotPassword = async (newPassword) => {
+    console.log(localStorage.getItem('email'));
+    try {
+      const email = localStorage.getItem('email');
+      if (email == null) {
+        console.log('email is null');
+        throw new Error('Email is null.');
+      } else {
+        console.log('email not null');
+        localStorage.removeItem('email');
+      }
+
+      const response = await fetch(`${dbHttpsUrl}/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, newPassword }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to resend');
+      }
+      toast.success(data.message);
+    } catch (err) {
+      console.log('throwing error in forgotPassword');
       throw new Error(err.message || "Couldn't resend email");
     }
   };
@@ -261,6 +397,7 @@ export const AuthProvider = ({ children }) => {
         loginResponse,
         signupResponse,
         resendVerification,
+        forgotPassword,
       }}
     >
       {children}
