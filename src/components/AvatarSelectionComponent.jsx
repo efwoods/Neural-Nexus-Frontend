@@ -9,12 +9,12 @@ import {
   Search,
   Settings,
   CirclePlus,
-  LogOut as LogOutIcon,
+  LogOut,
   X,
-  UserPen,
+  Edit,
   User,
 } from 'lucide-react';
-import { FiCircle, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiCircle } from 'react-icons/fi';
 import AuthComponent from './AuthComponent';
 import CreateAvatarComponent from './CreateAvatarComponent';
 import AvatarCardComponent from './AvatarCardComponent';
@@ -42,25 +42,11 @@ const AvatarSelectionComponent = ({
   const [suggestions, setSuggestions] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [currentPage, setCurrentPage] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const galleryRef = useRef(null);
   const searchRef = useRef(null);
   const dropdownRef = useRef(null);
   const hasInitialized = useRef(false);
-
-  const CARDS_PER_PAGE = 3;
-  const totalAvatarCards = avatars?.length || 0;
-  const totalPages = Math.ceil(totalAvatarCards / CARDS_PER_PAGE);
-  const startIndex = currentPage * CARDS_PER_PAGE;
-  const paginatedAvatars = useMemo(
-    () => avatars?.slice(startIndex, startIndex + CARDS_PER_PAGE) || [],
-    [avatars, currentPage]
-  );
-
-  // Determine if we should show create avatar button on current page
-  const isLastPage = currentPage === totalPages - 1;
-  const shouldShowCreateAvatar = totalPages <= 1 || isLastPage;
 
   const isValidImageUrl = (url) => {
     if (!url) return false;
@@ -91,12 +77,9 @@ const AvatarSelectionComponent = ({
   const cacheAvatarPosition = (avatarId, avatarIndex = null) => {
     try {
       localStorage.setItem('last_used_avatar_id', avatarId);
-
       if (avatarIndex !== null && avatars?.length > 0) {
         const positionData = {
           avatarIndex,
-          page: Math.floor(avatarIndex / CARDS_PER_PAGE),
-          relativeIndex: avatarIndex % CARDS_PER_PAGE,
         };
         localStorage.setItem(
           `avatar_position_${avatarId}`,
@@ -122,11 +105,9 @@ const AvatarSelectionComponent = ({
         console.error('Failed to cache avatar icon:', error);
       }
     }
-    // Always cache position regardless of icon
     cacheAvatarPosition(avatarId, avatarIndex);
   };
 
-  // Update your handleClick function
   const handleClick = async (cardData) => {
     let actualCardData = cardData;
     if (!cardData.type) {
@@ -152,13 +133,10 @@ const AvatarSelectionComponent = ({
         const avatarIndex = avatars.findIndex(
           (avatar) => avatar.avatar_id === avatarId
         );
-        const page = Math.floor(avatarIndex / CARDS_PER_PAGE);
-        const relativeIndex = avatarIndex % CARDS_PER_PAGE;
 
-        setCurrentPage(page);
-        setCurrentCardIndex(relativeIndex);
+        setCurrentCardIndex(avatarIndex);
         if (galleryRef.current) {
-          galleryRef.current.setCurrentIndex(relativeIndex);
+          galleryRef.current.setCurrentIndex(avatarIndex);
         }
 
         const response = await axios.post(
@@ -177,10 +155,8 @@ const AvatarSelectionComponent = ({
             (avatar) => avatar.avatar_id === avatarId
           );
 
-          // Cache position regardless of whether there's an icon
           cacheAvatarPosition(avatarId, avatarIndex);
 
-          // Cache icon only if it exists
           if (response.data.icon_url) {
             cacheAvatarIcon(avatarId, response.data.icon_url, avatarIndex);
           }
@@ -190,8 +166,8 @@ const AvatarSelectionComponent = ({
             icon: response.data.icon_url || selectedAvatar?.icon,
             messages: response.data.messages || [],
           };
-          setActiveAvatar(avatarWithMessages);
 
+          setActiveAvatar(avatarWithMessages);
           if (response.data.messages) {
             setMessages((prev) => ({
               ...prev,
@@ -209,7 +185,6 @@ const AvatarSelectionComponent = ({
     }
   };
 
-  // Update your handleCustomizeAvatar function similarly
   const handleCustomizeAvatar = async () => {
     if (currentCardIndex === authenticatedCards.length - 1) {
       setShowCreateModal(true);
@@ -243,15 +218,12 @@ const AvatarSelectionComponent = ({
           const selectedAvatar = avatars.find(
             (avatar) => avatar.avatar_id === avatarId
           );
-
           const avatarIndex = avatars.findIndex(
             (avatar) => avatar.avatar_id === avatarId
           );
 
-          // Cache position regardless of whether there's an icon
           cacheAvatarPosition(avatarId, avatarIndex);
 
-          // Cache icon only if it exists
           if (response.data.icon_url) {
             cacheAvatarIcon(avatarId, response.data.icon_url, avatarIndex);
           }
@@ -261,8 +233,8 @@ const AvatarSelectionComponent = ({
             icon: response.data.icon_url || selectedAvatar?.icon,
             messages: response.data.messages || [],
           };
-          setActiveAvatar(avatarWithMessages);
 
+          setActiveAvatar(avatarWithMessages);
           if (response.data.messages) {
             setMessages((prev) => ({
               ...prev,
@@ -279,30 +251,28 @@ const AvatarSelectionComponent = ({
   };
 
   const authenticatedCards = useMemo(() => {
-    const avatarCards = paginatedAvatars.map((avatar) => ({
-      id: avatar.avatar_id,
-      component: (
-        <AvatarCardComponent avatar={avatar} onCardClick={handleClick} />
-      ),
-      type: 'avatar',
-      text: avatar.name,
-      image: avatar.icon && isValidImageUrl(avatar.icon) ? avatar.icon : null,
-      avatar_data: avatar,
-    }));
+    const avatarCards =
+      avatars?.map((avatar) => ({
+        id: avatar.avatar_id,
+        component: (
+          <AvatarCardComponent avatar={avatar} onCardClick={handleClick} />
+        ),
+        type: 'avatar',
+        text: avatar.name,
+        image: avatar.icon && isValidImageUrl(avatar.icon) ? avatar.icon : null,
+        avatar_data: avatar,
+      })) || [];
 
-    // Only add create avatar card if we should show it on this page
-    if (shouldShowCreateAvatar) {
-      avatarCards.push({
-        id: 'create-avatar',
-        component: <CreateAvatarComponent onCardClick={handleClick} />,
-        type: 'create',
-        text: 'Create Avatar',
-        image: null,
-      });
-    }
+    avatarCards.push({
+      id: 'create-avatar',
+      component: <CreateAvatarComponent onCardClick={handleClick} />,
+      type: 'create',
+      text: 'Create Avatar',
+      image: null,
+    });
 
     return avatarCards;
-  }, [paginatedAvatars, shouldShowCreateAvatar]);
+  }, [avatars]);
 
   const getCachedAvatarPosition = (avatarId = null) => {
     try {
@@ -324,16 +294,12 @@ const AvatarSelectionComponent = ({
   useEffect(() => {
     if (isLoggedIn && avatars?.length > 0 && !hasInitialized.current) {
       let targetIndex = 0;
-      let page = 0;
-      let relativeIndex = 0;
 
       const cachedLastAvatarId = localStorage.getItem('last_used_avatar_id');
       if (cachedLastAvatarId) {
         const cachedPosition = getCachedAvatarPosition(cachedLastAvatarId);
         if (cachedPosition && cachedPosition.avatarIndex < avatars.length) {
           targetIndex = cachedPosition.avatarIndex;
-          page = cachedPosition.page;
-          relativeIndex = cachedPosition.relativeIndex;
         }
       } else if (lastUsedAvatar) {
         const lastUsedIndex = avatars.findIndex(
@@ -341,19 +307,15 @@ const AvatarSelectionComponent = ({
         );
         if (lastUsedIndex !== -1) {
           targetIndex = lastUsedIndex;
-          page = Math.floor(targetIndex / CARDS_PER_PAGE);
-          relativeIndex = targetIndex % CARDS_PER_PAGE;
         }
       }
 
-      setCurrentPage(page);
-      setCurrentCardIndex(relativeIndex);
+      setCurrentCardIndex(targetIndex);
       if (galleryRef.current) {
-        galleryRef.current.setCurrentIndex(relativeIndex);
+        galleryRef.current.setCurrentIndex(targetIndex);
       }
       hasInitialized.current = true;
     }
-
     if (!isLoggedIn || !avatars?.length) {
       hasInitialized.current = false;
     }
@@ -387,7 +349,6 @@ const AvatarSelectionComponent = ({
     } catch (error) {
       console.error('Error getting cached avatar icon:', error);
     }
-
     if (lastUsedAvatar && avatars?.length > 0) {
       const lastUsedAvatarData = avatars.find(
         (avatar) => avatar.avatar_id === lastUsedAvatar
@@ -456,28 +417,54 @@ const AvatarSelectionComponent = ({
     }
   };
 
-  const handlePreviousPage = () => {
-    const newPage = Math.max(currentPage - 1, 0);
-    setCurrentPage(newPage);
-    setCurrentCardIndex(0);
+  const handleJumpLeft = () => {
+    const newIndex = Math.max(0, currentCardIndex - 5);
+    setCurrentCardIndex(newIndex);
     if (galleryRef.current) {
-      galleryRef.current.setCurrentIndex(0);
+      galleryRef.current.setCurrentIndex(newIndex);
     }
   };
 
-  const handleNextPage = () => {
-    const newPage = Math.min(currentPage + 1, totalPages - 1);
-    setCurrentPage(newPage);
-    setCurrentCardIndex(0);
+  const handleJumpRight = () => {
+    const newIndex = Math.min(currentCards.length - 1, currentCardIndex + 5);
+    setCurrentCardIndex(newIndex);
     if (galleryRef.current) {
-      galleryRef.current.setCurrentIndex(0);
+      galleryRef.current.setCurrentIndex(newIndex);
     }
+  };
+
+  // Get the 5 closest avatars to current index (2 before, current, 2 after)
+  const getVisibleDots = () => {
+    const total = currentCards.length;
+    const visibleCount = 5;
+    const halfVisible = Math.floor(visibleCount / 2);
+
+    let start = currentCardIndex - halfVisible;
+    let end = currentCardIndex + halfVisible;
+
+    // Adjust if at the beginning
+    if (start < 0) {
+      end = Math.min(total - 1, end + Math.abs(start));
+      start = 0;
+    }
+
+    // Adjust if at the end
+    if (end >= total) {
+      start = Math.max(0, start - (end - total + 1));
+      end = total - 1;
+    }
+
+    return currentCards.slice(start, end + 1).map((card, idx) => ({
+      ...card,
+      originalIndex: start + idx,
+    }));
   };
 
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
     setHighlightedIndex(-1);
+
     const allCards = [
       ...(avatars?.map((avatar, idx) => ({
         id: avatar.avatar_id,
@@ -494,6 +481,7 @@ const AvatarSelectionComponent = ({
         originalIndex: authenticatedCards.length - 1,
       },
     ];
+
     const filteredSuggestions = allCards
       .filter((card) => card.text.toLowerCase().includes(value.toLowerCase()))
       .map((card) => ({
@@ -534,6 +522,7 @@ const AvatarSelectionComponent = ({
         originalIndex: authenticatedCards.length - 1,
       },
     ];
+
     setSuggestions(
       searchQuery &&
         allCards.every(
@@ -554,13 +543,9 @@ const AvatarSelectionComponent = ({
   };
 
   const handleSuggestionSelect = (index) => {
-    const avatarIndex = index;
-    const page = Math.floor(avatarIndex / CARDS_PER_PAGE);
-    const relativeIndex = avatarIndex % CARDS_PER_PAGE;
-    setCurrentPage(page);
-    setCurrentCardIndex(relativeIndex);
+    setCurrentCardIndex(index);
     if (galleryRef.current) {
-      galleryRef.current.setCurrentIndex(relativeIndex);
+      galleryRef.current.setCurrentIndex(index);
     }
     setSearchQuery(authenticatedCards[index]?.text || '');
     setIsDropdownOpen(false);
@@ -584,58 +569,6 @@ const AvatarSelectionComponent = ({
       );
     }
   };
-
-  useEffect(() => {
-    console.log(
-      'Authentication state:',
-      isLoggedIn,
-      'Access token:',
-      accessToken,
-      'User:',
-      user,
-      'Avatars:',
-      avatars,
-      'Last used avatar:',
-      lastUsedAvatar,
-      'Current page:',
-      currentPage,
-      'Paginated avatars:',
-      paginatedAvatars,
-      'Search query:',
-      searchQuery,
-      'Suggestions:',
-      suggestions,
-      'Highlighted index:',
-      highlightedIndex,
-      'Dropdown open:',
-      dropdownOpen
-    );
-    console.log('Gallery items count:', authenticatedCards.length);
-    console.log(
-      'Gallery items:',
-      authenticatedCards.map((item) => ({
-        id: item.id,
-        text: item.text,
-        image: item.image,
-        type: item.type,
-      }))
-    );
-    console.log('Current card index:', currentCardIndex);
-  }, [
-    isLoggedIn,
-    accessToken,
-    user,
-    avatars,
-    lastUsedAvatar,
-    currentPage,
-    paginatedAvatars,
-    searchQuery,
-    suggestions,
-    highlightedIndex,
-    authenticatedCards,
-    currentCardIndex,
-    dropdownOpen,
-  ]);
 
   return (
     <div className="flex flex-col items-center justify-start p-4 relative mx-auto min-h-screen w-full">
@@ -691,53 +624,115 @@ const AvatarSelectionComponent = ({
             className="flex flex-col items-center w-full gap-2 z-10"
             ref={dropdownRef}
           >
-            <div className="flex gap-2">
-              {/* Show left chevron only if not on first page and pagination is used */}
-              {totalAvatarCards > CARDS_PER_PAGE && currentPage > 0 && (
-                <div
-                  onClick={handlePreviousPage}
-                  className="p-0.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 cursor-pointer transition-all duration-300"
-                  aria-label="Previous page"
+            <div className="flex gap-2 justify-center items-center">
+              {/* Left arrow */}
+              <button
+                onClick={handleJumpLeft}
+                disabled={currentCardIndex === 0}
+                className={`p-1 rounded-full transition-all duration-300 ${
+                  currentCardIndex === 0
+                    ? 'text-white/20 cursor-not-allowed'
+                    : 'text-white/50 hover:text-white hover:bg-white/10 cursor-pointer'
+                }`}
+                aria-label="Jump left 5 positions"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <FiChevronLeft className="w-8 h-8" />
-                </div>
-              )}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
 
-              {currentCards.map((card, index) => {
-                const isCreateAvatar = card.type === 'create';
-                const isSelected = currentCardIndex === index;
-                return (
-                  <div
-                    key={index}
-                    onClick={() => handleDotClick(index)}
-                    className={`p-0.5 rounded-full transition-all duration-300 cursor-pointer hover:scale-110 ${
-                      isSelected
-                        ? 'text-white bg-white/20'
-                        : 'text-white/50 hover:text-white hover:bg-white/10'
-                    }`}
-                    aria-label={`Go to ${card.text}`}
-                  >
-                    {isCreateAvatar ? (
-                      <CirclePlus className="w-8 h-8" />
-                    ) : (
-                      <FiCircle className="w-8 h-8" />
-                    )}
-                  </div>
-                );
-              })}
+              {/* Visible dots */}
+              <div
+                className="flex gap-2 items-center"
+                style={{ minWidth: '200px', justifyContent: 'center' }}
+              >
+                {getVisibleDots().map((card) => {
+                  const isCreateAvatar = card.type === 'create';
+                  const isSelected = currentCardIndex === card.originalIndex;
+                  const distance = Math.abs(
+                    currentCardIndex - card.originalIndex
+                  );
 
-              {/* Show right chevron only if not on last page and pagination is used */}
-              {totalAvatarCards > CARDS_PER_PAGE &&
-                currentPage < totalPages - 1 && (
-                  <div
-                    onClick={handleNextPage}
-                    className="p-0.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 cursor-pointer transition-all duration-300"
-                    aria-label="Next page"
-                  >
-                    <FiChevronRight className="w-8 h-8" />
-                  </div>
-                )}
+                  // Scale dots based on distance from current index
+                  const scale = Math.max(0.4, 1 - distance * 0.2);
+
+                  return (
+                    <div
+                      key={card.originalIndex}
+                      onClick={() => handleDotClick(card.originalIndex)}
+                      className={`rounded-full transition-all duration-300 cursor-pointer hover:scale-110 border-2 ${
+                        isSelected
+                          ? 'border-white'
+                          : 'border-white/30 hover:border-white/60'
+                      }`}
+                      style={{
+                        transform: `scale(${scale})`,
+                        width: '32px',
+                        height: '32px',
+                        flexShrink: 0,
+                      }}
+                      aria-label={`Go to ${card.text}`}
+                    >
+                      {isCreateAvatar ? (
+                        <div className="w-full h-full flex items-center justify-center bg-white/10 rounded-full">
+                          <CirclePlus className="w-5 h-5 text-white" />
+                        </div>
+                      ) : card.image && isValidImageUrl(card.image) ? (
+                        <img
+                          src={card.image}
+                          alt={card.text}
+                          className="w-full h-full object-cover rounded-full"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-white/10 rounded-full">
+                          <User className="w-4 h-4 text-white/50" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Right arrow */}
+              <button
+                onClick={handleJumpRight}
+                disabled={currentCardIndex === currentCards.length - 1}
+                className={`p-1 rounded-full transition-all duration-300 ${
+                  currentCardIndex === currentCards.length - 1
+                    ? 'text-white/20 cursor-not-allowed'
+                    : 'text-white/50 hover:text-white hover:bg-white/10 cursor-pointer'
+                }`}
+                aria-label="Jump right 5 positions"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
             </div>
+            <div className="min-h-[40px] w-full flex justify-center items-center gap-2 mb-8"></div>
             <div className="min-h-[40px] w-full flex justify-center items-center gap-2 mb-8">
               <button
                 onClick={handleCustomizeAvatar}
@@ -750,7 +745,7 @@ const AvatarSelectionComponent = ({
                   </>
                 ) : (
                   <>
-                    <UserPen className="w-5 h-5" />
+                    <Edit className="w-5 h-5" />
                     Customize Avatar
                   </>
                 )}
@@ -809,7 +804,7 @@ const AvatarSelectionComponent = ({
                     className="block w-full text-left flex flex-row items-center px-4 py-2 text-sm text-red-500 hover:bg-red-900 hover:text-white transition"
                     role="menuitem"
                   >
-                    Logout <LogOutIcon className="ml-2 w-4 h-4" />
+                    Logout <LogOut className="ml-2 w-4 h-4" />
                   </button>
                 </div>
               )}
