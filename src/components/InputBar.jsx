@@ -232,13 +232,13 @@ const InputBar = ({
       {/* Upload + Dock + Dynamic Send */}
       <div className="flex flex-row items-center justify-between mt-1">
         <div className="flex items-center gap-2">
-          <button
+          {/* <button
             onClick={() => fileInputRef.current?.click()}
             className="transition-transform duration-300 hover:scale-105 px-6 py-3 rounded-xl flex items-center justify-center gap-2 text-white bg-black/35 border border-gray-700 hover:border-teal-400"
           >
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Upload</span>
-          </button>
+          </button> */}
           <input
             ref={fileInputRef}
             type="file"
@@ -250,7 +250,7 @@ const InputBar = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <Dock
+          {/* <Dock
             isTranscribing={isTranscribing}
             startTranscription={startTranscription}
             stopTranscription={stopTranscription}
@@ -258,7 +258,7 @@ const InputBar = ({
             startThoughtToImage={startThoughtToImage}
             stopThoughtToImage={stopThoughtToImage}
             dataExchangeTypes={dataExchangeTypes}
-          />
+          /> */}
           <button
             onClick={() => {
               if (!inputMessage.trim() && mediaFiles.length === 0) {
