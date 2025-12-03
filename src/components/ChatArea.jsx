@@ -62,7 +62,7 @@ const ChatArea = ({
               } text-white`}
               onClick={() => setActiveTab('chat')}
             >
-              {activeAvatar?.name || 'Chat'}
+              {activeAvatar?.name + ' Chat' || 'Chat'}
             </button>
             <button
               className={`px-4 py-2 ${

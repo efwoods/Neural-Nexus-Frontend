@@ -1,4 +1,3 @@
-// components/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNgrokApiUrl } from './NgrokAPIContext';
 import { AvatarService } from '../services/AvatarService';
@@ -17,7 +16,16 @@ export const AuthProvider = ({ children }) => {
   const [loginResponse, setLoginResponse] = useState(false);
   const [signupResponse, setSignupResponse] = useState(false);
 
+  // Update any field safely
+  const updateActiveAvatarField = (field, value) => {
+    setActiveAvatar((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   useEffect(() => {
+    console.log('update');
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('access_token');
     if (storedUser && storedToken) {
@@ -26,7 +34,9 @@ export const AuthProvider = ({ children }) => {
       setAccessToken(storedToken);
       setIsLoggedIn(true);
       if (userData.last_used_avatar) {
-        setActiveAvatar({ avatar_id: userData.last_used_avatar });
+        setActiveAvatar({
+          avatar_id: userData.last_used_avatar,
+        });
       }
     }
   }, []);
@@ -73,16 +83,6 @@ export const AuthProvider = ({ children }) => {
           if (profileData.last_used_avatar) {
             setActiveAvatar({ avatar_id: profileData.last_used_avatar });
           }
-
-          // // Show success message
-          // toast.success('✅ Email verified! Welcome to Neural Nexus!', {
-          //   duration: 4000,
-          // });
-
-          // // Navigate to main page if setActiveTab is available
-          // if (setActiveTab) {
-          //   setActiveTab('avatars');
-          // }
         } catch (error) {
           console.error('Auto-login failed:', error);
           toast.error(
@@ -153,31 +153,6 @@ export const AuthProvider = ({ children }) => {
         throw new Error(err.detail || 'AutoLogin failed');
       }
     }
-    // Verification logic and auto-login
-
-    // const { access_token } = await signupResponse.json();
-    // const profileResponse = await fetch(`${dbHttpsUrl}/profile`, {
-    //   headers: {
-    //     Authorization: `Bearer ${access_token}`,
-    //     Accept: 'application/json',
-    //   },
-    // });
-
-    // if (!profileResponse.ok) {
-    //   const errText = await profileResponse.text();
-    //   throw new Error(errText || 'Failed to fetch profile');
-    // }
-
-    // const profileData = await profileResponse.json();
-    // setUser(profileData);
-    // setAccessToken(access_token);
-    // setIsLoggedIn(true);
-    // localStorage.setItem('user', JSON.stringify(profileData));
-    // localStorage.setItem('access_token', access_token);
-    // localStorage.setItem('avatars', JSON.stringify(profileData.avatars));
-    // if (profileData.last_used_avatar) {
-    //   setActiveAvatar({ avatar_id: profileData.last_used_avatar });
-    // }
   };
 
   const login = async (email, password) => {
@@ -398,6 +373,7 @@ export const AuthProvider = ({ children }) => {
         signupResponse,
         resendVerification,
         forgotPassword,
+        updateActiveAvatarField,
       }}
     >
       {children}

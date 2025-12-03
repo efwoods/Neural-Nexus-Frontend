@@ -114,13 +114,12 @@ const InputBar = ({
     setHistoryIndex(-1);
     setTempMessage('');
     setSender('user');
-    sendMessage(mediaFiles, () => {
-      setMediaFiles([]);
-      setInputMessage('');
-      setCaptions({});
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      if (textareaRef.current) textareaRef.current.style.height = 'auto';
-    });
+    sendMessage(mediaFiles, () => {});
+    setMediaFiles([]);
+    setInputMessage('');
+    setCaptions({});
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
   };
 
   const handleFileSelect = (e) => {

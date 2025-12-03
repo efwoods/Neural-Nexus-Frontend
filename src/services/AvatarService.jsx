@@ -83,6 +83,8 @@ export const AvatarService = {
 
   async selectAvatar(accessToken, avatar_id) {
     try {
+      console.log('update');
+
       const response = await fetch(
         `${getDbHttpsUrl()}/management/avatars/select_avatar`,
         {
@@ -96,6 +98,7 @@ export const AvatarService = {
         }
       );
       const res = await response.json();
+      // console.log(res);
       if (res.status !== 'success') throw new Error(JSON.stringify(res));
       return res;
     } catch (error) {

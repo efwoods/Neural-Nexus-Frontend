@@ -1,5 +1,5 @@
 // components/AvatarSettings.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Card,
   Button,
@@ -14,158 +14,163 @@ import {
 import { toast } from 'react-hot-toast';
 import Dropzone from 'react-dropzone';
 import { ExternalLink, Trash2, Loader2, Edit3 } from 'lucide-react';
+import { useNgrokApiUrl } from '../context/NgrokAPIContext';
+import { useAuth } from '../context/AuthContext';
+import { AvatarService } from '../services/AvatarService';
 
 const AvatarSettings = ({ avatarId, accessToken }) => {
+  const { dbHttpsUrl } = useNgrokApiUrl();
   const [links, setLinks] = useState([]);
   const [newLink, setNewLink] = useState('');
   const [files, setFiles] = useState([]);
-  const [avatarData, setAvatarData] = useState({
-    name: '',
-    description: '',
-    iconUrl: '',
-  });
   const [editingDesc, setEditingDesc] = useState(false);
   const [updatedDesc, setUpdatedDesc] = useState('');
+  const [updatedIcon, setUpdatedIcon] = useState('');
+  const [updatedAvatarName, setUpdatedAvatarName] = useState('');
+  const [editingName, setEditingName] = useState(false);
   const [researching, setResearching] = useState(false);
   const [researchResults, setResearchResults] = useState([]);
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+  const {
+    activeAvatar,
+    selectAvatar,
+    updateActiveAvatarField,
+    setActiveAvatar,
+  } = useAuth();
+  const hasRun = useRef(false);
 
-  useEffect(() => {
-    if (!avatarId) return;
+  const initialPopulationOfAvatarData = async () => {
+    if (hasRun.current) return;
+    hasRun.current = true;
 
-    fetch(`/api/avatars/${avatarId}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setAvatarData(data);
-        setUpdatedDesc(data.description || '');
-      });
-    // .catch(() => toast.error('Failed to load avatar info'));
+    if (!activeAvatar?.avatar_id || !accessToken) return;
 
-    fetch(`/api/avatars/${avatarId}/links`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then((res) => res.json())
-      .then(setLinks);
-    // .catch(() => toast.error('Failed to load links'));
+    try {
+      const avatarProfileData = await AvatarService.selectAvatar(
+        accessToken,
+        activeAvatar.avatar_id
+      );
 
-    fetch(`/api/avatars/${avatarId}/documents`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then((res) => res.json())
-      .then(setFiles);
-    // .catch(() => toast.error('Failed to load documents'));
-  }, [avatarId]);
+      // setActiveAvatar(avatarProfileData);
+      setUpdatedDesc(avatarProfileData.description);
+      setUpdatedIcon(avatarProfileData.icon_url);
+      setUpdatedAvatarName(avatarProfileData.name);
 
-  const handleDescSave = async () => {
-    await fetch(`/api/avatars/${avatarId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ description: updatedDesc }),
-    });
-    setAvatarData({ ...avatarData, description: updatedDesc });
-    setEditingDesc(false);
-    toast.success('Description updated');
+      // return avatarProfileData; // Add this line
+    } catch (err) {
+      console.error('Failed to fetch avatar profile:', err);
+      // return null; // Optional: return null on error
+    }
   };
 
+  const fetchAvatarData = async () => {
+    if (!activeAvatar?.avatar_id || !accessToken) return;
+
+    try {
+      const avatarProfileData = await AvatarService.selectAvatar(
+        accessToken,
+        activeAvatar.avatar_id
+      );
+      console.log('fetchAvatarData icon', avatarProfileData.icon_url);
+      // setActiveAvatar(avatarProfileData);
+
+      return avatarProfileData; // Add this line
+    } catch (err) {
+      console.error('Failed to fetch avatar profile:', err);
+      return null; // Optional: return null on error
+    }
+  };
+
+  useEffect(() => {
+    initialPopulationOfAvatarData();
+  }, []);
+
   const handleIconUpload = async (acceptedFiles) => {
+    // console.log(acceptedFiles);
+    // console.log(acceptedFiles[0].File);
+
     const formData = new FormData();
     formData.append('icon', acceptedFiles[0]);
-    await fetch(`/api/avatars/${avatarId}/icon`, {
+    formData.append('avatar_id', activeAvatar.avatar_id);
+    await fetch(`${dbHttpsUrl}/management/avatars/update`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}` },
       body: formData,
     });
-    setAvatarData({
-      ...avatarData,
-      iconUrl: URL.createObjectURL(acceptedFiles[0]),
-    });
-    toast.success('Avatar icon updated');
+    const avatarProfileData = await fetchAvatarData();
+    // setUpdatedDesc(avatarProfileData.description);
+    setUpdatedIcon(avatarProfileData.icon_url);
+    // setUpdatedAvatarName(avatarProfileData.name);
+    // toast.success('Avatar icon updated');
   };
 
   const handleAddLink = async () => {
     if (!newLink.trim()) return;
-    await fetch(`/api/avatars/${avatarId}/links`, {
+    await fetch(`${dbHttpsUrl}/management/avatars/update`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ url: newLink }),
+      body: JSON.stringify({ avatar_id: avatarId, url: newLink }),
     });
-    setLinks([...links, { url: newLink, status: 'pending' }]);
-    setNewLink('');
-    toast.success('Social media link added, scraping started');
+    setLinks([...links, { url: newLink, status: 'pending' }]); // placeholder
+    setNewLink(''); // placeholder
+    toast.success('Social media link added, ready to collect data...');
   };
 
   const handleUpload = async (acceptedFiles) => {
     const formData = new FormData();
-    formData.append('file', acceptedFiles[0]);
-    await fetch(`/api/avatars/${avatarId}/upload`, {
+    formData.append('file', acceptedFiles);
+    formData.append('avatar_id', avatarId);
+    await fetch(`/management/avatars/update`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}` },
       body: formData,
     });
-    setFiles([
-      ...files,
-      { name: acceptedFiles[0].name, status: 'preprocessing' },
-    ]);
+    setFiles([...files, { name: acceptedFiles.name, status: 'preprocessing' }]);
     toast.success('File uploaded & preprocessing started');
   };
 
-  const handleAction = async (fileId, action) => {
-    await fetch(`/api/avatars/${avatarId}/${action}/${fileId}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    setFiles(
-      files.map((f) => (f._id === fileId ? { ...f, status: action } : f))
-    );
-    toast.success(`File ${action} started`);
-  };
+  const handleDescSave = async (updatedDesc) => {
+    console.log('inside desc save');
+    const formData = new FormData();
+    formData.append('description', updatedDesc);
+    formData.append('avatar_id', activeAvatar.avatar_id);
 
-  const handleResearch = async () => {
-    if (!avatarData.name) return toast.error('Avatar name required');
-    setResearching(true);
-    setResearchResults([]);
-    toast.loading('Research agent started');
     try {
-      const res = await fetch(
-        `/api/research-agent?name=${encodeURIComponent(avatarData.name)}`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      setResearchResults(await res.json());
-      setApprovalDialogOpen(true);
+      await fetch(`${dbHttpsUrl}/management/avatars/update`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
+      });
+      const avatarProfileData = await fetchAvatarData();
+      setUpdatedDesc(avatarProfileData.description);
+      // setUpdatedIcon(avatarProfileData.icon_url);
+      // setUpdatedAvatarName(avatarProfileData.name);
+      console.log('this should be updated', activeAvatar.description);
     } catch (err) {
-      toast.error('Research agent failed');
-    } finally {
-      setResearching(false);
-      toast.dismiss();
+      toast.error(err.message);
     }
   };
 
-  const handleApprove = async (result) => {
+  const handleUpdateName = async (updatedAvatarName) => {
+    console.log('inside desc save');
+    const formData = new FormData();
+    formData.append('name', updatedAvatarName);
+    formData.append('avatar_id', activeAvatar.avatar_id);
+
     try {
-      const res = await fetch(`/api/avatars/${avatarId}/documents`, {
+      await fetch(`${dbHttpsUrl}/management/avatars/update`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          url: result.url,
-          type: result.type,
-          snippet: result.snippet,
-        }),
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
       });
-      if (!res.ok) throw new Error('Failed to add document');
-      setLinks([...links, { url: result.url, status: 'pending' }]);
-      setResearchResults(researchResults.filter((r) => r.url !== result.url));
-      toast.success('Link added to documents');
+      const avatarProfileData = await fetchAvatarData();
+      // setUpdatedDesc(avatarProfileData.description);
+      // setUpdatedIcon(avatarProfileData.icon_url);
+      setUpdatedAvatarName(avatarProfileData.name);
+      console.log('this should be updated', activeAvatar.name);
     } catch (err) {
       toast.error(err.message);
     }
@@ -175,70 +180,33 @@ const AvatarSettings = ({ avatarId, accessToken }) => {
     <div className="h-screen bg-gray-300 flex flex-col p-2">
       <Card className="flex-grow flex flex-col gap-3 p-3 overflow-auto rounded-xl">
         <h2 className="text-lg font-bold">Avatar Info & Documents</h2>
-
-        {/* <div className="flex flex-col gap-2 mb-2">
-          <Button size="small" onClick={handleResearch} disabled={researching}>
-            {researching && <CircularProgress size={18} className="mr-1" />}
-            Run Research Agent
-          </Button>
-        </div>
-
-        <Dialog
-          open={approvalDialogOpen}
-          onClose={() => setApprovalDialogOpen(false)}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle>Approve Research Results</DialogTitle>
-          <DialogContent dividers>
-            {researchResults.length ? (
-              researchResults.map((r, idx) => (
-                <Card key={idx} className="p-2 mb-2 border">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-gray-700 truncate">{r.url}</p>
-                      <p className="text-xs text-gray-500">{r.snippet}</p>
-                    </div>
-                    <Button size="small" onClick={() => handleApprove(r)}>
-                      Approve
-                    </Button>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              <p className="text-gray-500">No results pending approval.</p>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button size="small" onClick={() => setApprovalDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog> */}
-
         {/* Icon & Description */}
         <div className="flex gap-3 items-start">
-          {avatarData.iconUrl ? (
-            // Show existing icon with edit overlay
-            <div className="relative w-24 h-24 rounded-lg overflow-hidden cursor-pointer">
-              <img
-                src={avatarData.iconUrl}
-                alt="avatar"
-                className="w-full h-full object-cover"
-                onClick={() => document.getElementById('icon-dropzone').click()}
-              />
-              <div className="absolute top-0 right-0 bg-black/50 p-1 rounded-bl cursor-pointer">
-                <Edit3 size={14} />
-              </div>
-              <Dropzone
-                id="icon-dropzone"
-                onDrop={handleIconUpload}
-                multiple={false}
-                accept={{ 'image/*': [] }}
-              >
-                {({ getInputProps }) => <input {...getInputProps()} hidden />}
-              </Dropzone>
-            </div>
+          {updatedIcon ? (
+            <Dropzone
+              onDrop={handleIconUpload}
+              multiple={false}
+              accept={{ 'image/*': [] }}
+              noClick
+            >
+              {({ getRootProps, getInputProps, open }) => (
+                <div className="relative w-24 h-24 rounded-lg overflow-hidden cursor-pointer">
+                  <img
+                    src={updatedIcon}
+                    alt="avatar"
+                    className="w-full h-full object-cover"
+                    onClick={open}
+                  />
+                  <div
+                    className="absolute top-0 right-0 bg-black/50 p-1 rounded-bl cursor-pointer"
+                    onClick={open}
+                  >
+                    <Edit3 size={14} color="white" />
+                  </div>
+                  <input {...getInputProps()} />
+                </div>
+              )}
+            </Dropzone>
           ) : (
             // Fallback Dropzone if no icon
             <Dropzone onDrop={handleIconUpload} multiple={false}>
@@ -255,36 +223,84 @@ const AvatarSettings = ({ avatarId, accessToken }) => {
               )}
             </Dropzone>
           )}
-          {/* Description Field */}
-          <div className="mb-3">
-            <h3 className="font-semibold text-sm mb-1">Description</h3>
-            {editingDesc ? (
-              <div className="flex flex-col gap-1">
+          {/* Name and Description Fields */}
+          <div className="flex-grow">
+            {/* Name Field */}
+            <div className="mb-3">
+              <h3 className="font-semibold text-sm mb-1">Name</h3>
+              {editingName ? (
                 <div className="flex gap-2 items-center">
                   <Input
-                    value={updatedDesc}
-                    onChange={(e) => setUpdatedDesc(e.target.value)}
-                    placeholder="Enter description"
+                    value={updatedAvatarName}
+                    onChange={(e) => setUpdatedAvatarName(e.target.value)}
+                    placeholder="Enter avatar name"
                     className="flex-grow p-1"
                   />
-                  <Button size="small" onClick={handleDescSave}>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      handleUpdateName(updatedAvatarName);
+                      setEditingName(false);
+                    }}
+                  >
                     Save
                   </Button>
-                  <Button size="small" onClick={() => setEditingDesc(false)}>
+                  <Button size="small" onClick={() => setEditingName(false)}>
                     Cancel
                   </Button>
                 </div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <p className="text-gray-700 flex-grow font-medium">
+                    {updatedAvatarName || 'No name yet'}
+                  </p>
+                  <Button size="small" onClick={() => setEditingName(true)}>
+                    Edit
+                  </Button>
+                </div>
+              )}
+
+              {/* Description Field */}
+              <div className="mb-3">
+                <h3 className="font-semibold text-sm mb-1">Description</h3>
+                {editingDesc ? (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        value={updatedDesc}
+                        onChange={(e) => setUpdatedDesc(e.target.value)}
+                        placeholder="Enter description"
+                        className="flex-grow p-1"
+                      />
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          handleDescSave(updatedDesc);
+                          setEditingDesc(false);
+                        }}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="small"
+                        onClick={() => setEditingDesc(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-center">
+                    <p className="text-gray-700 flex-grow">
+                      {updatedDesc || 'No description yet'}
+                    </p>
+                    <Button size="small" onClick={() => setEditingDesc(true)}>
+                      Edit
+                    </Button>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="flex justify-between items-center">
-                <p className="text-gray-700 flex-grow">
-                  {avatarData.description || 'No description yet'}
-                </p>
-                <Button size="small" onClick={() => setEditingDesc(true)}>
-                  Edit
-                </Button>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
@@ -297,7 +313,45 @@ const AvatarSettings = ({ avatarId, accessToken }) => {
             <Input
               value={newLink}
               onChange={(e) => setNewLink(e.target.value)}
-              placeholder="Enter social media link"
+              placeholder="These links will appear on your avatar in the chat area."
+              className="flex-grow p-1"
+            />
+            <Button size="small" onClick={handleAddLink}>
+              Add
+            </Button>
+          </div>
+
+          {/* Existing links */}
+          <ul className="space-y-1">
+            {links.map((link, idx) => (
+              <li
+                key={idx}
+                className="flex justify-between items-center text-gray-700"
+              >
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:underline flex items-center gap-1"
+                >
+                  <ExternalLink size={14} /> {link.url}
+                </a>
+                <span className="text-xs">{link.status || 'scraping'}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Data Links */}
+        <div className="mb-2">
+          <h3 className="font-semibold text-sm mb-1">Website Data Links</h3>
+
+          {/* Input for new link */}
+          <div className="flex gap-2 mb-2">
+            <Input
+              value={newLink}
+              onChange={(e) => setNewLink(e.target.value)}
+              placeholder="These links will be used to train your avatar in the future."
               className="flex-grow p-1"
             />
             <Button size="small" onClick={handleAddLink}>
@@ -351,37 +405,6 @@ const AvatarSettings = ({ avatarId, accessToken }) => {
                 >
                   <div className="flex justify-between items-center text-sm">
                     <span>{file.name}</span>
-                    <div className="flex gap-1">
-                      <Button
-                        size="small"
-                        onClick={() => handleAction(file._id, 'preprocess')}
-                      >
-                        {file.status === 'preprocessing' && (
-                          <Loader2 className="animate-spin mr-1" size={14} />
-                        )}
-                        Preprocess
-                      </Button>
-                      <Button
-                        size="small"
-                        onClick={() => handleAction(file._id, 'train')}
-                      >
-                        Train
-                      </Button>
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          window.open(`/preprocessed/${file._id}`, '_blank')
-                        }
-                      >
-                        <Edit3 size={14} className="mr-1" /> Edit
-                      </Button>
-                      <Button
-                        size="small"
-                        onClick={() => handleAction(file._id, 'delete')}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
                   </div>
                   <div className="flex items-center gap-1">
                     <LinearProgress
