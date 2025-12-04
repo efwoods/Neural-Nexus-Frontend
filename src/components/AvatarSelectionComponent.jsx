@@ -570,6 +570,64 @@ const AvatarSelectionComponent = ({
     }
   };
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setIsDropdownOpen(false);
+        setHighlightedIndex(-1);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Keyboard navigation for avatar gallery
+  useEffect(() => {
+    const handleGalleryKeyDown = (e) => {
+      // Don't handle if dropdown is open or user is typing in search
+      if (
+        isDropdownOpen ||
+        document.activeElement === searchRef.current?.querySelector('input')
+      ) {
+        return;
+      }
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const newIndex = Math.max(0, currentCardIndex - 1);
+        setCurrentCardIndex(newIndex);
+        if (galleryRef.current) {
+          galleryRef.current.setCurrentIndex(newIndex);
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const newIndex = Math.min(
+          currentCards.length - 1,
+          currentCardIndex + 1
+        );
+        setCurrentCardIndex(newIndex);
+        if (galleryRef.current) {
+          galleryRef.current.setCurrentIndex(newIndex);
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const currentCard = currentCards[currentCardIndex];
+        if (currentCard) {
+          handleClick(currentCard);
+        }
+      }
+    };
+
+    if (isLoggedIn) {
+      document.addEventListener('keydown', handleGalleryKeyDown);
+      return () =>
+        document.removeEventListener('keydown', handleGalleryKeyDown);
+    }
+  }, [isLoggedIn, currentCardIndex, currentCards, isDropdownOpen]);
+
   return (
     <div className="flex flex-col items-center justify-start p-4 relative mx-auto min-h-screen w-full">
       {isLoggedIn ? (
