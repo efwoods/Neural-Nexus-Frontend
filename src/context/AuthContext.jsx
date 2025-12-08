@@ -171,9 +171,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
-
-      // Update MongoDB
+      // Update MongoDB FIRST (while token is still valid)
       if (accessToken) {
         await fetch(`${dbHttpsUrl}/logout`, {
           method: 'POST',
@@ -183,11 +181,17 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
+      // THEN sign out from Supabase
+      await supabase.auth.signOut();
+
       handleSignOut();
       // toast.success('Logged out successfully');
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error('Logout failed');
+      // Still sign out locally even if backend fails
+      await supabase.auth.signOut();
+      handleSignOut();
+      toast.error('Logout completed with errors');
     }
   };
 
