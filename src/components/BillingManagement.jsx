@@ -52,7 +52,7 @@ const BillingManagement = () => {
       <button onClick={updateCard} className="px-4 py-2 bg-teal-600 rounded-lg">
         Update Card
       </button>
-      <button onClick={deleteCard} className="px-4 py-2 bg-gray-600 rounded-lg">
+      <button onClick={deleteCard} className="px-4 py-2 bg-red-600 rounded-lg">
         Delete Payment Info
       </button>
       {message && <p className="text-white mt-2">{message}</p>}

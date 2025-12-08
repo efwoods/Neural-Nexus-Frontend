@@ -2,16 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import {
   LogIn,
-  LogOut,
   LogOutIcon,
   UserPlus,
-  UserIcon,
   X,
-  ArrowLeft,
-  ClipboardPen,
-  LogInIcon,
   SendIcon,
+  Github,
+  Mail,
+  User,
 } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
 import { useMedia } from '../context/MediaContext';
 import VantaBackground from './VantaBackground';
@@ -31,432 +30,227 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showSignupModal, setShowSignupModal] = useState(false);
-  const [showLoginButton, setShowLoginButton] = useState(true);
-  const [showSignupButton, setShowSignupButton] = useState(true);
-  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
-  const [showChangePasswordButton, setShowChangePasswordButton] =
-    useState(false);
-  const [showVerifyEmailModal, setShowVerifyEmailModal] = useState(false);
-  const [
-    showResendVerificationEmailButton,
-    setShowResendVerificationEmailButton,
-  ] = useState(false);
+  const [modalView, setModalView] = useState('login'); // 'login', 'signup', 'forgotPassword'
+
+  // Rotating avatar index
+  const [rotatingIndex, setRotatingIndex] = useState(0);
+
   const {
     user,
     isLoggedIn,
-    accessToken,
     login,
     signup,
     logout,
-    setActiveAvatar,
-    loginResponse,
-    signupResponse,
     resendVerification,
     forgotPassword,
+    signInWithProvider,
+    accessToken,
+    avatars,
+    lastUsedAvatar,
+    setActiveAvatar,
   } = useAuth();
-  const { messages, setMessages } = useMedia();
+
+  const { setMessages } = useMedia();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  const validIcons = Array.isArray(avatars)
+    ? avatars
+        .map((a) => a.icon)
+        .filter((icon) => typeof icon === 'string' && icon.startsWith('https'))
+    : [];
+
+  // Intermittently rotate avatar images
+
+  // This returns the exact image or fallback you should render.
+  const getRotatingAvatarIcon = (avatars, rotatingIndex, user) => {
+    // Filter only valid URLs
+    const validIcons = avatars
+      .map((a) => a.icon)
+      .filter((icon) => typeof icon === 'string' && icon.startsWith('https'));
+    // Case 1: No avatars at all → show User icon
+    if (!Array.isArray(avatars) || avatars.length === 0) {
+      return null; // This signals: "render <User />"
+    }
+
+    // Case 2: Exactly one avatar → show that one avatar
+    if (validIcons.length === 1) {
+      return avatars[0].icon || null;
+    }
+
+    // Case 3: Multiple avatars → rotate through them
+    return avatars[rotatingIndex]?.icon || null;
+  };
+
+  // Rotation effect (only when there are 2+ avatars)
+  useEffect(() => {
+    if (!Array.isArray(avatars)) return;
+
+    if (validIcons.length < 2) {
+      setRotatingIndex(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setRotatingIndex((prev) => (prev + 1) % validIcons.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [avatars]);
+
+  const avatarToRender = getRotatingAvatarIcon(avatars, rotatingIndex, user);
+
   const handleAuth = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+
     try {
-      if (showSignupModal) {
-        try {
-          setShowSignupModal(false);
-          // setShowVerifyModal(true);
-          // setIsLoading(true);
-          setShowVerifyEmailModal(true);
-          // setShowResendVerificationEmailButton(true);
-          setShowLoginButton(false);
-          setShowSignupButton(false);
-          await signup(username, email, password);
-          // on successful signup logic but not yet verified
-          setShowVerifyModal(false);
-          setIsLoading(false);
-        } catch (err) {
-          // toast.err(err.message);
-          toast(
-            (t) => (
-              <div className="flex flex-col items-center justify-center bg-gray-800 text-white p-4 rounded-lg shadow-lg">
-                {err.message == 'Email already registered and verified.' && (
-                  <>
-                    {/* Verified and Registered*/}
-                    {/* auto-login */}
-                    <p className="mb-2">{err.message}</p>
-                    <div className="flex gap-2">
-                      <button
-                        className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
-                        onClick={() => {
-                          toast.dismiss(t.id);
-                          setShowLoginButton(true);
-                        }}
-                      >
-                        Dismiss
-                      </button>
-
-                      <button
-                        className="px-3 py-1 flex flex-row bg-teal-600 hover:bg-teal-700 rounded"
-                        onClick={() => {
-                          // retryLogin(); auto-login
-                          toast.dismiss(t.id);
-                          setShowLoginButton(true);
-                          setShowLoginModal(true);
-                          setShowVerifyModal(false);
-                          setIsLoading(false);
-                          setShowSignupModal(false);
-                        }}
-                      >
-                        Login <LogInIcon />
-                      </button>
-                    </div>
-                  </>
-                )}
-                {err.message ==
-                  'Email already registered. Please check your email for verification link or request a new one.' && (
-                  <>
-                    <p className="mb-2">{err.message}</p>
-                    <div className="flex items-center justify-center gap-2">
-                      {/* Registered but not verified */}
-                      <button
-                        className="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded bg-red-600 hover:bg-red-700  transition-colors focus:outline focus:outline-2 focus:outline-red-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
-                        onClick={() => {
-                          toast.dismiss(t.id);
-                          setShowSignupButton(true);
-                        }}
-                      >
-                        Dismiss
-                      </button>
-
-                      <button
-                        className="px-3 py-1 flex flex-row bg-teal-600 hover:bg-teal-700 rounded gap-2"
-                        onClick={() => {
-                          // retryLogin(); resendVerification();
-                          resendVerification(email);
-                          toast.dismiss(t.id);
-                          setShowSignupButton(true);
-                        }}
-                      >
-                        Resend <SendIcon size={16} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowModal(true);
-                          setShowSignupModal(false);
-                          setShowLoginModal(true);
-                          setShowVerifyModal(false);
-                          setIsLoading(false);
-                          setShowLoginButton(true);
-                          setShowSignupButton(false);
-                          setShowChangePasswordModal(false);
-                          setShowVerifyEmailModal(false);
-                          setEmail('');
-                          setUsername('');
-                          setPassword('');
-                          toast.dismiss(t.id);
-                        }}
-                        className="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
-                      >
-                        <LogIn size={16} />
-                        <span className="ml-2">Login</span>
-                      </button>
-                    </div>
-                  </>
-                )}
-                {err.message !=
-                  'Email already registered. Please check your email for verification link or request a new one.' &&
-                  err.message != 'Email already registered and verified.' && (
-                    <>
-                      {/* Catch-All Signup Errors*/}
-                      <p className="mb-2">{err.message}</p>
-                      <div className="flex gap-2">
-                        <button
-                          className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
-                          onClick={() => {
-                            toast.dismiss(t.id);
-                            setShowLoginButton(true);
-                          }}
-                        >
-                          Dismiss
-                        </button>
-
-                        <button
-                          className="px-3 py-1 flex flex-row bg-teal-600 hover:bg-teal-700 rounded"
-                          onClick={() => {
-                            // retryLogin(); auto-login
-                            toast.dismiss(t.id);
-                            setShowLoginButton(true);
-                            setShowLoginModal(true);
-                            setShowVerifyModal(false);
-                            setIsLoading(false);
-                            setShowSignupModal(false);
-                          }}
-                        >
-                          Login <LogInIcon />
-                        </button>
-                      </div>
-                    </>
-                  )}
-              </div>
-            ),
-            { duration: Infinity }
-          );
-        }
-      }
-      if (showLoginModal) {
-        try {
-          setShowLoginModal(false);
-          setShowLoginButton(false);
-          setShowVerifyModal(true);
-          setIsLoading(true);
-          setShowResendVerificationEmailButton(false);
-          await login(email, password);
-        } catch (err) {
-          toast(
-            (t) => (
-              <div className="flex flex-col items-center justify-center bg-gray-800 text-white p-4 rounded-lg shadow-lg">
-                {err.message ==
-                  'NetworkError when attempting to fetch resource.' && (
-                  <>
-                    {/* Verified, but password fails */}
-
-                    <p className="mb-2">Could not log in. Please try again.</p>
-                    <div className="flex gap-2">
-                      <button
-                        className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
-                        onClick={() => {
-                          toast.dismiss(t.id);
-                          setShowLoginModal(true);
-                          setShowLoginButton(true);
-                          setShowVerifyModal(false);
-                          setIsLoading(false);
-                        }}
-                      >
-                        Dismiss
-                      </button>
-                      <form onSubmit={handleAuth}>
-                        <button
-                          type="submit"
-                          className="px-3 py-1 bg-teal-600 hover:bg-teal-700 rounded gap-2"
-                          onClick={() => {
-                            toast.dismiss(t.id);
-                            setShowLoginModal(true);
-                            setShowLoginButton(false);
-                          }}
-                        >
-                          Retry
-                        </button>
-                      </form>
-                    </div>
-                  </>
-                )}
-
-                {err.message ==
-                  'Please verify your email before logging in. Check your inbox for the verification link.' && (
-                  <>
-                    {/* Not Verified */}
-                    <p className="mb-2">Account Not Verified</p>
-                    <div className="flex gap-2">
-                      <button
-                        className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
-                        onClick={() => {
-                          toast.dismiss(t.id);
-                          setShowLoginButton(true);
-                        }}
-                      >
-                        Dismiss
-                      </button>
-                      <button
-                        className="px-3 py-1 flex flex-row bg-teal-600 hover:bg-teal-700 rounded"
-                        onClick={() => {
-                          resendVerification(email);
-                          toast.dismiss(t.id);
-                          setShowLoginButton(true);
-                        }}
-                      >
-                        Resend Email <SendIcon />
-                      </button>
-                    </div>
-                  </>
-                )}
-                {err.message == 'Invalid email or password.' && (
-                  <>
-                    {/* Verified, but password fails */}
-                    <p className="mb-2">Invalid email or password.</p>
-                    <div className="flex gap-2">
-                      <button
-                        className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
-                        onClick={() => {
-                          toast.dismiss(t.id);
-                          setShowLoginButton(true);
-                        }}
-                      >
-                        Dismiss
-                      </button>
-                      <button
-                        className="px-3 py-1 bg-teal-600 hover:bg-teal-700 rounded"
-                        onClick={() => {
-                          // retryLogin(); Forgot Password?
-                          localStorage.setItem('email', email);
-                          console.log(localStorage.getItem('email'));
-                          setShowLoginButton(false);
-                          setShowLoginModal(false);
-                          setShowVerifyModal(false);
-                          setIsLoading(false);
-                          setShowChangePasswordModal(true);
-                          setShowChangePasswordButton(true);
-                          toast.dismiss(t.id);
-                        }}
-                      >
-                        Forgot Password?
-                      </button>
-                    </div>
-                  </>
-                )}
-                {err.message != 'Invalid email or password.' &&
-                  err.message !=
-                    'Please verify your email before logging in. Check your inbox for the verification link.' && (
-                    <>
-                      {/* Catch-All Login Errors*/}
-                      <p className="mb-2">{err.message}</p>
-                      <div className="flex gap-2">
-                        <button
-                          className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
-                          onClick={() => {
-                            toast.dismiss(t.id);
-                            setShowLoginButton(true);
-                          }}
-                        >
-                          Dismiss
-                        </button>
-
-                        <button
-                          className="px-3 py-1 flex flex-row bg-teal-600 hover:bg-teal-700 rounded"
-                          onClick={() => {
-                            // retryLogin(); auto-login
-                            toast.dismiss(t.id);
-                            setShowLoginButton(true);
-                            setShowLoginModal(true);
-                            setShowVerifyModal(false);
-                            setIsLoading(false);
-                            setShowSignupModal(false);
-                          }}
-                        >
-                          Retry <LogInIcon />
-                        </button>
-                      </div>
-                    </>
-                  )}
-              </div>
-            ),
-            {
-              duration: Infinity,
-            }
-          );
-
-          setShowLoginModal(true);
-          setShowVerifyModal(false);
-          setIsLoading(false);
-          await login(email, password);
-        }
-      }
-      if (showChangePasswordModal) {
-        try {
-          setShowLoginButton(false);
-          setShowChangePasswordButton(false);
-          setShowChangePasswordModal(false);
-          setShowVerifyModal(true);
-          setIsLoading(true);
-          await forgotPassword(password);
-
-          // Return to the Login Screen
-          setShowChangePasswordButton(false);
-          setShowChangePasswordModal(false);
-          setShowModal(true);
-          setShowSignupModal(false);
-          setShowLoginModal(true);
-          setShowVerifyModal(false);
-          setIsLoading(false);
-          setShowLoginButton(true);
-          setShowSignupButton(false);
-          setShowChangePasswordModal(false);
-          setShowVerifyEmailModal(false);
-          setEmail('');
-          setUsername('');
-          setPassword('');
-        } catch (err) {
-          toast.error(err.message);
-          toast(
-            (t) => (
-              <div className="flex flex-col items-center justify-center bg-gray-800 text-white p-4 rounded-lg shadow-lg">
-                {err.message == 'assignment to undeclared variable email' && (
-                  <>
-                    {/* Verified, but password fails */}
-                    <p className="mb-2">Could not log in. Please try again.</p>
-                    <div className="flex gap-2">
-                      <button
-                        className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded"
-                        onClick={() => {
-                          toast.dismiss(t.id);
-                          setShowLoginModal(true);
-                          setShowLoginButton(true);
-                          setShowVerifyModal(false);
-                          setIsLoading(false);
-                        }}
-                      >
-                        Dismiss
-                      </button>
-                      <form onSubmit={handleAuth}>
-                        <button
-                          type="submit"
-                          className="px-3 py-1 bg-teal-600 hover:bg-teal-700 rounded gap-2"
-                          onClick={() => {
-                            toast.dismiss(t.id);
-                            setShowLoginModal(true);
-                            setShowLoginButton(false);
-                          }}
-                        >
-                          Retry
-                        </button>
-                      </form>
-                    </div>
-                  </>
-                )}
-              </div>
-            ),
-            {
-              duration: Infinity,
-            }
-          );
-        }
-      }
-
-      if (showVerifyModal && !loginResponse) {
-        setShowLoginModal(true);
-        setShowVerifyModal(false);
-        setIsLoading(false);
-      }
-      if (isLoggedIn) {
+      if (modalView === 'signup') {
+        await signup(username, email, password);
+        // Success handled in AuthContext
+        setShowModal(true);
+        resetForm();
+        setModalView('login');
+      } else if (modalView === 'login') {
+        await login(email, password);
+        // Success handled in AuthContext
         setShowModal(false);
-        setShowSignupModal(false);
-        setShowLoginModal(false);
-        setShowVerifyModal(false);
-        setIsLoading(false);
-        setShowLoginButton(false);
-        setShowSignupButton(false);
-        setShowChangePasswordModal(false);
-        setShowVerifyEmailModal(false);
-        setEmail('');
-        setUsername('');
-        setPassword('');
+        resetForm();
+      } else if (modalView === 'forgotPassword') {
+        await forgotPassword(email);
+        toast.success(
+          (t) => (
+            <div className="relative flex flex-col gap-2 p-4 ">
+              {/* Text + X button in one row */}
+              <div className="flex justify-between items-start">
+                {/* Message */}
+                <p className="pr-4">
+                  Password reset email sent! Check your inbox.
+                </p>
+
+                {/* X button top-right */}
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  className="p-1 bg-red-600 hover:bg-red-500 rounded text-sm"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          ),
+          { duration: Infinity }
+        );
+        setModalView('login');
       }
     } catch (error) {
-      console.error('Authentication error:', error);
+      // Handle specific error cases
+      const errorMsg = error.message || 'Authentication failed';
+
+      if (
+        errorMsg.includes('Email not confirmed') ||
+        errorMsg.includes('verify your email')
+      ) {
+        // Email not verified
+        toast.error(
+          (t) => (
+            <div className="flex flex-col gap-3">
+              <p className="font-medium">Please verify your email first</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    resendVerification(email);
+                    toast.dismiss(t.id);
+                  }}
+                  className="px-3 py-1 bg-teal-600 hover:bg-teal-700 rounded text-sm flex items-center gap-1"
+                >
+                  <SendIcon size={14} />
+                  Resend Email
+                </button>
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  className="px-3 py-1 bg-red-500 hover:bg-red-500 rounded text-sm"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          ),
+          { duration: 10000 }
+        );
+      } else if (
+        errorMsg.includes('Invalid login credentials') ||
+        errorMsg.includes('Invalid email or password')
+      ) {
+        // Wrong password
+        toast.error(
+          (t) => (
+            <div className="flex flex-col gap-3">
+              <p className="font-medium">Invalid email or password</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setModalView('forgotPassword');
+                    toast.dismiss(t.id);
+                  }}
+                  className="px-3 py-1 bg-teal-600 hover:bg-teal-700 rounded text-sm"
+                >
+                  Forgot Password?
+                </button>
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  className="px-3 py-1 bg-red-600 hover:bg-red-500 rounded text-sm"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          ),
+          { duration: 10000 }
+        );
+      } else if (errorMsg.includes('User already registered')) {
+        // Already registered
+        toast.error(
+          (t) => (
+            <div className="flex flex-col gap-3">
+              <p className="font-medium">Email already registered</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setModalView('login');
+                    toast.dismiss(t.id);
+                  }}
+                  className="px-3 py-1 bg-teal-600 hover:bg-teal-700 rounded text-sm flex items-center gap-1"
+                >
+                  <LogIn size={14} />
+                  Login Instead
+                </button>
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  className="px-3 py-1 bg-red-600 hover:bg-red-500 rounded text-sm"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          ),
+          { duration: 10000 }
+        );
+      } else {
+        // Generic error
+        toast.error(errorMsg);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSocialLogin = async (provider) => {
+    try {
+      await signInWithProvider(provider);
+    } catch (error) {
+      toast.error(`${provider} login failed`);
     }
   };
 
@@ -468,316 +262,266 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
     onEndLiveChat?.();
   };
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-    };
-    if (dropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [dropdownOpen]);
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setUsername('');
+    setModalView('login');
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    resetForm();
+    toast.dismiss();
+  };
 
   const modalContent = (
     <div className="fixed inset-0 flex items-center justify-center z-[999]">
-      <VantaBackground />
-      <Toaster position="top-center" />
+      {/* <VantaBackground /> */}
+
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/0" />
+
+      {/* Modal */}
       <div
-        className="absolute inset-0"
-        onClick={() => setShowModal(false)}
-        style={{ zIndex: 1 }}
-      />
-      <div
-        className="relative z-10 p-6 rounded-xl shadow-lg w-96 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20"
+        className="relative z-10 p-8 rounded-xl shadow-2xl w-full max-w-md bg-white/5 backdrop-blur-lg border border-white/20"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-4">
-          {showSignupModal && (
-            <h2 className="text-2xl font-bold text-white mb-4">Signup</h2>
-          )}
-          {showLoginModal && (
-            <h2 className="text-2xl font-bold text-white mb-4">Login</h2>
-          )}
-          {showVerifyModal && (
-            <h2 className="text-2xl font-bold text-white mb-4">Verifying</h2>
-          )}
-          {showVerifyEmailModal && (
-            <>
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Verify Email
-              </h2>
-            </>
-          )}
-          {showChangePasswordModal && (
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Update Password
-            </h2>
-          )}
-          <button
-            type="button"
-            onClick={() => {
-              toast.dismiss();
-              setShowModal(false);
-              setShowSignupModal(false);
-              setShowLoginModal(false);
-              setShowVerifyModal(false);
-              setIsLoading(false);
-              setShowResendVerificationEmailButton(false);
-              setShowChangePasswordModal(false);
-              setShowChangePasswordButton(false);
-            }}
-            className="px-4 py-2 bg-white/5 hover:bg-red-900 rounded-lg text-white"
-          >
-            <X />
-          </button>
-        </div>
-        <div className="flex flex-row items-center justify-center">
-          {isLoading && <LoadingSpinner />}
-        </div>
-        {showVerifyEmailModal && (
-          <p>
-            A verification email has been sent to your inbox. Please click the
-            link to verify your email before logging in.
-          </p>
-        )}
-        <form onSubmit={handleAuth}>
-          {(showSignupModal || showVerifyEmailModal) &&
-            !showChangePasswordModal && (
-              <div className="mb-4">
-                <label className="block text-white mb-1">Username</label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  required
+        {/* Header */}
+        <>
+          {/* relative flex items-center justify-center space-x-4 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-16 text-center cursor-pointer hover:bg-white/10 transition-all duration-300 min-h-screen w-full flex flex-col justify-evenly items-center  */}
+          <div className="flex jusify-center items-center justify-evenly ">
+            <h2 className="text-5xl font-bold text-white mb-6">Neural Nexus</h2>
+          </div>
+          {avatars?.length > 0 && (
+            <div className="flex justify-center items-center pb-6">
+              <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center">
+                <img
+                  src={avatarToRender}
+                  alt="Avatar"
+                  className="w-32 h-32 rounded-full object-cover transition-opacity duration-500"
+                  onError={(e) => {
+                    console.error('Avatar failed to load:', e.target.src);
+                    e.target.style.display = 'none';
+                  }}
                 />
               </div>
-            )}
-          {!showChangePasswordModal && (
-            <div className="mb-4">
-              <label className="block text-white mb-1">Email</label>
+            </div>
+          )}
+        </>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-3xl font-bold text-white">
+            {modalView === 'signup' && 'Create Account'}
+            {modalView === 'login' && 'Login'}
+            {modalView === 'forgotPassword' && 'Reset Password'}
+          </h2>
+          {/* <button
+            type="button"
+            onClick={closeModal}
+            className="p-2 hover:bg-red-500/20 rounded-lg text-white transition"
+          >
+            <X size={24} />
+          </button> */}
+        </div>
+
+        {isLoading && (
+          <div className="flex justify-center mb-4">
+            <LoadingSpinner />
+          </div>
+        )}
+
+        {/* Social Login Buttons (not for password reset) */}
+        {/* {modalView !== 'forgotPassword' && (
+          <div className="space-y-3 mb-6">
+            <button
+              onClick={() => handleSocialLogin('google')}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white text-gray-800 rounded-lg hover:bg-gray-100 transition font-medium"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
+              </svg>
+              Continue with Google
+            </button>
+
+            <button
+              onClick={() => handleSocialLogin('github')}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gray-800 text-white rounded-lg hover:bg-red-500 transition font-medium"
+            >
+              <Github size={20} />
+              Continue with GitHub
+            </button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center pt-6">
+                <div className="w-full border-t border-white/20"></div>
+              </div>
+            </div>
+
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-transparent text-white/60">
+                Or continue with email
+              </span>
+            </div>
+          </div>
+        )} */}
+
+        {/* Form */}
+        <form onSubmit={handleAuth} className="space-y-4">
+          {modalView === 'signup' && (
+            <div>
+              <label className="block text-white/80 mb-2 text-sm font-medium">
+                Username
+              </label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-white/40"
+                placeholder="Enter your username"
                 required
               />
             </div>
           )}
-          <div className="mb-4">
-            <label className="block text-white mb-1">
-              {!showChangePasswordModal ? 'Password' : 'New Password'}
+
+          <div>
+            <label className="block text-white/80 mb-2 text-sm font-medium">
+              Email
             </label>
             <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-white/40"
+              placeholder="Enter your email"
               required
             />
           </div>
 
-          <div className="flex flex-row justify-center space-x-3">
-            {/* Buttons at bottom of modal */}
-            {/* <button
-              type="button"
-              onClick={() => setShowModal(false)}
-              className="px-4 py-2 bg-white/5 hover:bg-red-900 rounded-lg text-white"
-            >
-              Cancel
-            </button> */}
-            {/* Submit Button: Either Signup or Login */}
-            {showResendVerificationEmailButton && (
-              // <div className="flex flex-row justify-between mb-4">
+          {modalView !== 'forgotPassword' && (
+            <div>
+              <label className="block text-white/80 mb-2 text-sm font-medium">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-white/40"
+                placeholder="Enter your password"
+                required
+                minLength={6}
+              />
+            </div>
+          )}
+
+          {/* Forgot Password Link */}
+          {modalView === 'login' && (
+            <div className="text-right">
               <button
-                type="submit"
-                className="px-4 py-2 bg-white/5 hover:bg-teal-600 rounded-lg text-white flex flex-row gap-2"
+                type="button"
+                onClick={() => setModalView('forgotPassword')}
+                className="text-teal-400 hover:text-teal-300 text-sm transition"
               >
-                Resend Verification Email <SendIcon />
+                Forgot password?
               </button>
-              // </div>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-3 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-600/50 rounded-lg text-white font-semibold transition flex items-center justify-center gap-2"
+          >
+            {modalView === 'signup' && (
+              <>
+                <UserPlus size={20} />
+                Sign Up
+              </>
             )}
-            {showChangePasswordButton && (
-              <div className="flex flex-row justify-between mb-4 gap-2 ">
+            {modalView === 'login' && (
+              <>
+                <LogIn size={20} />
+                Log In
+              </>
+            )}
+            {modalView === 'forgotPassword' && (
+              <>
+                <SendIcon size={20} />
+                Send Reset Link
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Toggle between Login/Signup */}
+        {modalView !== 'forgotPassword' && (
+          <div className="mt-6 text-center text-white/60 text-sm">
+            {modalView === 'login' ? (
+              <>
+                Don't have an account?{' '}
                 <button
                   onClick={() => {
-                    localStorage.removeItem('email');
-                    setShowModal(true);
-                    setShowSignupModal(true);
-                    setShowSignupButton(true);
-                    setShowLoginModal(false);
-                    setShowLoginButton(false);
-                    setShowVerifyModal(false);
-                    setIsLoading(false);
-                    setShowChangePasswordModal(false);
-                    setShowVerifyEmailModal(false);
-                    setShowChangePasswordModal(false);
-                    setShowChangePasswordButton(false);
-                    setEmail('');
-                    setUsername('');
+                    setModalView('signup');
                     setPassword('');
                   }}
-                  className="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
+                  className="text-teal-400 hover:text-teal-300 font-medium transition"
                 >
-                  <UserPlus size={16} />
-                  <span className="ml-2">Signup</span>
+                  Sign up
                 </button>
-
+              </>
+            ) : (
+              <>
+                Already have an account?{' '}
                 <button
-                  type="submit"
-                  className="px-4 py-2 bg-white/5 hover:bg-teal-600 rounded-lg text-white flex flex-row gap-2"
+                  onClick={() => {
+                    setModalView('login');
+                    setUsername('');
+                  }}
+                  className="text-teal-400 hover:text-teal-300 font-medium transition"
                 >
-                  Update Password <SendIcon />
+                  Log in
                 </button>
-              </div>
-            )}
-            {showSignupButton && (
-              // <div className="flex flex-row justify-between mb-4">
-              <button
-                type="submit"
-                className="px-4 py-2 bg-white/5 hover:bg-teal-600 rounded-lg text-white flex flex-row gap-2"
-              >
-                Sign Up <ClipboardPen />
-              </button>
-              // </div>
-            )}
-            {showLoginButton && (
-              <button
-                type="submit"
-                className="flex flew-row px-4 py-2 bg-white/5 hover:bg-teal-600 rounded-lg text-white gap-2"
-              >
-                Login <UserIcon />
-              </button>
+              </>
             )}
           </div>
-        </form>
+        )}
+
+        {/* Back to login from forgot password */}
+        {modalView === 'forgotPassword' && (
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => setModalView('login')}
+              className="text-teal-400 hover:text-teal-300 text-sm transition"
+            >
+              ← Back to login
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 
   return (
-    <div className="relative flex items-center justify-center space-x-4">
-      {isLoggedIn ? (
-        <div ref={dropdownRef} className="relative">
-          <button
-            onClick={() => setDropdownOpen((open) => !open)}
-            className="flex items-center space-x-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full text-white transition focus:outline-none focus:ring-2 focus:ring-teal-500"
-            aria-haspopup="true"
-            aria-expanded={dropdownOpen}
-            aria-controls="user-menu"
-          >
-            <span>{user?.username}</span>
-            <svg
-              className={`w-4 h-4 transition-transform duration-200 ${
-                dropdownOpen ? 'rotate-180' : 'rotate-0'
-              }`}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
-          {dropdownOpen && (
-            <div
-              id="user-menu"
-              role="menu"
-              className="absolute right-0 mt-2 w-32 bg-gray-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
-            >
-              <button
-                onClick={() => {
-                  onEndLiveChat?.();
-                  setActiveTab('account');
-                  setDropdownOpen(false);
-                }}
-                className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-teal-600 transition"
-                role="menuitem"
-              >
-                Account Settings
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab('billing');
-                  onEndLiveChat?.();
-                  setDropdownOpen(false);
-                }}
-                className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-teal-600 transition"
-                role="menuitem"
-              >
-                Billing
-              </button>
-              <button
-                onClick={handleLogout}
-                className="block w-full text-left flex flex-row items-center px-4 py-2 text-sm text-red-500 hover:bg-red-900 hover:text-white transition"
-                role="menuitem"
-              >
-                Logout <LogOutIcon className="ml-2 w-4 h-4" />
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <>
-          <button
-            onClick={() => {
-              setShowModal(true);
-              setShowSignupModal(true);
-              setShowSignupButton(true);
-              setShowLoginModal(false);
-              setShowLoginButton(false);
-              setShowVerifyModal(false);
-              setIsLoading(false);
-              setShowChangePasswordModal(false);
-              setShowVerifyEmailModal(false);
-              setEmail('');
-              setUsername('');
-              setPassword('');
-            }}
-            className="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
-          >
-            <UserPlus size={16} />
-            <span className="ml-2">Signup</span>
-          </button>
-          <button
-            onClick={() => {
-              setShowChangePasswordButton(false);
-              setShowChangePasswordModal(false);
-              setShowModal(true);
-              setShowSignupModal(false);
-              setShowLoginModal(true);
-              setShowVerifyModal(false);
-              setIsLoading(false);
-              setShowLoginButton(true);
-              setShowSignupButton(false);
-              setShowChangePasswordModal(false);
-              setShowVerifyEmailModal(false);
-              setEmail('');
-              setUsername('');
-              setPassword('');
-            }}
-            className="text-sm px-2 sm:px-4 py-1 sm:py-2 transition-transform duration-300 hover:scale-105 rounded hover:bg-teal-600 transition-colors focus:outline focus:outline-2 focus:outline-teal-400 border border-gray-700 text-white bg-black/35 font-semibold shadow-lg flex items-center justify-center"
-          >
-            <LogIn size={16} />
-            <span className="ml-2">Login</span>
-          </button>
-        </>
-      )}
-      {showModal && ReactDOM.createPortal(modalContent, modalRoot)}
-    </div>
+    <>
+      <Toaster position="top-center" />
+      <>{showModal && ReactDOM.createPortal(modalContent, modalRoot)}</>
+    </>
   );
 };
 

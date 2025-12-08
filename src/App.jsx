@@ -25,7 +25,7 @@ const App = () => {
   const [showDataExchangeDropdown, setShowDataExchangeDropdown] =
     useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState('chat'); // Default to avatar-selection
+  const [activeTab, setActiveTab] = useState('avatar-selection'); // Default to avatar-selection
   const dropdownRef = useRef(null);
   const [isLiveChat, setIsLiveChat] = useState(false);
 
@@ -70,7 +70,10 @@ const App = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-green-900 text-white relative">
       <VantaBackground />
-      <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
+      <Toaster
+        position="top-center"
+        toastOptions={{ style: { boxShadow: 'none' }, className: 'z-[2000]' }}
+      />
       <div className="w-screen h-screen flex flex-col gap-1 relative z-10">
         <div className="relative flex flex-grow overflow-hidden justify-center items-center">
           {activeTab === 'avatar-selection' || !activeAvatar ? (

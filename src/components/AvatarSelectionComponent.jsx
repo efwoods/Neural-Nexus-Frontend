@@ -342,68 +342,18 @@ const AvatarSelectionComponent = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const getLoginCardIcon = () => {
-    try {
-      const cachedIcon = localStorage.getItem('last_avatar_icon');
-      if (cachedIcon && isValidImageUrl(cachedIcon)) return cachedIcon;
-    } catch (error) {
-      console.error('Error getting cached avatar icon:', error);
-    }
-    if (lastUsedAvatar && avatars?.length > 0) {
-      const lastUsedAvatarData = avatars.find(
-        (avatar) => avatar.avatar_id === lastUsedAvatar
-      );
-      if (
-        lastUsedAvatarData?.icon &&
-        isValidImageUrl(lastUsedAvatarData.icon)
-      ) {
-        return lastUsedAvatarData.icon;
-      }
-    }
-    if (user?.icon && isValidImageUrl(user.icon)) return user.icon;
-    return null;
-  };
-
   const loginCard = useMemo(
     () => ({
       id: 'login',
       component: (
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/20 p-16 text-center cursor-pointer hover:bg-white/10 transition-all duration-300 min-h-screen w-full flex flex-col justify-evenly items-center ">
-          <div className="flex justify-center">
-            <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center">
-              {getLoginCardIcon() ? (
-                <img
-                  src={getLoginCardIcon()}
-                  alt="User Icon"
-                  className="w-32 h-32 object-cover rounded-full"
-                  onError={(e) => {
-                    console.error('Login image load failed:', e.target.src);
-                    e.target.style.display = 'none';
-                  }}
-                />
-              ) : (
-                <User className="w-16 h-16 text-gray-400 opacity-20" />
-              )}
-            </div>
-          </div>
-          <h2 className="text-5xl font-bold text-white mb-6">
-            Welcome to Neural Nexus
-          </h2>
-          <p className="text-white/80 mb-8 text-lg mb-6 font-bold">
-            Create Personalized AI Conversational Agents
-          </p>
-          <p className="text-white/80 mb-8 text-lg mb-6 font-bold">
-            Sign In Or Create An Account To Get Started
-          </p>
-          <AuthComponent
-            setActiveTab={setActiveTab}
-            onEndLiveChat={onEndLiveChat}
-          />
-        </div>
+        <AuthComponent
+          setActiveTab={setActiveTab}
+          onEndLiveChat={onEndLiveChat}
+        />
       ),
-      type: 'login',
-      text: 'Sign In',
-      image: getLoginCardIcon(),
+      // type: 'login',
+      // text: 'Sign In',
+      // image: getLoginCardIcon(),
     }),
     [user, lastUsedAvatar, avatars]
   );
@@ -432,6 +382,17 @@ const AvatarSelectionComponent = ({
       galleryRef.current.setCurrentIndex(newIndex);
     }
   };
+  useEffect(() => {
+    const visibleDots = getVisibleDots();
+
+    // Find the index of the currently selected card within the visible dots
+    const selectedDotIndex = visibleDots.findIndex(
+      (card) => card.originalIndex === currentCardIndex
+    );
+
+    console.log('Currently selected visible dot index:', selectedDotIndex);
+    console.log('Current Card Index:', currentCardIndex);
+  }, [currentCardIndex]);
 
   // Get the 5 closest avatars to current index (2 before, current, 2 after)
   const getVisibleDots = () => {
@@ -442,21 +403,23 @@ const AvatarSelectionComponent = ({
     let start = currentCardIndex - halfVisible;
     let end = currentCardIndex + halfVisible;
 
-    // Adjust if at the beginning
+    // Clamp start/end to valid range
     if (start < 0) {
       end = Math.min(total - 1, end + Math.abs(start));
       start = 0;
     }
-
-    // Adjust if at the end
     if (end >= total) {
       start = Math.max(0, start - (end - total + 1));
       end = total - 1;
     }
 
-    return currentCards.slice(start, end + 1).map((card, idx) => ({
+    const slice = currentCards.slice(start, end + 1);
+
+    // Map slice to include visibleIndex
+    return slice.map((card, idx) => ({
       ...card,
       originalIndex: start + idx,
+      visibleIndex: idx, // index relative to the visible slice
     }));
   };
 

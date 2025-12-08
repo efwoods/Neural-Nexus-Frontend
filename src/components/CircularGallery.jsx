@@ -517,7 +517,8 @@ class App {
     ];
     const galleryItems = items && items.length ? items : defaultItems;
     this.originalItems = galleryItems;
-    this.mediasImages = galleryItems.concat(galleryItems);
+    // this.mediasImages = galleryItems.concat(galleryItems);
+    this.mediasImages = galleryItems; // <-- instead of galleryItems.concat(galleryItems)
     this.medias = this.mediasImages.map((data, index) => {
       return new Media({
         geometry: this.planeGeometry,
@@ -596,9 +597,11 @@ class App {
   getCurrentItemIndex() {
     if (!this.medias || !this.medias[0]) return 0;
     const width = this.medias[0].width;
-    const itemIndex = Math.round(Math.abs(this.scroll.target) / width);
-    return itemIndex % this.originalItems.length;
+    const itemIndex = Math.round(this.scroll.target / width);
+    const len = this.originalItems.length;
+    return ((itemIndex % len) + len) % len;
   }
+
   setCurrentIndex(index, animate = true) {
     if (!this.medias || !this.medias[0]) return;
     this.isExternalControl = true;

@@ -143,7 +143,7 @@ const LiveChat = ({ avatarIcon, onEndLiveChat, onSendVoice }) => {
         </button>
         {/* End button with CircleX icon */}
         <button
-          className="p-4 rounded-full bg-gray-500/80 hover:bg-gray-600/80 text-white transition-all duration-300 backdrop-blur-sm"
+          className="p-4 rounded-full bg-gray-500/80 hover:bg-red-600/80 text-white transition-all duration-300 backdrop-blur-sm"
           onClick={onEndLiveChat}
         >
           <CircleX className="w-6 h-6" />

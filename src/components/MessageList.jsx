@@ -32,7 +32,7 @@ const MessageList = ({ messages, messagesEndRef }) => {
                 ? 'bg-teal-600 self-end text-white'
                 : msg.sender === 'avatar'
                 ? 'bg-gray-700 self-start text-white'
-                : 'bg-gray-600 self-center italic text-gray-300'
+                : 'bg-red-600 self-center italic text-gray-300'
             }`}
           >
             {/* TEXT CONTENT - Updated to handle both 'content' and 'message' fields */}
