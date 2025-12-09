@@ -342,6 +342,12 @@ const AvatarSelectionComponent = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (isLoggedIn) {
+      toast.dismiss();
+    }
+  }, []);
+
   const loginCard = useMemo(
     () => ({
       id: 'login',
