@@ -148,6 +148,10 @@ const ChatArea = ({
             <AvatarSettings
               avatarId={activeAvatar.avatar_id}
               accessToken={accessToken}
+              onAvatarDeleted={() => {
+                // Switch to avatar selection tab after deletion
+                setActiveTab('avatar-selection');
+              }}
             />
           </div>
         )}

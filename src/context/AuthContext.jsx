@@ -120,7 +120,8 @@ export const AuthProvider = ({ children }) => {
       }
 
       const data = await response.json();
-
+      if (data.message === 'Login successful') {
+      }
       toast.success(
         data.message ||
           'Signup successful! Please check your email to verify your account.',

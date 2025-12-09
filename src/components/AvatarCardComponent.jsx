@@ -25,10 +25,6 @@ const AvatarCardComponent = ({ avatar, onCardClick }) => {
           )}
         </div>
       </div>
-      <h3 className="text-2xl font-bold text-white mb-2">{avatar.name}</h3>
-      <p className="text-white/70 text-sm">
-        {avatar.description || 'Click to select this avatar'}
-      </p>
     </div>
   );
 };
