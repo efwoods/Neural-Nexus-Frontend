@@ -108,11 +108,16 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
 
     try {
       if (modalView === 'signup') {
-        await signup(username, email, password);
+        const res = await signup(username, email, password);
         // Success handled in AuthContext
-        setShowModal(true);
-        resetForm();
-        setModalView('login');
+        if (res.message === 'Login successful') {
+          setShowModal(false);
+          resetForm();
+        } else {
+          setShowModal(true);
+          resetForm();
+          setModalView('login');
+        }
       } else if (modalView === 'login') {
         await login(email, password);
         // Success handled in AuthContext
@@ -293,7 +298,7 @@ const AuthComponent = ({ setActiveTab, onEndLiveChat }) => {
           <div className="flex jusify-center items-center justify-evenly ">
             <h2 className="text-5xl font-bold text-white mb-6">Neural Nexus</h2>
           </div>
-          {avatars?.length > 0 && (
+          {validIcons?.length > 0 && (
             <div className="flex justify-center items-center pb-6">
               <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center">
                 <img

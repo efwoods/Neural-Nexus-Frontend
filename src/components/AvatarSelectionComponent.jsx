@@ -645,6 +645,22 @@ const AvatarSelectionComponent = ({
             className="flex flex-col items-center w-full gap-2 z-10"
             ref={dropdownRef}
           >
+            {/* <button
+              onClick={handleCustomizeAvatar}
+              className="bg-white/10 rounded-lg border border-white/20 py-2 px-4 text-white hover:bg-white/15 transition-all duration-300 flex items-center gap-2"
+            >
+              {currentCardIndex === authenticatedCards.length - 1 ? (
+                <>
+                  <CirclePlus className="w-5 h-5" />
+                  Create Avatar
+                </>
+              ) : (
+                <>
+                  <Edit className="w-5 h-5" />
+                  Customize Avatar
+                </>
+              )}
+            </button> */}
             <div className="flex gap-2 justify-center items-center">
               {/* Left arrow */}
               <button
@@ -753,82 +769,68 @@ const AvatarSelectionComponent = ({
                 </svg>
               </button>
             </div>
-            <div className="min-h-[40px] w-full flex justify-center items-center gap-2 mb-8"></div>
             <div className="min-h-[40px] w-full flex justify-center items-center gap-2 mb-8">
-              <button
-                onClick={handleCustomizeAvatar}
-                className="bg-white/10 rounded-lg border border-white/20 py-2 px-4 text-white hover:bg-white/15 transition-all duration-300 flex items-center gap-2"
-              >
-                {currentCardIndex === authenticatedCards.length - 1 ? (
-                  <>
-                    <CirclePlus className="w-5 h-5" />
-                    Create Avatar
-                  </>
-                ) : (
-                  <>
-                    <Edit className="w-5 h-5" />
-                    Customize Avatar
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => setDropdownOpen((open) => !open)}
-                className="p-2 bg-white/10 hover:bg-white/10 rounded-full text-white transition focus:outline-none focus:ring-2 focus:ring-teal-500"
-                aria-haspopup="true"
-                aria-expanded={dropdownOpen}
-                aria-controls="user-menu"
-              >
-                <Settings className="w-6 h-6" />
-              </button>
-              {dropdownOpen && (
-                <div
-                  id="user-menu"
-                  role="menu"
-                  className="absolute bottom-[80px] right-0 w-48 backdrop-blur-lg bg-white/10 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+              <div className="relative w-48">
+                <button
+                  onClick={() => setDropdownOpen((open) => !open)}
+                  className="bg-white/10 rounded-lg border border-white/20 py-2 px-4 text-white hover:bg-white/15 transition-all duration-300 flex items-center gap-2 w-full"
+                  aria-haspopup="true"
+                  aria-expanded={dropdownOpen}
+                  aria-controls="user-menu"
                 >
-                  <div className="flex justify-between items-center px-4 py-2 border-b border-white/20">
-                    <span className="text-white text-sm font-semibold">
-                      {user?.username}
-                    </span>
+                  <Settings className="w-6 h-6" />
+                  User Settings
+                </button>
+                {dropdownOpen && (
+                  <div
+                    id="user-menu"
+                    role="menu"
+                    className="absolute bottom-[50px] w-full mt-2 right-0 backdrop-blur-lg bg-white/10 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                  >
+                    <div className="flex justify-between items-center px-4 py-2 border-b border-white/20">
+                      <span className="text-white text-sm font-semibold">
+                        {user?.username}
+                      </span>
+                      <button
+                        onClick={() => setDropdownOpen(false)}
+                        className="text-white hover:text-red-500"
+                        aria-label="Close menu"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                     <button
-                      onClick={() => setDropdownOpen(false)}
-                      className="text-white hover:text-red-500"
-                      aria-label="Close menu"
+                      onClick={() => {
+                        onEndLiveChat?.();
+                        setActiveTab('account');
+                        setDropdownOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-teal-600 transition"
+                      role="menuitem"
                     >
-                      <X className="w-4 h-4" />
+                      Account Settings
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab('billing');
+                        onEndLiveChat?.();
+                        setDropdownOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-teal-600 transition"
+                      role="menuitem"
+                    >
+                      Billing
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left flex flex-row items-center px-4 py-2 text-sm text-red-500 hover:bg-red-900 hover:text-white transition"
+                      role="menuitem"
+                    >
+                      Logout <LogOut className="ml-2 w-4 h-4" />
                     </button>
                   </div>
-                  <button
-                    onClick={() => {
-                      onEndLiveChat?.();
-                      setActiveTab('account');
-                      setDropdownOpen(false);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-teal-600 transition"
-                    role="menuitem"
-                  >
-                    Account Settings
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveTab('billing');
-                      onEndLiveChat?.();
-                      setDropdownOpen(false);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-teal-600 transition"
-                    role="menuitem"
-                  >
-                    Billing
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left flex flex-row items-center px-4 py-2 text-sm text-red-500 hover:bg-red-900 hover:text-white transition"
-                    role="menuitem"
-                  >
-                    Logout <LogOut className="ml-2 w-4 h-4" />
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
