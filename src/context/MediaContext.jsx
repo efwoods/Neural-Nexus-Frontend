@@ -196,14 +196,14 @@ export const MediaProvider = ({ children }) => {
       console.error('Failed to fetch messages:', error);
     }
   };
-
-  // sendMessage - Updated to only send to DB API
+  // sendMessage - Updated to include loading indicator for AI response
   async function sendMessage() {
     if (!activeAvatar || (!inputMessage.trim() && mediaFiles.length === 0))
       return;
 
     try {
       const tempId = `temp-${Date.now()}`;
+      const loadingId = `loading-${Date.now()}`;
 
       // Optimistically add user message to UI
       const tempMessage = {
@@ -228,6 +228,21 @@ export const MediaProvider = ({ children }) => {
       // Cache the user message
       cacheMessage(activeAvatar.avatar_id, tempMessage);
 
+      // Add loading message for AI response
+      const loadingMessage = {
+        id: loadingId,
+        sender: 'avatar',
+        isLoading: true,
+      };
+
+      setMessages((prev) => ({
+        ...prev,
+        [activeAvatar.avatar_id]: [
+          ...(prev[activeAvatar.avatar_id] || []),
+          loadingMessage,
+        ],
+      }));
+
       // Send to DB API and wait for AI response
       const response = await MessageService.saveMessage(
         activeAvatar.avatar_id,
@@ -236,6 +251,14 @@ export const MediaProvider = ({ children }) => {
         accessToken,
         sender
       );
+
+      // Remove loading message
+      setMessages((prev) => ({
+        ...prev,
+        [activeAvatar.avatar_id]: prev[activeAvatar.avatar_id].filter(
+          (msg) => msg.id !== loadingId
+        ),
+      }));
 
       if (!response || response.status !== 'success') {
         throw new Error(response?.detail || 'Message post failed');
@@ -282,11 +305,11 @@ export const MediaProvider = ({ children }) => {
     } catch (err) {
       console.error('Failed to send message:', err);
 
-      // Remove optimistic message on error
+      // Remove both optimistic message and loading message on error
       setMessages((prev) => ({
         ...prev,
         [activeAvatar.avatar_id]: (prev[activeAvatar.avatar_id] || []).filter(
-          (msg) => msg.id !== tempId
+          (msg) => msg.id !== tempId && !msg.isLoading
         ),
       }));
 

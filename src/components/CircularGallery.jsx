@@ -309,6 +309,7 @@ class Media {
       // Load actual image
       const img = new Image();
       img.crossOrigin = 'anonymous';
+      img.decoding = 'async';
       img.src = this.image;
       img.onload = () => {
         texture.image = img;
